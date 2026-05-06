@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}ផ្ទាំងគ្រប់គ្រង (Dashboard) | EPS{% endblock %}
+{% block page_title %}ផ្ទាំងគ្រប់គ្រងទូទៅ (Dashboard){% endblock %}
+
+{% block head %}
+<style>
+    /* 💡 បន្ថយ Padding ក្នុងកាតឱ្យហាប់ណែនជាងមុន (ពី 1.5rem មក 1.25rem) */
+    .stat-card { background-color: #fff; border: none; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); padding: 1.25rem; height: 100%; display: flex; flex-direction: column; transition: 0.3s; }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+    
+    .border-left-primary { border-left: 4px solid #0d6efd !important; }
+    .border-left-warning { border-left: 4px solid #ffc107 !important; }
+    .border-left-danger { border-left: 4px solid #dc3545 !important; }
+    .border-left-success { border-left: 4px solid #198754 !important; }
+    .border-left-info { border-left: 4px solid #0dcaf0 !important; }
+
+    /* 💡 បន្ថយទំហំ Card Action និង Icon ឱ្យសមល្មម */
+    .card-action { border: none; border-radius: 12px; padding: 1.2rem !important; transition: transform 0.3s ease, box-shadow 0.3s ease; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+    .card-action:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.08) !important; border-color: #ced4da; }
+    .icon-circle { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 12px; font-size: 1.25rem; }
+    
+    .section-title { font-size: 1.05rem; letter-spacing: 0.3px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+
+    <div class="card shadow-sm mb-3 border-0 rounded-3 bg-white">
+        <div class="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between py-2 px-3 gap-3">
+            
+            <h6 class="mb-0 text-dark fw-bold" style="line-height: 1.6;">
+                វគ្គប្រឡងបច្ចុប្បន្ន៖ <br class="d-md-none"> <span class="text-primary ms-md-1 d-inline-block">
+                    {% if active_session %}
+                        {% set ns = namespace(found=false) %}
+                        {% for s in all_sessions %}
+                            {% if s.session_code == active_session %}
+                                {{ s.title_kh or s.session_code }}
+                                {% set ns.found = true %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if not ns.found %}
+                            {{ active_session }}
+                        {% endif %}
+                    {% else %} 
+                        <span class="text-danger"><i class="fas fa-exclamation-triangle"></i> មិនទាន់ជ្រើសរើស</span> 
+                    {% endif %}
+                </span>
+            </h6>
+            
+            <form action="/set_active_session" method="POST" class="m-0 w-100" style="max-width: 300px;">
+                <select name="session_code" class="form-select form-select-sm shadow-sm fw-bold text-primary bg-light border-secondary w-100" required onchange="this.form.submit()">
+                    <option value="">-- ជ្រើសរើសវគ្គប្រឡង --</option>
+                    {% for s in all_sessions %}
+                        <option value="{{ s.session_code }}" {% if s.session_code == active_session %}selected{% endif %}>{{ s.title_en or s.session_code }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+            
+        </div>
+    </div>
+
+    <h6 class="fw-bold mb-2 text-secondary section-title"><i class="fas fa-chart-pie me-2 text-primary"></i> ស្ថិតិការប្រឡងទូទៅ (UBT)</h6>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card border-left-primary">
+                <p class="text-muted mb-1 fw-bold small">បេក្ខជនសរុប</p>
+                <div class="d-flex align-items-end mb-2">
+                    <h3 class="fw-bold text-primary mb-0 me-2">{{ total_candidates }}</h3>
+                    <span class="text-muted small mb-1">(ស្រី៖ {{ total_female }})</span>
+                </div>
+                <a href="/candidates" class="text-decoration-none small text-primary fw-bold mt-auto">មើលបញ្ជីបេក្ខជន <i class="fas fa-arrow-right fs-6 align-middle"></i></a>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card border-left-warning">
+                <p class="text-muted mb-1 fw-bold small">សំណើកែព័ត៌មាន (Pending)</p>
+                <h3 class="fw-bold text-warning mb-2">{{ pending_count }}</h3>
+                <a href="/admin/requests" class="text-decoration-none small text-warning fw-bold mt-auto">ពិនិត្យសំណើ <i class="fas fa-arrow-right fs-6 align-middle"></i></a>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card border-left-danger">
+                <p class="text-muted mb-1 fw-bold small">បេក្ខជនអវត្តមាន</p>
+                <div class="d-flex align-items-end mb-2">
+                    <h3 class="fw-bold text-danger mb-0 me-2">{{ absent_count }}</h3>
+                    <span class="text-muted small mb-1">(ស្រី៖ {{ absent_female }})</span>
+                </div>
+                <a href="/candidates?present=0" class="text-decoration-none small text-danger fw-bold mt-auto">មើលបញ្ជីអវត្តមាន <i class="fas fa-arrow-right fs-6 align-middle"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <h6 class="fw-bold mb-2 text-secondary section-title mt-4"><i class="fas fa-tools me-2 text-success"></i> ស្ថិតិតេស្តជំនាញ (2nd Round)</h6>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card border-left-info">
+                <p class="text-muted mb-1 fw-bold small">អ្នកតេស្តជំនាញសរុប</p>
+                <div class="d-flex align-items-end mb-2">
+                    <h3 class="fw-bold text-info mb-0 me-2">{{ skill_total }}</h3>
+                    <span class="text-muted small mb-1">(ស្រី៖ {{ skill_female }})</span>
+                </div>
+                <a href="/skill_test_candidates" class="text-decoration-none small text-info fw-bold mt-auto">មើលបញ្ជីបេក្ខជនទាំងអស់ <i class="fas fa-arrow-right fs-6 align-middle"></i></a>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="stat-card border-left-success">
+                <p class="text-muted mb-1 fw-bold small">ស្កេនវត្តមានរួច</p>
+                <div class="d-flex align-items-end mb-2">
+                    <h3 class="fw-bold text-success mb-0 me-2">{{ skill_present }}</h3>
+                    <span class="text-muted small mb-1">(ស្រី៖ {{ skill_present_f }})</span>
+                </div>
+                <a href="/skill_test_candidates?present=1" class="text-decoration-none small text-success fw-bold mt-auto">មើលអ្នកមានវត្តមាន <i class="fas fa-arrow-right fs-6 align-middle"></i></a>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="stat-card border-left-danger">
+                <p class="text-muted mb-1 fw-bold small">បេក្ខជនអវត្តមាន</p>
+                <div class="d-flex align-items-end mb-2">
+                    <h3 class="fw-bold text-danger mb-0 me-2">{{ skill_absent }}</h3>
+                    <span class="text-muted small mb-1">(ស្រី៖ {{ skill_absent_f }})</span>
+                </div>
+                <a href="/skill_test_candidates?present=0" class="text-decoration-none small text-danger fw-bold mt-auto">មើលអ្នកអវត្តមាន <i class="fas fa-arrow-right fs-6 align-middle"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <h6 class="fw-bold mb-2 text-secondary section-title mt-4"><i class="fas fa-th-large me-2 text-primary"></i> ម៉ូឌុលគ្រប់គ្រងរហ័ស (Quick Modules)</h6>
+    
+    <div class="row g-3 mb-4">
+        <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12">
+            <a href="/exam" class="text-decoration-none">
+                <div class="card card-action text-center">
+                    <div class="icon-circle bg-danger text-white"><i class="fas fa-camera"></i></div>
+                    <h6 class="fw-bold text-dark mb-0 small">ផ្ទៀងផ្ទាត់កាមេរ៉ា UBT</h6>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12">
+            <a href="/skill_test_candidates" class="text-decoration-none">
+                <div class="card card-action text-center">
+                    <div class="icon-circle text-white" style="background-color: #17a2b8;"><i class="fas fa-id-card-clip"></i></div>
+                    <h6 class="fw-bold text-dark mb-0 small">បញ្ជីតេស្តជំនាញ</h6>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12">
+            <a href="/candidates" class="text-decoration-none">
+                <div class="card card-action text-center">
+                    <div class="icon-circle bg-primary text-white"><i class="fas fa-user-graduate"></i></div>
+                    <h6 class="fw-bold text-dark mb-0 small">បញ្ជីបេក្ខជន UBT</h6>
+                </div>
+            </a>
+        </div>
+    </div> <div class="row">
+        <div class="col-12">
+            <a href="/station" class="text-decoration-none">
+                <div class="card border-0 shadow-sm bg-primary text-white hover-elevate" style="border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s;">
+                    <div class="card-body text-center py-4">
+                        <h4 class="fw-bold mb-0 d-flex flex-column flex-md-row justify-content-center align-items-center gap-2" style="letter-spacing: 1px;">
+                            <i class="fas fa-desktop text-warning fa-bounce" style="font-size: 1.5rem;"></i> 
+                            ចូលបញ្ជរស្កែនវត្តមានរួម (UNIVERSAL SCANNING STATION)
+                        </h4>
+                        <p class="mb-0 mt-2 text-white-50 small">ប្រព័ន្ធស្កែនមុខ និងម្រាមដៃសម្រាប់គ្រប់ដំណាក់កាល (តេស្តជំនាញ, ពេទ្យ, កិច្ចសន្យា...)</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <style>
+        .hover-elevate:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.3) !important; 
+        }
+    </style>
+    
+</div>
+{% endblock %}

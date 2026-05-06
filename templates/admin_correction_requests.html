@@ -1,0 +1,89 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container-fluid mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold text-primary"><i class="fas fa-tasks me-2"></i>បញ្ជីសំណើសុំកែតម្រូវទិន្នន័យ</h4>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="5%" class="text-center">#</th>
+                            <th width="15%">កាលបរិច្ឆេទ</th>
+                            <th width="20%">ព័ត៌មានបេក្ខជន</th>
+                            <th width="40%">ចំណុចដែលស្នើសុំកែតម្រូវ</th>
+                            <th width="20%" class="text-center">សកម្មភាព</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if requests %}
+                            {% for req in requests %}
+                            <tr>
+                                <td class="text-center fw-bold text-muted">{{ loop.index }}</td>
+                                <td>
+                                    <div class="text-secondary small">
+                                        <i class="far fa-calendar-alt me-1"></i> {{ req.created_at.strftime('%Y-%m-%d %H:%M') if req.created_at else '' }}
+                                    </div>
+                                    <span class="badge bg-warning text-dark mt-1">{{ req.status }}</span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-primary">{{ req.application_no }}</div>
+                                    <div class="text-muted small">{{ req.name_en or 'គ្មានឈ្មោះ' }}</div>
+                                </td>
+                                <td>
+                                    <ul class="list-unstyled mb-0">
+                                        {% for change in req.changes %}
+                                        <li class="mb-2 p-2 rounded bg-light border">
+                                            <span class="badge bg-secondary me-2">{{ change.field }}</span>
+                                            <span class="text-danger text-decoration-line-through small">{{ change.old }}</span>
+                                            <i class="fas fa-arrow-right mx-2 text-muted"></i>
+                                            <span class="text-success fw-bold">{{ change.new }}</span>
+                                        </li>
+                                        {% else %}
+                                        <li class="text-muted fst-italic">មិនមានទិន្នន័យលម្អិត</li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
+                                <td class="text-center">
+                                    <form action="{{ url_for('handle_correction') }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="request_id" value="{{ req.id }}">
+                                        
+                                        <button type="submit" name="action" value="approve" class="btn btn-sm btn-success me-1 mb-1 shadow-sm" onclick="return confirm('តើអ្នកពិតជាចង់អនុម័តសំណើនេះមែនទេ?');">
+                                            <i class="fas fa-check"></i> អនុម័ត
+                                        </button>
+                                        
+                                        <button type="submit" name="action" value="reject" class="btn btn-sm btn-danger mb-1 shadow-sm" onclick="return confirm('តើអ្នកពិតជាចង់បដិសេធសំណើនេះមែនទេ?');">
+                                            <i class="fas fa-times"></i> បដិសេធ
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="fas fa-inbox fa-3x mb-3 text-light"></i>
+                                    <h5>មិនមានសំណើកែតម្រូវថ្មីៗទេ</h5>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}សំណើកែប្រែព័ត៌មាន | EPS System{% endblock %}
+{% block page_title %}សំណើកែប្រែព័ត៌មានបេក្ខជន{% endblock %}
+
+{% block head %}
+<style>
+    .font-code { font-family: 'Courier New', Courier, monospace; font-weight: bold; font-size: 1.05rem; }
+    .summary-card { background: #ffffff; border-radius: 10px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.04); position: relative; transition: all 0.3s ease; }
+    .summary-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.08); }
+    .summary-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; border-radius: 10px 0 0 10px; }
+    .card-primary::before { background-color: #0d6efd; }
+    .card-warning::before { background-color: #ffc107; }
+    .card-success::before { background-color: #198754; }
+    .card-danger::before { background-color: #dc3545; }
+    .icon-circle { width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .card-custom { border: none; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); background: #fff; }
+    .filter-label { font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 0.4rem; }
+    .request-item { border-left: 4px solid #dee2e6; border-radius: 10px; transition: all 0.2s; }
+    .request-item:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.08) !important; }
+    .request-pending { border-left-color: #ffc107; }
+    .request-approved { border-left-color: #198754; }
+    .request-rejected { border-left-color: #dc3545; }
+    .note-box { background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 1.2rem; }
+    .btn-uniform { min-width: 110px; display: inline-flex; align-items: center; justify-content: center; padding: 0.4rem 0.5rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0 mb-5">
+    
+    <div class="d-flex flex-column mb-4 mt-1">
+        <h4 class="mb-1 fw-bold text-dark">
+            <i class="fas fa-edit text-primary me-2"></i>សំណើកែប្រែព័ត៌មានបេក្ខជន
+        </h4>
+        <div class="text-muted fw-bold">
+            ពិនិត្យ អនុម័ត ឬបដិសេធសំណើកែប្រែព័ត៌មានបេក្ខជនសម្រាប់វគ្គប្រឡងបច្ចុប្បន្ន
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card summary-card card-primary h-100">
+                <div class="card-body p-4 d-flex flex-column justify-content-center">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h6 class="text-muted fw-bold mb-1">សំណើសរុប</h6>
+                            <h2 class="fw-bolder text-dark mb-0">{{ all_time_summary.total_all or 0 }}</h2>
+                        </div>
+                        <div class="icon-circle bg-primary bg-opacity-10 text-primary"><i class="fas fa-file-alt"></i></div>
+                    </div>
+                    <div class="border-top pt-2 d-flex justify-content-between text-muted small fw-bold">
+                        <span>ថ្ងៃនេះ: <span class="text-dark">{{ today_summary.total_today or 0 }}</span></span>
+                        <span class="text-danger"><i class="fas fa-female"></i> ស្រី: {{ all_time_summary.total_female_all or 0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card summary-card card-warning h-100">
+                <div class="card-body p-4 d-flex flex-column justify-content-center">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h6 class="text-muted fw-bold mb-1">កំពុងរង់ចាំ</h6>
+                            <h2 class="fw-bolder text-dark mb-0">{{ all_time_summary.pending_all or 0 }}</h2>
+                        </div>
+                        <div class="icon-circle bg-warning bg-opacity-10 text-warning"><i class="fas fa-hourglass-half"></i></div>
+                    </div>
+                    <div class="border-top pt-2 d-flex justify-content-between text-muted small fw-bold">
+                        <span>ថ្ងៃនេះ: <span class="text-dark">{{ today_summary.pending_today or 0 }}</span></span>
+                        <span class="text-danger"><i class="fas fa-female"></i> ស្រី: {{ all_time_summary.pending_female_all or 0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card summary-card card-success h-100">
+                <div class="card-body p-4 d-flex flex-column justify-content-center">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h6 class="text-muted fw-bold mb-1">អនុម័តរួច</h6>
+                            <h2 class="fw-bolder text-dark mb-0">{{ all_time_summary.approved_all or 0 }}</h2>
+                        </div>
+                        <div class="icon-circle bg-success bg-opacity-10 text-success"><i class="fas fa-check-circle"></i></div>
+                    </div>
+                    <div class="border-top pt-2 d-flex justify-content-between text-muted small fw-bold">
+                        <span>ថ្ងៃនេះ: <span class="text-dark">{{ today_summary.approved_today or 0 }}</span></span>
+                        <span class="text-danger"><i class="fas fa-female"></i> ស្រី: {{ all_time_summary.approved_female_all or 0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card summary-card card-danger h-100">
+                <div class="card-body p-4 d-flex flex-column justify-content-center">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h6 class="text-muted fw-bold mb-1">បានបដិសេធ</h6>
+                            <h2 class="fw-bolder text-dark mb-0">{{ all_time_summary.rejected_all or 0 }}</h2>
+                        </div>
+                        <div class="icon-circle bg-danger bg-opacity-10 text-danger"><i class="fas fa-ban"></i></div>
+                    </div>
+                    <div class="border-top pt-2 d-flex justify-content-between text-muted small fw-bold">
+                        <span>ថ្ងៃនេះ: <span class="text-dark">{{ today_summary.rejected_today or 0 }}</span></span>
+                        <span class="text-danger"><i class="fas fa-female"></i> ស្រី: {{ all_time_summary.rejected_female_all or 0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-custom mb-4">
+        <div class="card-body p-3">
+            <form action="/admin/requests" method="GET" class="m-0 row g-3 align-items-end">
+                <div class="col-md-2">
+                    <label class="filter-label">ស្ថានភាពសំណើ</label>
+                    <select name="status" class="form-select fw-bold shadow-sm text-dark">
+                        <option value="All" {% if status_filter == 'All' %}selected{% endif %}>-- ទាំងអស់ --</option>
+                        <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>កំពុងរង់ចាំ</option>
+                        <option value="Approved" {% if status_filter == 'Approved' %}selected{% endif %}>បានអនុម័ត</option>
+                        <option value="Rejected" {% if status_filter == 'Rejected' %}selected{% endif %}>បានបដិសេធ</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="filter-label">ចាប់ពីថ្ងៃទី</label>
+                    <input type="date" name="start_date" class="form-control shadow-sm fw-bold" value="{{ start_date }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="filter-label">ដល់ថ្ងៃទី</label>
+                    <input type="date" name="end_date" class="form-control shadow-sm fw-bold" value="{{ end_date }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="filter-label">ស្វែងរកលេខកូដបេក្ខជន</label>
+                    <input type="text" name="search_query" class="form-control shadow-sm fw-bold" placeholder="វាយបញ្ចូលទីនេះ..." value="{{ search_query }}">
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold shadow-sm"><i class="fas fa-search me-1"></i> ស្វែងរក</button>
+                    <a href="/admin/requests" class="btn btn-outline-secondary shadow-sm" title="ជម្រះទិន្នន័យ"><i class="fas fa-sync-alt"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0 fw-bold text-dark">លទ្ធផលស្វែងរក <span class="badge bg-primary rounded-pill shadow-sm ms-2 fs-6 px-3">{{ requests|length }}</span></h5>
+    </div>
+    
+    {% if requests %}
+        <div class="row">
+            {% for req in requests %}
+            <div class="col-12 mb-3">
+                <div class="card card-custom request-item shadow-sm bg-white {% if req.status == 'Pending' %}request-pending{% elif req.status == 'Approved' %}request-approved{% else %}request-rejected{% endif %}">
+                    <div class="card-body p-4">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
+                            <div class="d-flex flex-column">
+                                <div class="d-flex align-items-center gap-3 mb-2">
+                                    {% if req.status == 'Pending' %}
+                                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill shadow-sm"><i class="fas fa-spinner fa-spin me-1"></i> កំពុងរង់ចាំ</span>
+                                    {% elif req.status == 'Approved' %}
+                                        <span class="badge bg-success px-3 py-2 rounded-pill shadow-sm"><i class="fas fa-check-circle me-1"></i> បានអនុម័ត</span>
+                                    {% elif req.status == 'Rejected' %}
+                                        <span class="badge bg-danger px-3 py-2 rounded-pill shadow-sm"><i class="fas fa-times-circle me-1"></i> បានបដិសេធ</span>
+                                    {% endif %}
+                                    <span class="text-muted fw-bold small"><i class="far fa-clock me-1"></i> {{ req.created_at or 'មិនបញ្ជាក់' }}</span>
+                                </div>
+                                <div class="fw-bold fs-5 text-dark mb-1">លេខបេក្ខជន៖ <span class="font-code text-primary">{{ req.application_no }}</span></div>
+                                <div class="text-muted fw-bold small"><i class="fas fa-user-edit text-info me-1"></i> ស្នើដោយ៖ {{ req.history_by or 'ប្រព័ន្ធ' }}</div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 justify-content-start justify-content-lg-end">
+                                {% if req.status == 'Pending' %}
+                                    <button type="button" class="btn btn-secondary btn-sm fw-bold shadow-sm btn-uniform" onclick="processRequest('{{ req.id }}', 'Deleted')"><i class="fas fa-trash-alt me-1"></i> បោះបង់</button>
+                                    <button type="button" class="btn btn-danger btn-sm fw-bold shadow-sm btn-uniform" onclick="processRequest('{{ req.id }}', 'Rejected')"><i class="fas fa-times-circle me-1"></i> បដិសេធ</button>
+                                    <button type="button" class="btn btn-success btn-sm fw-bold shadow-sm btn-uniform" onclick="processRequest('{{ req.id }}', 'Approved')"><i class="fas fa-check-circle me-1"></i> យល់ព្រម</button>
+                                {% endif %}
+                                <a href="/view_pdf/{{ req.id }}" class="btn btn-primary btn-sm fw-bold shadow-sm btn-uniform" target="_blank"><i class="fas fa-file-pdf me-1"></i> មើល PDF</a>
+                                <button type="button" class="btn btn-info text-white btn-sm fw-bold shadow-sm btn-uniform" data-id="{{ req.id }}" data-app="{{ req.application_no }}" data-seat="{{ req.seat_no }}" data-date="{{ req.created_at }}" data-note="{{ req.correction_note }}" data-status="{{ req.status }}" onclick="openDetailsModal(this)"><i class="fas fa-eye me-1"></i> លម្អិត</button>
+                            </div>
+                        </div>
+                        <div class="note-box mt-4 shadow-sm">
+                            <h6 class="fw-bold text-dark mb-2"><i class="fas fa-list-ul text-primary me-2"></i>ព័ត៌មានដែលស្នើកែប្រែ៖</h6>
+                            <div class="fw-bold ms-4 text-dark fs-6">{{ req.correction_note }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card card-custom border-0 py-5 text-center shadow-sm">
+            <div class="card-body">
+                <i class="fas fa-folder-open fa-4x mb-3 text-secondary opacity-50"></i>
+                <h5 class="fw-bold text-dark">មិនមានទិន្នន័យទេ</h5>
+                <p class="text-muted">មិនមានសំណើដែលត្រូវនឹងលក្ខខណ្ឌដែលអ្នកបានស្វែងរកឡើយ។</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-light border-bottom px-4 py-3">
+                <h5 class="modal-title fw-bold text-dark"><i class="fas fa-exchange-alt me-2 text-primary"></i>ប្រៀបធៀបទិន្នន័យ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 bg-white">
+                <h6 class="text-primary fw-bold mb-3 small text-uppercase">ព័ត៌មានផ្ទៀងផ្ទាត់</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label class="filter-label">លេខកូដប្រឡង</label>
+                        <input type="text" class="form-control bg-light fw-bold font-code text-primary" id="m_app_no" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="filter-label">តុលេខ</label>
+                        <input type="text" class="form-control bg-light fw-bold text-dark" id="m_seat_no" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="filter-label">ថ្ងៃស្នើសុំ</label>
+                        <input type="text" class="form-control bg-light fw-bold text-dark" id="m_date" readonly>
+                    </div>
+                </div>
+                <h6 class="text-primary fw-bold mb-3 small text-uppercase mt-4">ចំណារកែប្រែ (ថ្មី ទល់នឹង ចាស់)</h6>
+                <div class="row align-items-center mb-3">
+                    <div class="col-12">
+                        <div class="note-box d-flex align-items-start border border-warning shadow-sm" style="background-color: #fffdf5;">
+                            <i class="fas fa-edit text-warning fa-2x me-3 mt-1"></i>
+                            <div id="m_note" class="text-dark w-100"></div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-muted small mt-4 text-center fw-bold">* ចំណាំ៖ ការចុចយល់ព្រមនឹងធ្វើឱ្យទិន្នន័យនេះត្រូវបានកត់ត្រាជាផ្លូវការចូលក្នុងប្រព័ន្ធ។</p>
+            </div>
+            <div class="modal-footer bg-light d-flex justify-content-between border-top px-4 py-3 rounded-bottom-4">
+                <button type="button" class="btn btn-secondary px-4 fw-bold shadow-sm" data-bs-dismiss="modal">បិទផ្ទាំង</button>
+                <div id="modal_action_buttons">
+                    <button type="button" class="btn btn-danger px-4 me-2 fw-bold shadow-sm" id="modal_btn_reject"><i class="fas fa-times-circle me-1"></i> បដិសេធ</button>
+                    <button type="button" class="btn btn-success px-4 fw-bold shadow-sm" id="modal_btn_approve"><i class="fas fa-check-circle me-1"></i> យល់ព្រម</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function openDetailsModal(btnElement) {
+        const id = btnElement.getAttribute('data-id');
+        const appNo = btnElement.getAttribute('data-app');
+        const seatNo = btnElement.getAttribute('data-seat');
+        const dateStr = btnElement.getAttribute('data-date');
+        const noteText = btnElement.getAttribute('data-note') || '';
+        const reqStatus = btnElement.getAttribute('data-status');
+
+        document.getElementById('m_app_no').value = appNo;
+        document.getElementById('m_seat_no').value = seatNo || 'មិនមាន';
+        document.getElementById('m_date').value = dateStr || 'មិនបញ្ជាក់';
+
+        let formattedNote = noteText;
+        if (noteText.includes('[')) {
+            let parts = noteText.split('[');
+            let listHtml = '<ul class="list-unstyled mb-0 w-100">';
+            for(let i = 1; i < parts.length; i++) {
+                let cleanChange = parts[i].replace(/\], /g, '').replace(/\]/g, '').trim();
+                let icon = 'fa-pen text-secondary';
+                if(cleanChange.includes('ឈ្មោះ')) icon = 'fa-user-edit text-primary';
+                else if(cleanChange.includes('ភេទ')) icon = 'fa-venus-mars text-info';
+                else if(cleanChange.includes('ថ្ងៃកំណើត')) icon = 'fa-calendar-alt text-warning';
+                else if(cleanChange.includes('ID') || cleanChange.includes('Passport')) icon = 'fa-id-card text-danger';
+
+                listHtml += `<li class="mb-3 border-bottom pb-2 d-flex align-items-start"><div class="me-3 mt-1" style="width: 25px; text-align: center;"><i class="fas ${icon} fa-lg"></i></div> <span class="fs-6 fw-bold text-dark">${cleanChange}</span></li>`;
+            }
+            listHtml += '</ul>';
+            formattedNote = listHtml;
+        } else {
+             formattedNote = `<span class="fw-bold d-block mt-2">${noteText}</span>`;
+        }
+
+        document.getElementById('m_note').innerHTML = formattedNote;
+
+        if(reqStatus !== 'Pending') {
+            document.getElementById('modal_action_buttons').style.display = 'none';
+        } else {
+            document.getElementById('modal_action_buttons').style.display = 'block';
+            document.getElementById('modal_btn_reject').onclick = () => { processRequest(id, 'Rejected'); };
+            document.getElementById('modal_btn_approve').onclick = () => { processRequest(id, 'Approved'); };
+        }
+
+        const modalElement = document.getElementById('detailsModal');
+        const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+        modalInstance.show();
+    }
+
+    function processRequest(reqId, actionStatus) {
+        let confirmMsg = "";
+        if (actionStatus === 'Approved') confirmMsg = "តើអ្នកពិតជាចង់អនុម័តសំណើនេះមែនទេ?";
+        else if (actionStatus === 'Rejected') confirmMsg = "តើអ្នកពិតជាចង់បដិសេធសំណើនេះមែនទេ?";
+        else if (actionStatus === 'Deleted') confirmMsg = "តើអ្នកពិតជាចង់បោះបង់ និងលុបសំណើនេះចោលមែនទេ?";
+
+        if (!confirm(confirmMsg)) return;
+
+        fetch('/admin/process_request', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: reqId, status: actionStatus })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') { location.reload(); } 
+            else { alert("⚠️ បញ្ហា: " + data.message); }
+        }).catch(error => { alert("មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ប្រព័ន្ធ!"); });
+    }
+</script>
+{% endblock %}

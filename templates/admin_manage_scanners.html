@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <h2 class="fw-bold text-primary mb-0"><i class="fas fa-print me-2"></i> គ្រប់គ្រងប្រតិបត្តិការស្កេនឯកសារ</h2>
+        
+        <button type="button" class="btn btn-success btn-lg fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#exportScannerModal">
+            <i class="fas fa-file-excel me-2"></i> ទាញយកជារបាយការណ៍ Excel
+        </button>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-3 bg-primary text-white h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="fs-1 me-3"><i class="fas fa-file-alt"></i></div>
+                    <div>
+                        <h6 class="mb-1 text-white-50">បេក្ខជនត្រូវស្កេនសរុប (ថ្ងៃនេះ)</h6>
+                        <h2 class="mb-0 fw-bold"><span id="stat_total_approved">0</span> <span class="fs-6 fw-normal">នាក់</span></h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-3 bg-success text-white h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="fs-1 me-3"><i class="fas fa-check-circle"></i></div>
+                    <div>
+                        <h6 class="mb-1 text-white-50">ស្កេនរួចរាល់ (Scanned)</h6>
+                        <h2 class="mb-0 fw-bold">
+                            <span id="stat_total_scanned">0</span> <span class="fs-6 fw-normal">នាក់</span>
+                        </h2>
+                        <div class="small text-white-50 mt-1 fw-bold">
+                            (ស្រី៖ <span id="stat_female_scanned">0</span> នាក់)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-3 text-white h-100" style="background-color: #f39c12;">
+                <div class="card-body d-flex align-items-center">
+                    <div class="fs-1 me-3"><i class="fas fa-clock"></i></div>
+                    <div>
+                        <h6 class="mb-1 text-white-50">កំពុងរង់ចាំ / បាត់កណ្តាលទី (Pending)</h6>
+                        <h2 class="mb-0 fw-bold"><span id="stat_total_pending">0</span> <span class="fs-6 fw-normal">នាក់</span></h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-7">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-users-cog text-primary me-2"></i> របាយការណ៍មន្ត្រីស្កេនថ្ងៃនេះ</h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">ឈ្មោះមន្ត្រី (Officer Name)</th>
+                                <th class="text-center">ស្កេនបានសរុប</th>
+                            </tr>
+                        </thead>
+                        <tbody id="officers_table_body">
+                            <tr><td colspan="2" class="text-center text-muted py-4">កំពុងទាញយកទិន្នន័យ...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-exclamation-triangle text-warning me-2"></i> បញ្ជីរង់ចាំ (Pending)</h5>
+                    <span class="badge bg-warning text-dark rounded-pill" id="badge_pending_count">0 នាក់</span>
+                </div>
+                <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover table-sm align-middle mb-0">
+                        <thead class="table-light" style="position: sticky; top: 0;">
+                            <tr>
+                                <th class="ps-3">ម៉ោងទទួល</th>
+                                <th>លេខរង់ចាំ</th>
+                                <th>លេខកូដប្រឡង</th> 
+                                <th>ឈ្មោះបេក្ខជន</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pending_table_body">
+                            <tr><td colspan="4" class="text-center text-muted py-4">កំពុងទាញយកទិន្នន័យ...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="exportScannerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <form action="{{ url_for('queue.export_scanners_report') }}" method="POST">
+                <div class="modal-header bg-success text-white border-0">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-file-excel me-2"></i>ទាញយករបាយការណ៍ស្កេន (Excel)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-info border-0 rounded-3 small">
+                        <i class="fas fa-info-circle me-1"></i> អ្នកអាចទាញយករបាយការណ៍សម្រាប់តែថ្ងៃនេះ ឬកំណត់ចន្លោះថ្ងៃដែលអ្នកចង់បាន។
+                    </div>
+                    
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">ចាប់ពីថ្ងៃទី <span class="text-danger">*</span></label>
+                            <input type="date" name="start_date" class="form-control" required id="scanStartDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">ដល់ថ្ងៃទី <span class="text-danger">*</span></label>
+                            <input type="date" name="end_date" class="form-control" required id="scanEndDate">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-light py-3 px-4">
+                    <button type="button" class="btn btn-secondary px-4 fw-bold rounded-pill" data-bs-dismiss="modal">បោះបង់</button>
+                    <button type="submit" class="btn btn-success px-5 fw-bold rounded-pill shadow-sm"><i class="fas fa-download me-1"></i> ទាញយក</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        // 🌟 កំណត់កាលបរិច្ឆេទថ្ងៃនេះចូលទៅក្នុងប្រអប់ Modal ដោយស្វ័យប្រវត្តិ
+        var today = new Date().toISOString().split('T')[0];
+        document.getElementById('scanStartDate').value = today;
+        document.getElementById('scanEndDate').value = today;
+
+        function fetchScannerData() {
+            fetch("{{ url_for('queue.get_admin_scanners_data') }}")
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    
+                    // ១. Update កាតស្ថិតិ
+                    const stats = data.stats;
+                    document.getElementById('stat_total_approved').innerText = stats.total_approved || 0;
+                    document.getElementById('stat_total_scanned').innerText = stats.total_scanned || 0;
+                    document.getElementById('stat_female_scanned').innerText = stats.female_scanned || 0;
+                    document.getElementById('stat_total_pending').innerText = stats.total_pending || 0;
+                    document.getElementById('badge_pending_count').innerText = (stats.total_pending || 0) + ' នាក់';
+
+                    // ២. Update តារាងមន្ត្រី
+                    const officersBody = document.getElementById('officers_table_body');
+                    officersBody.innerHTML = '';
+                    if(data.officers && data.officers.length > 0) {
+                        data.officers.forEach(o => {
+                            officersBody.innerHTML += `
+                                <tr>
+                                    <td class="ps-4 fw-bold"><i class="fas fa-user-tie text-secondary me-2"></i> ${o.full_name}</td>
+                                    <td class="text-center">
+                                        <div class="d-inline-flex align-items-center bg-light border rounded-pill px-3 py-1 shadow-sm">
+                                            <div title="ទទួលពាក្យសរុប"><i class="fas fa-users text-primary me-1"></i><span class="fw-bold text-dark fs-6">${o.processed_today || 0}</span></div>
+                                            <div class="border-start border-2 ms-2 ps-2" title="បេក្ខជនស្រី"><i class="fas fa-female text-danger me-1"></i><span class="fw-bold text-dark fs-6">${o.female_processed_today || 0}</span></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        officersBody.innerHTML = '<tr><td colspan="2" class="text-center text-muted py-4">មិនទាន់មានមន្ត្រីស្កេនឯកសារនៅឡើយទេថ្ងៃនេះ</td></tr>';
+                    }
+
+                    // ៣. Update តារាងបញ្ជីរង់ចាំ (Pending)
+                    const pendingBody = document.getElementById('pending_table_body');
+                    pendingBody.innerHTML = '';
+                    if(data.pending_list && data.pending_list.length > 0) {
+                        data.pending_list.forEach(p => {
+                            pendingBody.innerHTML += `
+                                <tr>
+                                    <td class="ps-3 text-muted"><i class="far fa-clock me-1"></i> ${p.approved_time}</td>
+                                    <td><span class="badge bg-secondary">${p.queue_number}</span></td>
+                                    <td class="text-primary fw-bold">${p.application_no}</td> 
+                                    <td class="fw-bold text-dark">${p.full_name_kh}</td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        pendingBody.innerHTML = '<tr><td colspan="4" class="text-center text-success py-4"><i class="fas fa-check-circle fs-4 mb-2 d-block"></i> មិនមានបេក្ខជនរង់ចាំទេ (ស្កេនអស់ហើយ)</td></tr>';
+                    }
+                }
+            })
+            .catch(err => console.error("Error fetching scanner data:", err));
+        }
+
+        fetchScannerData();
+        setInterval(fetchScannerData, 5000);
+    });
+</script>
+{% endblock %}

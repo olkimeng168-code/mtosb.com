@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ចូលប្រព័ន្ធបេក្ខជន - EPS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Moul&family=Siemreap&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: 'Siemreap', sans-serif; 
+            background-color: #f0f4f8; 
+            color: #333a40;
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; margin: 0; padding: 10px;
+        }
+
+        .login-card {
+            background: #ffffff; border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(2, 48, 94, 0.1);
+            width: 100%; max-width: 400px; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.8); position: relative;
+        }
+
+        .login-header {
+            background-color: #02305e; color: #ffffff;
+            padding: 20px 15px 15px; text-align: center;
+            position: relative; overflow: hidden;
+            display: flex; align-items: center; justify-content: center; gap: 15px;
+        }
+
+        .login-header::after {
+            content: ''; position: absolute; top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(0, 242, 254, 0.15) 0%, transparent 60%); z-index: 0;
+        }
+
+        .logo-circle {
+            width: 50px; height: 50px;
+            background: linear-gradient(135deg, #ffc107, #ff9800);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; color: #ffffff; z-index: 1;
+            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.3); border: 2px solid #ffffff;
+        }
+
+        .header-text { 
+            position: relative; z-index: 1; text-align: center;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        
+        .header-title-kh { font-family: 'Moul', serif; font-size: 1.1rem; line-height: 1.6; margin-bottom: 3px; }
+        .header-subtitle-en { font-family: Arial, sans-serif; font-size: 0.75rem; letter-spacing: 1px; color: rgba(255, 255, 255, 0.7); margin: 0; line-height: 1; }
+        
+        /* ---------------- UI ស្កេនមុខ ---------------- */
+        .biometric-container { display: flex; flex-direction: column; align-items: center; padding: 10px 0 5px; }
+
+        .status-badge {
+            background: rgba(2, 48, 94, 0.05); color: #02305e; padding: 8px 20px;
+            border-radius: 30px; font-weight: bold; font-size: 0.9rem;
+            margin-bottom: 20px; border: 1px solid rgba(2, 48, 94, 0.1);
+            transition: all 0.3s; text-align: center;
+        }
+
+        .camera-outer-wrapper {
+            position: relative; width: 280px; height: 280px;
+            margin-bottom: 25px; display: flex; justify-content: center; align-items: center;
+        }
+
+        .tech-ring {
+            position: absolute; width: 100%; height: 100%; border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent 70%, #00f2fe 100%);
+            animation: spin 2s linear infinite; display: none; z-index: 1;
+        }
+        .tech-ring::before { content: ''; position: absolute; inset: 4px; background: #ffffff; border-radius: 50%; }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .camera-mask {
+            width: 260px; height: 260px; border-radius: 50%; overflow: hidden; position: relative; z-index: 2;
+            background-color: #f8fafc; box-shadow: inset 0 6px 20px rgba(0,0,0,0.08); border: 4px solid #e2e8f0; transition: border-color 0.4s;
+        }
+
+        #videoElement { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none; }
+
+        .laser-scanner {
+            position: absolute; left: 0; width: 100%; height: 60px;
+            background: linear-gradient(to bottom, rgba(0, 242, 254, 0) 0%, rgba(0, 242, 254, 0.4) 100%);
+            border-bottom: 2px solid #00f2fe; animation: sweep 2s ease-in-out infinite alternate; display: none; z-index: 3;
+        }
+
+        @keyframes sweep { 0% { top: -20%; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+
+        .reticle { position: absolute; width: 30px; height: 30px; border-color: rgba(2, 48, 94, 0.3); border-style: solid; z-index: 4; transition: all 0.3s; }
+        .reticle.tl { top: -5px; left: -5px; border-width: 3px 0 0 3px; border-top-left-radius: 15px; }
+        .reticle.tr { top: -5px; right: -5px; border-width: 3px 3px 0 0; border-top-right-radius: 15px; }
+        .reticle.bl { bottom: -5px; left: -5px; border-width: 0 0 3px 3px; border-bottom-left-radius: 15px; }
+        .reticle.br { bottom: -5px; right: -5px; border-width: 0 3px 3px 0; border-bottom-right-radius: 15px; }
+
+        .camera-placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #cbd5e1; width: 100%; }
+
+        .success-overlay { position: absolute; inset: 0; background: rgba(255, 255, 255, 0.9); z-index: 10; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.4s; }
+        .success-icon { font-size: 5rem; color: #10b981; transform: scale(0.5); transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+        .btn-modern { border-radius: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; transition: all 0.2s; border: none; font-family: 'Siemreap', sans-serif; }
+        .btn-blue { background: #02305e; color: white; box-shadow: 0 6px 15px rgba(2, 48, 94, 0.2); }
+        .btn-scan { background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: white; box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4); }
+
+        .form-control, .form-select { border-radius: 12px; padding: 12px 15px; background-color: #f8fafc; border: 1px solid #e2e8f0; color: #1e293b; font-family: 'Siemreap', sans-serif; }
+        .form-control:focus, .form-select:focus { box-shadow: 0 0 0 4px rgba(2, 48, 94, 0.1); border-color: #02305e; background-color: #ffffff; }
+
+        .fallback-link { font-size: 0.95rem; color: #64748b; text-decoration: none; font-weight: bold; padding: 10px; display: block; text-align: center; }
+        .fallback-link:hover { color: #02305e; }
+
+        /* លាក់ទម្រង់ Manual ជាស្រេច */
+        #manualLoginSection { display: none; }
+        
+        /* 🔴 តុបតែងប្រអប់លេខកូដឱ្យលេចធ្លោ */
+        .app-no-input-wrapper {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="login-header">
+            <div class="logo-circle"><i class="fas fa-shield-alt"></i></div>
+            <div class="header-text">
+                <div class="header-title-kh">ផ្ទៀងផ្ទាត់អត្តសញ្ញាណ</div>
+                <div class="header-subtitle-en">CANDIDATE LOGIN</div> 
+            </div>
+        </div>
+
+        <div class="p-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} small fw-bold text-center rounded-3 p-2 mb-3">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div id="faceScanSection">
+                <div class="biometric-container">
+                    
+                    <div class="camera-outer-wrapper mt-2">
+                        <div class="reticle tl" id="ret1"></div><div class="reticle tr" id="ret2"></div>
+                        <div class="reticle bl" id="ret3"></div><div class="reticle br" id="ret4"></div>
+                        <div class="tech-ring" id="techRing"></div>
+                        <div class="camera-mask" id="cameraMask">
+                            <div class="laser-scanner" id="laserScanner"></div>
+                            <div class="camera-placeholder" id="cameraPlaceholder">
+                                <i class="fas fa-user-lock fa-3x mb-2"></i><div class="small fw-bold">កាមេរ៉ាបិទ</div>
+                            </div>
+                            <video id="videoElement" autoplay playsinline muted></video>
+                            <div class="success-overlay" id="successOverlay"><i class="fas fa-check-circle success-icon" id="successIcon"></i></div>
+                        </div>
+                    </div>
+
+                    <div class="status-badge mt-0 mb-3" id="statusBadge"><i class="fas fa-info-circle me-1"></i> អនុញ្ញាតកាមេរ៉ាជាមុនសិន</div>
+
+                    <div class="app-no-input-wrapper w-100 mb-3 p-3">
+                        <label class="form-label text-primary fw-bold mb-2 text-center w-100" style="font-size: 0.95rem;">
+                            <i class="fas fa-barcode me-1"></i> លេខកូដប្រឡង (១៦ខ្ទង់)
+                        </label>
+                        <input type="text" id="face_app_no" class="form-control text-center font-monospace fw-bold fs-5 text-uppercase" placeholder="ឧ. 0022026C502XXXXX" maxlength="16" oninput="this.value = this.value.toUpperCase()">
+                    </div>
+
+                    <button type="button" class="btn w-100 btn-modern btn-blue" id="btnStartCamera" onclick="startCamera()">
+                        <i class="fas fa-camera me-2"></i> បើកកាមេរ៉ា
+                    </button>
+                    <button type="button" class="btn w-100 btn-modern btn-scan d-none" id="btnCapture" onclick="captureAndLogin()">
+                        <i class="fas fa-fingerprint me-2"></i> ស្កេនផ្ទៀងផ្ទាត់
+                    </button>
+
+                    <!-- 🔴 Comment បិទមុខងារ Manual Fallback សិន
+                    <div id="manual_fallback_link" class="d-none mt-3">
+                        <a href="#" class="fallback-link text-danger" onclick="switchView('manual')">
+                            <i class="fas fa-keyboard me-2"></i> បញ្ចូលទិន្នន័យដោយផ្ទាល់ (Manual Login)
+                        </a>
+                    </div>
+                    -->
+                </div>
+                <canvas id="canvasElement" style="display:none;"></canvas>
+            </div>
+
+            <!-- 🔴 Comment បិទផ្នែកទម្រង់ Manual Login ទាំងមូលសិន
+            <div id="manualLoginSection">
+                <div class="text-center mb-4">
+                    <h6 class="fw-bold text-primary">ទម្រង់ចូលប្រព័ន្ធដោយផ្ទាល់</h6>
+                    <p class="text-muted small">សូមបញ្ចូលព័ត៌មានខាងក្រោមឲ្យបានត្រឹមត្រូវ</p>
+                </div>
+
+                <form action="/candidate/manual_login" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold">លេខកូដប្រឡង (១៦ខ្ទង់) *</label>
+                        <input type="text" class="form-control text-uppercase" name="application_no" id="manual_app_no" placeholder="ឧ. 0022026C502XXXXX" required maxlength="16">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold">លេខ ID / Passport *</label>
+                        <input type="text" class="form-control text-uppercase" name="id_passport" placeholder="បញ្ចូលលេខអត្តសញ្ញាណប័ណ្ណ" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label text-muted small fw-bold">ថ្ងៃខែឆ្នាំកំណើត *</label>
+                        <div class="row g-2">
+                            <div class="col-4"><select class="form-select text-center" name="dob_day" id="dob_day" required><option value="">- ថ្ងៃ -</option></select></div>
+                            <div class="col-4">
+                                <select class="form-select text-center px-1" name="dob_month" required>
+                                    <option value="">- ខែ -</option><option value="01">មករា</option><option value="02">កុម្ភៈ</option><option value="03">មីនា</option><option value="04">មេសា</option><option value="05">ឧសភា</option><option value="06">មិថុនា</option><option value="07">កក្កដា</option><option value="08">សីហា</option><option value="09">កញ្ញា</option><option value="10">តុលា</option><option value="11">វិច្ឆិកា</option><option value="12">ធ្នូ</option>
+                                </select>
+                            </div>
+                            <div class="col-4"><select class="form-select text-center" name="dob_year" id="dob_year" required><option value="">- ឆ្នាំ -</option></select></div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn w-100 btn-modern btn-blue mb-3">ចូលប្រព័ន្ធ</button>
+
+                    <a href="#" class="fallback-link" style="margin-top: 5px;" onclick="switchView('face')">
+                        <i class="fas fa-expand me-2"></i> ត្រឡប់ទៅស្កេនមុខវិញ
+                    </a>
+                </form>
+            </div>
+            -->
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ១. បង្កើតថ្ងៃ និង ឆ្នាំ
+        document.addEventListener("DOMContentLoaded", function() {
+            let daySelect = document.getElementById('dob_day');
+            if (daySelect) {
+                for (let i = 1; i <= 31; i++) { let val = i < 10 ? '0' + i : i; daySelect.innerHTML += `<option value="${val}">${val}</option>`; }
+            }
+            let yearSelect = document.getElementById('dob_year');
+            if (yearSelect) {
+                let currentYear = new Date().getFullYear();
+                for (let i = currentYear - 18; i >= currentYear - 40; i--) { yearSelect.innerHTML += `<option value="${i}">${i}</option>`; }
+            }
+        });
+
+        // ២. គ្រប់គ្រងការប្តូរ View
+        const faceSection = document.getElementById('faceScanSection');
+        // const manualSection = document.getElementById('manualLoginSection'); // 🔴 Comment បិទសិនការពារ JS Error
+
+        function switchView(viewName) {
+            /* 🔴 Comment បិទមុខងារ Switch View នេះសិន
+            if (viewName === 'manual') {
+                faceSection.style.display = 'none';
+                manualSection.style.display = 'block';
+                document.getElementById('manual_app_no').value = document.getElementById('face_app_no').value;
+                stopCamera(); 
+            } else {
+                manualSection.style.display = 'none';
+                faceSection.style.display = 'block';
+            }
+            */
+        }
+
+        // ៣. មុខងារកាមេរ៉ាស្កេនមុខ និង រាប់ចំនួនបរាជ័យ
+        const video = document.getElementById('videoElement');
+        const placeholder = document.getElementById('cameraPlaceholder');
+        const laserScanner = document.getElementById('laserScanner');
+        const techRing = document.getElementById('techRing');
+        const statusBadge = document.getElementById('statusBadge');
+        const cameraMask = document.getElementById('cameraMask');
+        const successOverlay = document.getElementById('successOverlay');
+        const successIcon = document.getElementById('successIcon');
+        const reticles = [document.getElementById('ret1'), document.getElementById('ret2'), document.getElementById('ret3'), document.getElementById('ret4')];
+        const btnStart = document.getElementById('btnStartCamera');
+        const btnCapture = document.getElementById('btnCapture');
+        
+        let stream = null;
+        let failedAttempts = 0; 
+
+        function updateStatus(text, bgColor, textColor, borderColor) {
+            statusBadge.innerHTML = text; statusBadge.style.background = bgColor; statusBadge.style.color = textColor; statusBadge.style.borderColor = borderColor;
+        }
+
+        async function startCamera() {
+            let appNo = document.getElementById('face_app_no').value.trim();
+            if (appNo.length < 16) {
+                alert("សូមបញ្ចូលលេខកូដប្រឡង ១៦ ខ្ទង់ឱ្យបានពេញលេញសិន មុននឹងបើកកាមេរ៉ា!");
+                document.getElementById('face_app_no').focus();
+                return;
+            }
+
+            btnStart.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> កំពុងភ្ជាប់...';
+            btnStart.disabled = true;
+
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 720 }, height: { ideal: 720 } } });
+                video.srcObject = stream;
+                placeholder.style.display = 'none'; video.style.display = 'block';
+                updateStatus('<i class="fas fa-expand me-2"></i> សូមដាក់ផ្ទៃមុខឲ្យចំកណ្តាលរង្វង់', 'rgba(0, 242, 254, 0.1)', '#0083B0', 'rgba(0, 242, 254, 0.3)');
+                cameraMask.style.borderColor = '#00f2fe';
+                reticles.forEach(r => r.style.borderColor = '#00f2fe');
+                
+                btnStart.classList.add('d-none'); btnStart.disabled = false;
+                btnStart.innerHTML = '<i class="fas fa-camera me-2"></i> បើកកាមេរ៉ា';
+                btnCapture.classList.remove('d-none');
+            } catch (err) {
+                alert("មិនអាចបើកកាមេរ៉ាបានទេ! សូមពិនិត្យការអនុញ្ញាត (Permissions)។");
+                btnStart.disabled = false; btnStart.innerHTML = '<i class="fas fa-camera me-2"></i> សាកល្បងម្តងទៀត';
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.style.display = 'none'; laserScanner.style.display = 'none'; techRing.style.display = 'none';
+                placeholder.style.display = 'block'; btnCapture.classList.add('d-none'); btnStart.classList.remove('d-none');
+                btnCapture.innerHTML = '<i class="fas fa-fingerprint me-2"></i> ស្កេនឥឡូវនេះ'; btnCapture.disabled = false;
+                updateStatus('<i class="fas fa-info-circle me-1"></i> អនុញ្ញាតកាមេរ៉ាជាមុនសិន', 'rgba(2, 48, 94, 0.05)', '#02305e', 'rgba(2, 48, 94, 0.1)');
+                cameraMask.style.borderColor = '#e2e8f0'; reticles.forEach(r => r.style.borderColor = 'rgba(2, 48, 94, 0.3)');
+                stream = null;
+            }
+        }
+
+        function captureAndLogin() {
+            let appNo = document.getElementById('face_app_no').value.trim();
+            if (appNo.length < 16) {
+                alert("សូមបញ្ចូលលេខកូដប្រឡង (១៦ខ្ទង់) ឱ្យបានត្រឹមត្រូវសិន មុននឹងស្កេន!"); 
+                document.getElementById('face_app_no').focus();
+                return;
+            }
+
+            btnCapture.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> កំពុងផ្ទៀងផ្ទាត់...';
+            btnCapture.disabled = true;
+            laserScanner.style.display = 'block'; techRing.style.display = 'block';
+            updateStatus('<i class="fas fa-spinner fa-spin me-2"></i> កំពុងវិភាគទិន្នន័យ...', 'rgba(245, 158, 11, 0.1)', '#d97706', 'rgba(245, 158, 11, 0.3)');
+            cameraMask.style.borderColor = '#f59e0b'; reticles.forEach(r => r.style.borderColor = '#f59e0b');
+
+            const canvas = document.getElementById('canvasElement');
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            context.translate(canvas.width, 0); context.scale(-1, 1);
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const imageData = canvas.toDataURL('image/jpeg', 0.6);
+            const randomDelay = Math.floor(Math.random() * 1500);
+
+            setTimeout(() => {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => { controller.abort(); }, 15000); 
+
+                fetch('/candidate/face_login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: imageData, application_no: appNo }),
+                    signal: controller.signal 
+                })
+                .then(res => {
+                    clearTimeout(timeoutId); 
+                    return res.json();
+                })
+                .then(data => {
+                    if(data.status === 'success') {
+                        showSuccessState(data.redirect);
+                    } else {
+                        failedAttempts++;
+                        showErrorState(data.message + ` (បរាជ័យ ${failedAttempts} ដង)`);
+                        
+                        // 🔴 ពេលបរាជ័យ ៣ដង ខ្ញុំបាន Comment បិទមិនឱ្យលោតផ្ទាំង Manual Login ទេ
+                        /* 
+                        if (failedAttempts >= 3) {
+                            let fallbackLink = document.getElementById('manual_fallback_link');
+                            if(fallbackLink) fallbackLink.classList.remove('d-none');
+                        }
+                        */
+                    }
+                })
+                .catch(err => {
+                    clearTimeout(timeoutId);
+                    if (err.name === 'AbortError') {
+                        showErrorState("ភ្ជាប់ទៅកាន់ Server យឺតពេល (Timeout)! សូមសាកល្បងម្តងទៀត។");
+                    } else {
+                        showErrorState("មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ម៉ាស៊ីនមេ!");
+                    }
+                });
+            }, randomDelay);
+        }
+        
+        function showSuccessState(redirectUrl) {
+            laserScanner.style.display = 'none'; techRing.style.display = 'none';
+            updateStatus('<i class="fas fa-check-double me-2"></i> អត្តសញ្ញាណត្រឹមត្រូវ', 'rgba(16, 185, 129, 0.1)', '#059669', 'rgba(16, 185, 129, 0.3)');
+            cameraMask.style.borderColor = '#10b981'; reticles.forEach(r => r.style.borderColor = '#10b981');
+            successOverlay.style.opacity = '1'; setTimeout(() => { successIcon.style.transform = 'scale(1)'; }, 100);
+            setTimeout(() => { window.location.href = redirectUrl; }, 1200);
+        }
+        
+        function showErrorState(message) {
+            laserScanner.style.display = 'none'; techRing.style.display = 'none';
+            updateStatus('<i class="fas fa-exclamation-triangle me-2"></i> ' + message, 'rgba(239, 68, 68, 0.1)', '#dc2626', 'rgba(239, 68, 68, 0.3)');
+            cameraMask.style.borderColor = '#ef4444'; reticles.forEach(r => r.style.borderColor = '#ef4444');
+            btnCapture.innerHTML = '<i class="fas fa-redo me-2"></i> ស្កេនម្តងទៀត'; btnCapture.disabled = false;
+        }
+    </script>
+</body>
+</html>

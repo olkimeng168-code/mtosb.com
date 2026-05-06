@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}គ្រប់គ្រងបញ្ជីខ្មៅ | EPS System{% endblock %}
+{% block page_title %}គ្រប់គ្រងបញ្ជីខ្មៅ (Blacklist){% endblock %}
+
+{% block head %}
+<style>
+    .card-custom { border: none; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; }
+    .table-hover tbody tr:hover { background-color: #f8f9fa; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-danger text-white pt-3 border-0">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-ban me-2 text-warning"></i>បញ្ចូលទៅបញ្ជីខ្មៅ</h5>
+                </div>
+                <div class="card-body p-4 bg-white">
+                    <form action="/add_penalty" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted small">លេខកូដបេក្ខជន</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fas fa-barcode"></i></span>
+                                <input type="text" name="application_no" class="form-control" placeholder="ឧ. 0022026C..." required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted small">មូលហេតុនៃការដាក់ពិន័យ</label>
+                            <textarea name="ban_reason" class="form-control" rows="3" placeholder="ឧ. លួចចម្លង, ប្រើប្រាស់ទូរស័ព្ទដៃ..." required></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-muted small">ថ្ងៃផុតកំណត់ពិន័យ</label>
+                            <input type="date" name="ban_until" id="ban_until" class="form-control">
+                            
+                            <div class="form-check mt-2">
+                                <input class="form-check-input border-danger" type="checkbox" name="is_permanent" id="is_permanent" value="true">
+                                <label class="form-check-label text-danger fw-bold small" for="is_permanent">
+                                    ដាក់ពិន័យរហូត (Permanent Ban)
+                                </label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-danger w-100 fw-bold py-2 rounded-3 shadow-sm">
+                            <i class="fas fa-gavel me-2"></i> អនុវត្តការដាក់ពិន័យ
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-primary text-white pt-3 border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-list me-2"></i>បញ្ជីបេក្ខជនជាប់ពិន័យបច្ចុប្បន្ន</h5>
+                    <span class="badge bg-white text-primary rounded-pill px-3">{{ banned_candidates|length }} នាក់</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle text-center mb-0">
+                            <thead class="bg-light text-muted">
+                                <tr>
+                                    <th class="py-3">លេខកូដ</th>
+                                    <th class="text-start py-3">ឈ្មោះបេក្ខជន</th>
+                                    <th class="text-start py-3">មូលហេតុពិន័យ</th>
+                                    <th class="py-3">ផុតកំណត់ត្រឹម</th>
+                                    <th class="py-3">ជម្រើស</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for c in banned_candidates %}
+                                <tr>
+                                    <td class="fw-bold text-primary">{{ c.application_no }}</td>
+                                    <td class="text-start fw-bold">{{ c.name_en }}</td>
+                                    <td class="text-start text-danger small" style="max-width: 200px;">{{ c.ban_reason }}</td>
+                                    <td>
+                                        {% if c.ban_until %}
+                                            <span class="badge bg-warning text-dark px-2 py-1">{{ c.ban_until.strftime('%Y-%m-%d') }}</span>
+                                        {% else %}
+                                            <span class="badge bg-danger text-white px-2 py-1">ជាប់រហូត</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <form action="/revoke_penalty/{{ c.application_no }}" method="POST" onsubmit="return confirm('តើអ្នកពិតជាចង់ដកបម្រាមបេក្ខជននេះមែនទេ?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3">
+                                                <i class="fas fa-unlock me-1"></i> ដកបម្រាម
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="py-5 text-muted">
+                                        <i class="fas fa-check-circle fa-3x text-success mb-3 opacity-50"></i><br>
+                                        មិនមានបេក្ខជនជាប់ពិន័យទេនៅក្នុងប្រព័ន្ធបច្ចុប្បន្ន។
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('is_permanent').addEventListener('change', function() {
+        document.getElementById('ban_until').disabled = this.checked;
+        if(this.checked) document.getElementById('ban_until').value = '';
+    });
+</script>
+{% endblock %}

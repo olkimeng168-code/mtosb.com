@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>របាយការណ៍វត្តមានប្រចាំថ្ងៃ - {{ test_date }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Moul&display=swap');
+        
+        body { font-family: 'Battambang', Arial, sans-serif; background-color: #f0f2f5; padding: 20px; }
+        .report-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; overflow-x: auto; }
+        
+        /* ក្បាលរបាយការណ៍ */
+        .report-header { text-align: center; margin-bottom: 20px; }
+        .moul-font { font-family: 'Moul', cursive; }
+        
+        /* រចនាប័ទ្មតារាងបែប Excel */
+        .excel-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .excel-table th, .excel-table td { border: 1px solid #000; padding: 6px 8px; vertical-align: middle; text-align: center; color: #000; }
+        .excel-table th { background-color: #d9e1f2 !important; font-weight: bold; } /* ពណ៌ខៀវខ្ចីបែប Excel */
+        
+        /* 🌟 លុបកូដ .excel-text-format ចោលទាំងស្រុង ដើម្បីកុំឱ្យមានបន្ទាត់លឿង និងលោត Error */
+
+        /* សម្រាប់លាក់ប៊ូតុងពេល Print ចេញក្រដាស */
+        @media print {
+            body { background: white; padding: 0; }
+            .report-container { box-shadow: none; padding: 0; }
+            .no-print { display: none !important; }
+            @page { size: A4 landscape; margin: 10mm; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
+        <div>
+            <a href="javascript:history.back()" class="btn btn-outline-secondary fw-bold me-2"><i class="fas fa-arrow-left me-1"></i> ត្រឡប់ក្រោយ</a>
+            <span class="text-muted fw-bold">របាយការណ៍វត្តមានប្រចាំថ្ងៃ (Skill Test)</span>
+        </div>
+        <div>
+            <button onclick="window.print()" class="btn btn-primary fw-bold me-2"><i class="fas fa-print me-1"></i> Print ទំព័រនេះ</button>
+            <button onclick="exportToExcel('attendanceTable', 'Skill_Test_Attendance_{{ test_date }}')" class="btn btn-success fw-bold"><i class="fas fa-file-excel me-1"></i> Export ទៅ Excel</button>
+        </div>
+    </div>
+
+    <div class="report-container">
+        
+        <div class="report-header">
+            <h5 class="moul-font">ព្រះរាជាណាចក្រកម្ពុជា</h5>
+            <h6 class="moul-font mb-4">ជាតិ សាសនា ព្រះមហាក្សត្រ</h6>
+            <h4 class="fw-bold mb-3 moul-font">{{ report_title }}</h4>
+            
+            <div class="d-flex justify-content-center gap-4 mt-3 fw-bold" style="font-size: 14px;">
+                <span>កាលបរិច្ឆេទ៖ {{ test_date }}</span>
+                <span>ម៉ោងចូល៖ {{ entry_time or 'ទាំងអស់' }}</span>
+                <span>ក្រុមទី៖ {{ group_no or 'ទាំងអស់' }}</span>
+            </div>
+            
+            <div class="d-flex justify-content-center gap-4 mt-2 mb-3" style="font-size: 14px;">
+                <span>សរុប៖ <b>{{ total_candidates }}</b> នាក់</span> |
+                <span class="text-success">វត្តមាន៖ <b>{{ total_present }}</b> នាក់</span> |
+                <span class="text-danger">អវត្តមាន៖ <b>{{ total_absent }}</b> នាក់</span>
+            </div>
+        </div>
+
+        <table id="attendanceTable" class="excel-table">
+            <thead>
+                <tr>
+                    <th width="5%">ល.រ</th>
+                    <th width="15%">លេខកូដ UBT</th>
+                    <th width="15%">លេខកូដ Skill</th>
+                    <th width="15%">ឈ្មោះជាឡាតាំង (Name)</th>
+                    <th width="5%">ភេទ</th>
+                    <th width="10%">ថ្ងៃខែឆ្នាំកំណើត</th>
+                    <th width="10%">វិស័យ (Industry)</th>
+                    <th width="5%">ក្រុម</th>
+                    <th width="5%">តុ</th>
+                    <th width="7%">វត្តមាន</th>
+                    <th width="13%">ហត្ថលេខា / កត់សម្គាល់</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in candidates %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    
+                    <td class="text-start ps-2">&#8203;{{ c.application_no }}</td>
+                    <td class="text-start ps-2">&#8203;{{ c.second_test_register_no or '' }}</td>
+                    
+                    <td class="text-start ps-2 fw-bold">{{ c.name_en }}</td>
+                    <td>{{ c.gender }}</td>
+                    <td>{{ c.dob.strftime('%Y-%m-%d') if c.dob else '' }}</td>
+                    <td>{{ c.industry }}</td>
+                    <td>{{ c.group_no }}</td>
+                    <td>{{ c.seat_no }}</td>
+                    
+                    <td class="fw-bold text-center">
+                        {% if c.clean_present == '1' %}
+                            <span class="text-success">✓</span>
+                        {% elif c.clean_present == '0' %}
+                            <span class="text-danger">អវត្តមាន</span>
+                        {% endif %}
+                    </td>
+                    <td></td> </tr>
+                {% else %}
+                <tr>
+                    <td colspan="11" class="text-center py-4">មិនមានទិន្នន័យសម្រាប់ថ្ងៃនេះទេ</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // មុខងារសម្រាប់ Export តារាង HTML ទៅជា File Excel .xls
+        function exportToExcel(tableID, filename = ''){
+            var downloadLink;
+            var dataType = 'application/vnd.ms-excel';
+            var tableSelect = document.getElementById(tableID);
+            
+            var tableHTML = '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"></head><body>' + tableSelect.outerHTML.replace(/ /g, '%20') + '</body></html>';
+            
+            filename = filename ? filename + '.xls' : 'excel_data.xls';
+            downloadLink = document.createElement("a");
+            document.body.appendChild(downloadLink);
+            
+            if(navigator.msSaveOrOpenBlob){
+                var blob = new Blob(['\ufeff', tableHTML], { type: dataType });
+                navigator.msSaveOrOpenBlob(blob, filename);
+            } else {
+                downloadLink.href = 'data:' + dataType + ', ' + tableHTML;
+                downloadLink.download = filename;
+                downloadLink.click();
+            }
+        }
+    </script>
+</body>
+</html>

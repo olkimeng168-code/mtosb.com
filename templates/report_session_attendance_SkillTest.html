@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>របាយការណ៍ប្រចាំវេន - {{ test_date }} ({{ entry_time }})</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Moul&display=swap');
+        
+        body { font-family: 'Battambang', Arial, sans-serif; background-color: #f8f9fa; padding: 20px; }
+        .report-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 1000px; margin: 0 auto; }
+        
+        .report-header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #000; padding-bottom: 15px; }
+        .moul-font { font-family: 'Moul', cursive; }
+        
+        .excel-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 15px; }
+        .excel-table th, .excel-table td { border: 1px solid #000; padding: 8px 10px; vertical-align: middle; text-align: center; color: #000; }
+        .excel-table th { background-color: #e2efda !important; font-weight: bold; }
+        
+        @media print {
+            body { background: white; padding: 0; }
+            .report-container { box-shadow: none; padding: 0; max-width: 100%; margin: 0; }
+            .no-print { display: none !important; }
+            @page { size: A4 portrait; margin: 15mm; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm" style="max-width: 1000px; margin: 0 auto;">
+        <div>
+            <button onclick="history.back()" class="btn btn-outline-secondary fw-bold me-2"><i class="fas fa-arrow-left me-1"></i> ត្រឡប់ក្រោយ</button>
+            <span class="text-muted fw-bold">របាយការណ៍ប្រចាំវេន (Session Report)</span>
+        </div>
+        <div>
+            <button onclick="window.print()" class="btn btn-primary fw-bold me-2"><i class="fas fa-print me-1"></i> Print</button>
+            <button onclick="exportToExcel('sessionTable', 'Session_Report_{{ test_date }}_{{ entry_time }}')" class="btn btn-success fw-bold"><i class="fas fa-file-excel me-1"></i> Excel</button>
+        </div>
+    </div>
+
+    <div class="report-container">
+        
+        <div class="report-header">
+            <h4 class="fw-bold mb-3 moul-font">{{ report_title }}</h4>
+            <div class="d-flex justify-content-center gap-5 mt-2 fw-bold" style="font-size: 15px;">
+                <span>កាលបរិច្ឆេទ៖ <span class="text-primary">{{ test_date }}</span></span>
+                <span>ម៉ោងចូល៖ <span class="text-danger">{{ entry_time }}</span></span>
+            </div>
+            
+            <div class="row text-start mt-4 bg-light p-2 border" style="font-size: 14px;">
+                <div class="col-md-6">
+                    <ul class="mb-0 list-unstyled">
+                        <li>បេក្ខជនសរុប៖ <b>{{ total_candidates }}</b> នាក់</li>
+                        <li>ស្រី៖ <b>{{ total_female }}</b> នាក់ </li>
+                    </ul>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <ul class="mb-0 list-unstyled">
+                        <li>វត្តមាន៖ <b class="text-success">{{ total_present }}</b> នាក់</li>
+                        <li>អវត្តមាន៖ <b class="text-danger">{{ total_absent }}</b> នាក់</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <table id="sessionTable" class="excel-table">
+            <thead>
+                <tr>
+                    <th style="width: 5%">ល.រ</th>
+                    <th style="width: 20%">លេខកូដ UBT</th>
+                    <th style="width: 25%">ឈ្មោះបេក្ខជន (Name)</th>
+                    <th style="width: 10%">ភេទ</th>
+                    <th style="width: 15%">ក្រុម / តុ</th>
+                    <th style="width: 15%">វិស័យ (Industry)</th>
+                    <th style="width: 10%">វត្តមាន</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in candidates %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td class="text-start ps-3 fw-bold ubt-code">{{ c.application_no }}</td>
+                    <td class="text-start ps-3 fw-bold text-primary">{{ c.name_en }}</td>
+                    <td>{{ c.gender }}</td>
+                    <td class="fw-bold">
+                        G{{ c.group_no }} / <span class="text-danger">{{ c.seat_no }}</span>
+                    </td>
+                    <td>{{ c.industry }}</td>
+                    <td class="fw-bold">
+                        {% if c.clean_present == '1' %} ✓ {% elif c.clean_present == '0' %} អវត្តមាន {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">មិនមានទិន្នន័យសម្រាប់វេននេះទេ</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <div class="mt-5 pt-4 row text-center fw-bold" style="font-size: 14px;">
+            <div class="col-6">
+                <p>ហត្ថលេខាអ្នករៀបចំរបាយការណ៍</p>
+                <br><br><br>
+                <p>................................................</p>
+            </div>
+            <div class="col-6">
+                <p>ហត្ថលេខាអ្នកត្រួតពិនិត្យ (Proctor)</p>
+                <br><br><br>
+                <p>................................................</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+    function exportToExcel(tableID, filename = ''){
+        var tableSelect = document.getElementById(tableID);
+        var dataType = 'application/vnd.ms-excel';
+        
+        // ១. បង្កើត Style សម្រាប់ Excel នៅទីនេះ (វានឹងជួយកុំអោយលោតលឿងក្នុង HTML)
+        var excelStyle = '<style> .ubt-code { mso-number-format:"\\@"; } </style>';
+        
+        // ២. បញ្ចូល excelStyle នោះទៅក្នុង <head> របស់ Excel
+        var tableHTML = '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8">' + excelStyle + '</head><body>' + tableSelect.outerHTML + '</body></html>';
+        
+        filename = filename ? filename + '.xls' : 'excel_data.xls';
+        var downloadLink = document.createElement("a");
+        document.body.appendChild(downloadLink);
+        
+        if(navigator.msSaveOrOpenBlob){
+            var blob = new Blob(['\ufeff', tableHTML], { type: dataType });
+            navigator.msSaveOrOpenBlob(blob, filename);
+        } else {
+            downloadLink.href = 'data:' + dataType + ', ' + encodeURIComponent(tableHTML);
+            downloadLink.download = filename;
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+    }
+</script>
+</body>
+</html>

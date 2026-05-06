@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-primary"><i class="fas fa-desktop me-2"></i> គ្រប់គ្រងបញ្ជរ (Manage Counters)</h2>
+        <div>
+            <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#officerReportModal">
+                <i class="fas fa-file-excel me-1"></i> របាយការណ៍មន្ត្រី
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCounterModal">
+                <i class="fas fa-plus me-1"></i> បង្កើតបញ្ជរថ្មី
+            </button>
+        </div>
+    </div>
+
+    <!-- 🌟 កែប្រែ UI កាតខាងលើ 🌟 -->
+    <div class="row g-4 mb-4">
+        <!-- កាតទី១៖ ទទួលពាក្យសរុប និង បេក្ខជនស្រី (រួមបញ្ចូលគ្នា) -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-primary text-white h-100">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="fs-1 me-3"><i class="fas fa-file-signature text-white-50"></i></div>
+                        <div>
+                            <h6 class="mb-1 text-white-50 fw-bold">ទទួលពាក្យជោគជ័យ (ថ្ងៃនេះ)</h6>
+                            <h2 class="mb-0 fw-bold"><span id="stat_total_today">{{ total_today }}</span> <span class="fs-6 fw-normal">នាក់</span></h2>
+                        </div>
+                    </div>
+                    <!-- ខ្សែបន្ទាត់ខណ្ឌកណ្តាល -->
+                    <div class="border-start border-light border-opacity-25 ps-4 pe-2 text-center">
+                        <h6 class="mb-1 text-white-50 fw-bold"><i class="fas fa-female text-warning"></i> ស្រី</h6>
+                        <h3 class="mb-0 fw-bold text-warning"><span id="stat_female_today">{{ female_today }}</span></h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- កាតទី២៖ បញ្ជរកំពុងដំណើរការ -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-info text-white h-100">
+                <div class="card-body p-4 d-flex align-items-center">
+                    <div class="fs-1 me-3"><i class="fas fa-headset text-white-50"></i></div>
+                    <div>
+                        <h6 class="mb-1 text-white-50 fw-bold">បញ្ជរកំពុងដំណើរការ</h6>
+                        <h2 class="mb-0 fw-bold">
+                            <span id="stat_active_counters">{{ counters|selectattr("status", "equalto", "Active")|list|length }}</span> 
+                            <span class="fs-6 fw-normal">បញ្ជរ</span>
+                        </h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>ឈ្មោះបញ្ជរ (ខ្មែរ)</th>
+                        <th>ឈ្មោះបញ្ជរ (អង់គ្លេស)</th>
+                        <th>ស្ថានភាព (Status)</th>
+                        <th>មន្ត្រីប្រចាំការបច្ចុប្បន្ន</th>
+                        <th class="text-center text-success">ទទួលពាក្យជោគជ័យ</th> 
+                        <th class="text-center">សកម្មភាព</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in counters %}
+                    <tr>
+                        <td>{{ c.id }}</td>
+                        <td class="fw-bold">{{ c.counter_name_kh }}</td>
+                        <td>{{ c.counter_name_en }}</td>
+                        
+                        <td id="status-{{ c.id }}">
+                            {% if c.status == 'Available' and not c.current_user_name %}
+                                <span class="badge bg-secondary">ទំនេរ (Available)</span>
+                            {% elif c.status == 'Available' and c.current_user_name %}
+                                <span class="badge bg-success">ត្រៀមខ្លួន (Standby)</span>
+                            {% elif c.status == 'Active' %}
+                                <span class="badge bg-danger">កំពុងបម្រើការ (Active)</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">ផ្អាក (Paused)</span>
+                            {% endif %}
+                        </td>
+                        
+                        <td>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span id="officer-name-{{ c.id }}">
+                                    {% if c.current_user_name %}
+                                        <i class="fas fa-user-tie text-primary me-1"></i> <span class="fw-bold">{{ c.current_user_name }}</span>
+                                    {% else %}
+                                        <span class="text-muted">គ្មានមន្ត្រី</span>
+                                    {% endif %}
+                                </span>
+                                <button class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#assignModal{{ c.id }}" title="ចាត់តាំងមន្ត្រីចូលបញ្ជរនេះ">
+                                    <i class="fas fa-user-plus"></i>
+                                </button>
+                            </div>
+
+                            <!-- Modal សម្រាប់ចាត់តាំងមន្ត្រី -->
+                            <div class="modal fade" id="assignModal{{ c.id }}" tabindex="-1">
+                                <div class="modal-dialog modal-sm">
+                                    <div class="modal-content">
+                                        <form action="{{ url_for('queue.manage_counters') }}" method="POST">
+                                            <div class="modal-header bg-primary text-white py-2">
+                                                <h6 class="modal-title mb-0"><i class="fas fa-user-edit me-1"></i> ចាត់តាំងមន្ត្រី</h6>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <input type="hidden" name="action" value="assign">
+                                                <input type="hidden" name="counter_id" value="{{ c.id }}">
+                                                <p class="small text-muted mb-2">បញ្ជរ៖ <strong>{{ c.counter_name_kh }}</strong></p>
+                                                <select name="user_id" class="form-select form-select-sm border-primary">
+                                                    <option value="">-- ដកមន្ត្រីចេញពីបញ្ជរ --</option>
+                                                    {% for o in officers %}
+                                                    <option value="{{ o.id }}" {% if c.current_user_id == o.id %}selected{% endif %}>
+                                                        {{ o.full_name }} ({{ o.role_name }})
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="modal-footer py-1">
+                                                <button type="submit" class="btn btn-sm btn-primary w-100">រក្សាទុក</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <td class="text-center">
+                            <div class="d-inline-flex align-items-center bg-light border border-success border-opacity-25 rounded-pill px-3 py-1 shadow-sm">
+                                <div title="ទទួលពាក្យសរុប">
+                                    <i class="fas fa-users text-success me-1"></i>
+                                    <span class="fw-bold text-dark" style="font-size: 1.05rem;" id="processed-{{ c.id }}">{{ c.processed_today or 0 }}</span>
+                                </div>
+                                <div class="border-start border-2 ms-2 ps-2" title="បេក្ខជនស្រី">
+                                    <i class="fas fa-female text-danger me-1"></i>
+                                    <span class="fw-bold text-dark" style="font-size: 1.05rem;" id="female-{{ c.id }}">{{ c.female_processed_today or 0 }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <td class="text-center">
+                            <form id="reset-form-{{ c.id }}" action="{{ url_for('queue.manage_counters') }}" method="POST" class="d-inline" {% if c.status == 'Available' %}style="display: none !important;"{% endif %}>
+                                <input type="hidden" name="action" value="reset">
+                                <input type="hidden" name="counter_id" value="{{ c.id }}">
+                                <button type="submit" class="btn btn-sm btn-warning text-dark" title="Reset បញ្ជរនេះឱ្យទំនេរវិញ" onclick="return confirm('តើអ្នកពិតជាចង់ Reset បញ្ជរនេះឱ្យទំនេរវិញមែនទេ?');">
+                                    <i class="fas fa-sync-alt"></i> Reset
+                                </button>
+                            </form>
+
+                            <button class="btn btn-sm btn-info text-white ms-1" data-bs-toggle="modal" data-bs-target="#editCounterModal{{ c.id }}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+
+                            <form action="{{ url_for('queue.manage_counters') }}" method="POST" class="d-inline">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="counter_id" value="{{ c.id }}">
+                                <button type="submit" class="btn btn-sm btn-danger ms-1" onclick="return confirm('ប្រាកដជាចង់លុបបញ្ជរនេះមែនទេ?');">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+
+                    <div class="modal fade" id="editCounterModal{{ c.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form action="{{ url_for('queue.manage_counters') }}" method="POST">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">កែប្រែបញ្ជរ</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <input type="hidden" name="action" value="edit">
+                                        <input type="hidden" name="counter_id" value="{{ c.id }}">
+                                        <div class="mb-3">
+                                            <label>ឈ្មោះបញ្ជរ (ខ្មែរ) *</label>
+                                            <input type="text" name="counter_name_kh" class="form-control" value="{{ c.counter_name_kh }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label>ឈ្មោះបញ្ជរ (អង់គ្លេស) *</label>
+                                            <input type="text" name="counter_name_en" class="form-control" value="{{ c.counter_name_en }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">បិទ</button>
+                                        <button type="submit" class="btn btn-primary">រក្សាទុក</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addCounterModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('queue.manage_counters') }}" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">បង្កើតបញ្ជរថ្មី</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="action" value="add">
+                    <div class="mb-3">
+                        <label>ឈ្មោះបញ្ជរ (ខ្មែរ) *</label>
+                        <input type="text" name="counter_name_kh" class="form-control" placeholder="ឧទាហរណ៍៖ បញ្ជរទី ៦" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>ឈ្មោះបញ្ជរ (អង់គ្លេស) *</label>
+                        <input type="text" name="counter_name_en" class="form-control" placeholder="ឧទាហរណ៍៖ Counter 6" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">បិទ</button>
+                    <button type="submit" class="btn btn-primary">បង្កើតបញ្ជរ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="officerReportModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form action="{{ url_for('queue.download_officer_report') }}" method="POST"> 
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-file-excel me-2"></i> ទាញយករបាយការណ៍មន្ត្រី</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">ចាប់ពីថ្ងៃទី *</label>
+                            <input type="date" class="form-control" id="officer_start_date" name="start_date" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">ដល់ថ្ងៃទី *</label>
+                            <input type="date" class="form-control" id="officer_end_date" name="end_date" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">បោះបង់</button>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-download me-2"></i> ទាញយក Excel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('officer_start_date').value = today;
+        document.getElementById('officer_end_date').value = today;
+
+        function fetchCounterStats() {
+            fetch("{{ url_for('queue.get_manage_counters_data') }}")
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    document.getElementById('stat_total_today').innerText = data.total_today;
+                    document.getElementById('stat_female_today').innerText = data.female_today;
+                    document.getElementById('stat_active_counters').innerText = data.active_count;
+
+                    data.counters.forEach(c => {
+                        const processedEl = document.getElementById('processed-' + c.id);
+                        if(processedEl) processedEl.innerText = c.processed_today || 0;
+
+                        const femaleEl = document.getElementById('female-' + c.id);
+                        if(femaleEl) femaleEl.innerText = c.female_processed_today || 0;
+
+                        const statusEl = document.getElementById('status-' + c.id);
+                        if(statusEl) {
+                            if(c.status === 'Available' && !c.current_user_name) {
+                                statusEl.innerHTML = '<span class="badge bg-secondary">ទំនេរ (Available)</span>';
+                            } else if(c.status === 'Available' && c.current_user_name) {
+                                statusEl.innerHTML = '<span class="badge bg-success">ត្រៀមខ្លួន (Standby)</span>';
+                            } else if(c.status === 'Active') {
+                                statusEl.innerHTML = '<span class="badge bg-danger">កំពុងបម្រើការ (Active)</span>';
+                            } else {
+                                statusEl.innerHTML = '<span class="badge bg-warning text-dark">ផ្អាក (Paused)</span>';
+                            }
+                        }
+
+                        const officerNameEl = document.getElementById('officer-name-' + c.id);
+                        if(officerNameEl) {
+                            if(c.current_user_name) {
+                                officerNameEl.innerHTML = `<i class="fas fa-user-tie text-primary me-1"></i> <span class="fw-bold">${c.current_user_name}</span>`;
+                            } else {
+                                officerNameEl.innerHTML = '<span class="text-muted">គ្មានមន្ត្រី</span>';
+                            }
+                        }
+
+                        const resetForm = document.getElementById('reset-form-' + c.id);
+                        if(resetForm) {
+                            if(c.status !== 'Available') {
+                                resetForm.style.setProperty('display', 'inline-block', 'important');
+                            } else {
+                                resetForm.style.setProperty('display', 'none', 'important');
+                            }
+                        }
+                    });
+                }
+            })
+            .catch(err => console.error("Error fetching stats:", err));
+        }
+
+        setInterval(fetchCounterStats, 5000);
+    });
+</script>
+{% endblock %}

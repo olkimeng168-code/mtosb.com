@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ស្វែងរកលេខតុប្រឡង | EPS</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Moul&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ========================================= */
+        /* ទម្រង់ទូទៅ (Global Styles) */
+        /* ========================================= */
+        body { 
+            font-family: 'Battambang', Arial, sans-serif; 
+            background-color: #f0f4f8; 
+            color: #333;
+        }
+        
+        /* ========================================= */
+        /* ផ្នែក Header (ពណ៌ទឹកប៊ិចចាស់ Gradient) */
+        /* ========================================= */
+        .header-section {
+            background: linear-gradient(135deg, #0b2e59 0%, #1a4a82 100%);
+            padding: 60px 20px 90px 20px;
+            border-bottom: 5px solid #f39c12; 
+            text-align: center;
+            color: white;
+        }
+
+        .header-title {
+            font-family: 'Moul', 'Khmer OS Muol Light', cursive;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        /* ========================================= */
+        /* ប្រអប់ Search ផុសអណ្តែត (Floating Card) */
+        /* ========================================= */
+        .search-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: -50px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            position: relative;
+            z-index: 10;
+        }
+
+        .search-pill {
+            border: 2px solid #e0e6ed;
+            background-color: #f8fafc;
+            transition: all 0.3s;
+        }
+
+        .search-pill:focus-within {
+            border-color: #0b2e59;
+            box-shadow: 0 0 0 0.25rem rgba(11, 46, 89, 0.1);
+        }
+
+        .search-input {
+            box-shadow: none !important;
+            font-size: 1.1rem;
+        }
+
+        .btn-search {
+            background-color: #0b2e59;
+            color: white;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 10px rgba(11, 46, 89, 0.3);
+            transition: all 0.2s;
+        }
+        
+        .btn-search:hover {
+            background-color: #1a4a82;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* ========================================= */
+        /* តារាងបង្ហាញទិន្នន័យ (Table Styles) */
+        /* ========================================= */
+        .table-container { 
+            background-color: white; 
+            border-radius: 15px; 
+            overflow: hidden; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05); 
+            margin-top: 40px; 
+            margin-bottom: 30px;
+        }
+
+        .table-custom { margin-bottom: 0; table-layout: auto; width: 100%; }
+        
+        .table-custom thead th { 
+            background-color: #0b2e59 !important; 
+            color: #ffffff !important; 
+            border: none !important; 
+            font-family: 'Khmer OS Siemreap', 'Battambang', sans-serif; 
+            font-size: 1.05rem; 
+            font-weight: normal; 
+            padding: 18px 12px; 
+            white-space: nowrap; 
+        }
+
+        .table-custom td { 
+            vertical-align: middle; 
+            padding: 15px 12px; 
+            border-bottom: 1px solid #f0f2f5; 
+        }
+        
+        /* Badges សម្រាប់លម្អទិន្នន័យ */
+        .badge-time { background-color: #fff3cd; color: #856404; font-weight: bold; border: 1px solid #ffeeba; white-space: nowrap;}
+        .badge-seat { background-color: #f8d7da; color: #721c24; font-weight: bold; border: 1px solid #f5c6cb; font-size: 0.95rem; white-space: nowrap;}
+        .badge-group { background-color: #cce5ff; color: #0b2e59; font-weight: bold; border: 1px solid #b8daff; font-size: 0.95rem; white-space: nowrap;}
+        .badge-date { background-color: #e2efda; color: #28a745; font-weight: bold; border: 1px solid #c3e6cb; white-space: nowrap;}
+        
+        /* ========================================= */
+        /* ការកំណត់ទំព័រ (Pagination) */
+        /* ========================================= */
+        .pagination { margin-bottom: 0; }
+        .page-item.active .page-link { background-color: #0b2e59; border-color: #0b2e59; color: white;}
+        .page-link { color: #0b2e59; font-weight: bold; border-radius: 8px; margin: 0 3px; border: 1px solid #e9ecef;}
+        .page-link:hover { background-color: #f0f4f8; color: #0b2e59; }
+
+        /* Responsive សម្រាប់ទូរស័ព្ទដៃ */
+        @media (max-width: 768px) {
+            .header-title { font-size: 1.2rem; }
+            .hide-mobile { display: none; }
+            .search-card { padding: 20px; margin-top: -40px; border-radius: 15px; }
+            .page-link { padding: 0.4rem 0.6rem; font-size: 0.9rem; }
+            .search-input { font-size: 1rem; }
+            .btn-search { font-size: 1rem; }
+            
+            /* 🌟 បង្ការការលានតារាង 🌟 */
+            .table-responsive { overflow-x: hidden !important; }
+            .table-custom { table-layout: fixed; } 
+            
+            /* បង្រួម Margin សងខាង ដើម្បីចំណេញកន្លែង */
+            .table-container { margin-left: 5px; margin-right: 5px; border-radius: 10px; }
+            .table-custom td, .table-custom th { padding: 12px 3px !important; } 
+            
+            /* កំណត់ទំហំជួរឈរនៅលើ Mobile អោយខូលឹមចុងក្រោយមានកន្លែងធំជាងមុនបន្តិច */
+            .col-no { width: 8%; }
+            .col-name { width: 44%; }
+            .col-time { width: 20%; }
+            .col-group { width: 28%; }
+
+            /* 🌟 អនុញ្ញាតអោយលេខតុចុះបន្ទាត់បាន ករណីចង្អៀតខ្លាំង 🌟 */
+            .text-nowrap { white-space: normal !important; }
+
+            .ubt-mobile {
+                display: block;
+                word-wrap: break-word; 
+                word-break: break-all; 
+                font-size: 0.75rem !important; 
+                line-height: 1.2;
+                margin-top: 4px;
+                margin-bottom: 4px;
+                color: #6c757d;
+            }
+            
+            /* បង្រួម Badges បន្តិចទៀត ដើម្បីកុំអោយទើស */
+            .badge-time { padding: 4px 5px; font-size: 0.75rem; }
+            .badge-group, .badge-seat { 
+                padding: 4px 5px; 
+                font-size: 0.75rem; 
+                display: inline-block; 
+                margin-bottom: 2px; 
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-section">
+        <div class="container">
+            <h2 class="header-title fw-bold">
+                <i class="fas fa-search-location text-warning me-2"></i> ស្វែងរកព័ត៌មាន និងកាលវិភាគប្រឡង
+            </h2>
+            <p class="fs-5 opacity-75 mb-0">
+                <i class="fas fa-calendar-day me-1"></i> កាលបរិច្ឆេទប្រឡងថ្ងៃនេះ៖ <span class="fw-bold text-warning">{{ today_date }}</span>
+            </p>
+        </div>
+    </div>
+
+    <div class="container" style="max-width: 900px;">
+        <div class="search-card">
+            <form action="{{ url_for('exam_schedule') }}" method="GET" class="mb-0">
+                
+                <label class="fw-bold text-muted mb-3 d-flex align-items-center">
+                    <i class="fas fa-user-check text-success me-2 fs-5"></i> 
+                    សូមវាយបញ្ចូលព័ត៌មានរបស់អ្នកខាងក្រោម៖
+                </label>
+
+                <div class="input-group input-group-lg rounded-pill p-1 search-pill">
+                    <span class="input-group-text border-0 bg-transparent text-muted ps-4 pe-2">
+                        <i class="fas fa-id-card-clip fs-5"></i>
+                    </span>
+                    
+                    <input type="text" name="search_query" class="form-control border-0 bg-transparent px-2 search-input" 
+                           placeholder="វាយបញ្ចូល លេខកូដ UBT ឬ ឈ្មោះបេក្ខជន..." 
+                           value="{{ search_query or '' }}" autofocus>
+                    
+                    {% if search_query %}
+                        <a href="{{ url_for('exam_schedule') }}" class="btn btn-link text-danger text-decoration-none d-flex align-items-center pe-3">
+                            <i class="fas fa-times-circle fs-5"></i>
+                        </a>
+                    {% endif %}
+
+                    <button type="submit" class="btn fw-bold rounded-pill px-4 px-md-5 btn-search">
+                        <i class="fas fa-search me-1 d-none d-md-inline"></i> ស្វែងរក
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="table table-hover table-custom align-middle"> 
+                    <thead> 
+                        <tr>
+                            <th class="text-center col-no">ល.រ</th>
+                            <th class="text-start col-name">ឈ្មោះបេក្ខជន</th>
+                            <th class="text-center hide-mobile">លេខកូដ UBT</th>
+                            <th class="text-center hide-mobile">ភេទ</th>
+                            <th class="text-center hide-mobile">ថ្ងៃប្រឡង</th>
+                            <th class="text-center col-time">ម៉ោងប្រឡង</th>
+                            <th class="text-center col-group">ក្រុម / តុ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in candidates %}
+                        <tr>
+                            <td class="text-center text-muted small fw-bold">{{ loop.index + (page - 1) * per_page }}</td>
+                            
+                            <td class="text-start">
+                                <div class="fw-bold" style="color: #0b2e59;">{{ c.name_en }}</div>
+                                <div class="small d-block d-md-none mt-1">
+                                    <span class="ubt-mobile font-monospace">{{ c.application_no }}</span>
+                                    <span class="text-muted"><i class="far fa-calendar-alt me-1"></i> {{ c.test_date }}</span>
+                                </div>
+                            </td>
+                            
+                            <td class="text-center text-dark fw-bold hide-mobile" style="font-family: Arial;">{{ c.application_no }}</td>
+                            <td class="text-center fw-bold hide-mobile text-muted">{{ c.gender or '-' }}</td>
+                            
+                            <td class="text-center hide-mobile">
+                                <span class="badge badge-date px-3 py-2 fs-6"><i class="far fa-calendar-alt me-1"></i> {{ c.test_date or '-' }}</span>
+                            </td>
+                            
+                            <td class="text-center">
+                                <span class="badge badge-time px-3 py-2 fs-6"><i class="far fa-clock me-1 d-none d-md-inline"></i> {{ c.entry_time or '-' }}</span>
+                            </td>
+                            
+                            <td class="text-center text-nowrap">
+                                <span class="badge badge-group px-2 py-2">G{{ c.group_no or '-' }}</span> 
+                                <span class="badge badge-seat px-2 py-2">{{ c.seat_no or '-' }}</span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="mb-3"><i class="fas fa-search-minus fa-3x" style="color: #c2d1e0;"></i></div>
+                                {% if search_query %}
+                                    <h6 class="fw-bold text-danger fs-5">មិនមានបេក្ខជនឈ្មោះ ឬ លេខកូដនេះទេ</h6>
+                                    <p class="text-muted mb-0">សូមពិនិត្យមើលអក្ខរាវិរុទ្ធ ឬលេខកូដ UBT ឡើងវិញ។</p>
+                                {% else %}
+                                    <h6 class="fw-bold" style="color: #0b2e59;">មិនមានឈ្មោះប្រឡងសម្រាប់ថ្ងៃនេះទេ</h6>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        {% if total_pages > 1 %}
+        <div class="d-flex justify-content-center mb-5 mt-4">
+            <nav>
+                <ul class="pagination shadow-sm rounded-3 overflow-hidden">
+                    <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                        <a class="page-link py-2 px-3" href="{{ url_for('exam_schedule', page=page-1, search_query=search_query) }}"><i class="fas fa-chevron-left d-inline d-md-none"></i><span class="d-none d-md-inline"><i class="fas fa-chevron-left me-1"></i> មុន</span></a>
+                    </li>
+                    
+                    <li class="page-item disabled">
+                        <span class="page-link bg-light text-dark py-2 px-3 border-start-0 border-end-0" style="font-size: 0.9rem;">ទំព័រទី {{ page }} / {{ total_pages }}</span>
+                    </li>
+                    
+                    <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                        <a class="page-link py-2 px-3" href="{{ url_for('exam_schedule', page=page+1, search_query=search_query) }}"><i class="fas fa-chevron-right d-inline d-md-none"></i><span class="d-none d-md-inline">បន្ទាប់ <i class="fas fa-chevron-right ms-1"></i></span></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+        
+    </div>
+
+    <div class="text-center text-muted small pb-4" style="font-family: Arial, sans-serif;">
+        &copy; 2026 EPS SYSTEM. All rights reserved.
+    </div>
+
+</body>
+</html>

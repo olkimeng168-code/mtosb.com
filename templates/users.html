@@ -1,0 +1,663 @@
+{% extends "base.html" %}
+
+{% block title %}គ្រប់គ្រងគណនី | EPS System{% endblock %}
+{% block page_title %}គ្រប់គ្រងគណនីអ្នកប្រើប្រាស់{% endblock %}
+
+{% block head %}
+<style>
+    /* ==============================================
+       ការកំណត់តារាង (Table Styling) - ស្តាយត្រជាក់ភ្នែក
+       ============================================== */
+    .card-custom { border: none; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); background: #fff; }
+    .card-header-custom { background-color: #ffffff; border-bottom: none; padding: 1.5rem 1.5rem 0.5rem 1.5rem; border-radius: 12px 12px 0 0 !important; }
+    
+    /* ពណ៌ក្បាលតារាង (Header) */
+    .table-custom { margin-bottom: 0; border-collapse: separate; border-spacing: 0; }
+    .table-custom thead th { 
+        background-color: #02407f; /* ពណ៌ខៀវចាស់ត្រជាក់ភ្នែក ដូចទំព័រ Skill Test */
+        color: #ffffff; 
+        font-weight: 500; /* កាត់បន្ថយកម្រិតដិត ដើម្បីឱ្យទន់ភ្នែក */
+        font-size: 0.95rem; 
+        text-transform: none; /* ដកអក្សរធំ (Uppercase) ចេញ */
+        letter-spacing: 0.3px; 
+        padding: 1.2rem 1rem; 
+        white-space: nowrap; 
+        border: none;
+    }
+    
+    /* ធ្វើឱ្យក្បាលតារាងមានរាងកោងបន្តិចនៅជ្រុងសងខាង */
+    .table-custom thead th:first-child { border-top-left-radius: 8px; }
+    .table-custom thead th:last-child { border-top-right-radius: 8px; }
+
+    /* ពណ៌តួអក្សរ និងបន្ទាត់ក្នុងតារាង */
+    .table-custom tbody td { 
+        padding: 1.2rem 1rem; 
+        vertical-align: middle; 
+        border-bottom: 1px solid #f1f5f9; 
+        font-size: 0.9rem; 
+        color: #475569; 
+    }
+    .table-custom tbody tr:hover { background-color: #f8fafc; }
+    
+    /* ទម្រង់គណនី (Profile Grouping) */
+    .user-profile-group { display: flex; align-items: center; gap: 15px; }
+    .avatar-wrapper { position: relative; flex-shrink: 0; }
+    .avatar-circle { width: 48px; height: 48px; background: linear-gradient(135deg, #e0e7ff, #dbeafe); color: #4f46e5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; border: 2px solid #fff; box-shadow: 0 3px 6px rgba(0,0,0,0.05); }
+    .avatar-img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 3px 6px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.2s ease; }
+    .avatar-img:hover { transform: scale(1.1); box-shadow: 0 5px 15px rgba(0,0,0,0.15); z-index: 10;}
+    .gender-badge { position: absolute; bottom: -2px; right: -2px; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: white; border: 2px solid white; }
+    .gender-m { background-color: #3b82f6; }
+    .gender-f { background-color: #ec4899; }
+    
+    /* ព័ត៌មានទំនាក់ទំនង (Contact Info Stack) */
+    .contact-stack { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; }
+    .contact-item { display: flex; align-items: center; gap: 8px; color: #64748b; }
+    .contact-item i { width: 14px; text-align: center; color: #94a3b8; }
+    
+    /* Badges */
+    .role-badge { font-size: 0.75rem; padding: 0.35rem 0.75rem; font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .role-badge-admin { background-color: #fef2f2; color: #991b1b; border-color: #fecaca; }
+    .status-badge { font-size: 0.75rem; padding: 0.4rem 0.8rem; font-weight: 600; border-radius: 50rem; transition: 0.2s; cursor: pointer; border: 1px solid transparent; }
+    .status-active { background-color: #ecfdf5; color: #059669; border-color: #a7f3d0; }
+    .status-inactive { background-color: #fef2f2; color: #dc2626; border-color: #fecaca; }
+    
+    /* ប៊ូតុងសកម្មភាព (Action Buttons) */
+    .action-group { display: flex; gap: 6px; justify-content: flex-end; }
+    .btn-action { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; transition: all 0.2s ease; border: 1px solid #e2e8f0; font-size: 0.9rem; color: #64748b; background-color: #fff; }
+    .btn-action:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-color: transparent; }
+    .btn-permission:hover { background-color: #f3e8ff; color: #7e22ce; } 
+    .btn-edit:hover { background-color: #e0f2fe; color: #0284c7; }
+    .btn-delete:hover { background-color: #fee2e2; color: #e11d48; }
+    .btn-assign:hover { background-color: #fef3c7; color: #d97706; }
+    
+    /* Forms & Modals */
+    .form-label { font-weight: 600; color: #334155; font-size: 0.85rem; margin-bottom: 0.5rem; }
+    .form-control, .form-select { border-radius: 8px; border: 1px solid #cbd5e1; padding: 0.65rem 1rem; font-size: 0.95rem; background-color: #f8fafc; }
+    .form-control:focus, .form-select:focus { background-color: #ffffff; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+    .form-section-title { font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1.25rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.75rem; }
+    .permission-checkbox { transform: scale(1.2); cursor: pointer; }
+    
+    /* Modal Preview Image */
+    #imagePreviewModal .modal-content { background-color: transparent; border: none; box-shadow: none; }
+    #imagePreviewModal img { max-width: 100%; max-height: 80vh; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); object-fit: contain; }
+    #imagePreviewModal .btn-close-preview { position: absolute; top: -15px; right: -15px; background: #fff; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 1060; border: none; color: #333;}
+    #imagePreviewModal .btn-close-preview:hover { background: #dc2626; color: white;}
+
+    /* ==============================================
+       រចនាបថកុងតាក់ (Toggle Switches)
+       ============================================== */
+    .custom-switch .form-check-input {
+        width: 2.8em;
+        height: 1.4em;
+        cursor: pointer;
+        box-shadow: none !important;
+        border-color: #cbd5e1;
+        transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    }
+    .custom-switch .form-check-input:focus {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280, 0, 0, 0.25%29'/%3e%3c/svg%3e");
+    }
+    
+    /* ពណ៌កុងតាក់ពេលបើក (Active Colors) */
+    .switch-all:checked { background-color: #475569; border-color: #475569; }
+    .switch-view:checked { background-color: #3b82f6; border-color: #3b82f6; } /* ពណ៌ខៀវ */
+    .switch-create:checked { background-color: #10b981; border-color: #10b981; } /* ពណ៌បៃតង */
+    .switch-edit:checked { background-color: #f59e0b; border-color: #f59e0b; } /* ពណ៌លឿង */
+    .switch-delete:checked { background-color: #ef4444; border-color: #ef4444; } /* ពណ៌ក្រហម */
+    
+    /* ធ្វើឱ្យជួរឆ្លាស់ពណ៌គ្នា (Zebra-striping) ដើម្បីងាយស្រួលមើល */
+    .matrix-table tbody tr:nth-child(even) { background-color: #f8fafc; }
+    .matrix-table tbody tr:hover { background-color: #f1f5f9; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0 mb-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-custom">
+                <div class="card-header card-header-custom d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div>
+                        <h4 class="fw-bold mb-1 text-dark" style="letter-spacing: -0.5px;"><i class="fas fa-users-cog text-primary me-2"></i> បញ្ជីអ្នកប្រើប្រាស់</h4>
+                        <span class="text-muted small"><i class="fas fa-info-circle me-1"></i> គ្រប់គ្រងគណនី សិទ្ធិប្រើប្រាស់ និងតួនាទីក្នុងប្រព័ន្ធ</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary fw-bold rounded-pill px-4 shadow-sm d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                            <i class="fas fa-user-plus me-2"></i> បង្កើតគណនីថ្មី
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-body p-0 bg-white" style="border-radius: 0 0 16px 16px; overflow: hidden;">
+                    <div class="table-responsive">
+                        <table class="table table-custom align-middle table-hover text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th class="text-center" style="width: 50px;">ល.រ</th>
+                                    <th>គណនីអ្នកប្រើប្រាស់ (User Profile)</th>
+                                    <th>តួនាទី (Role)</th>
+                                    <th>ព័ត៌មានទំនាក់ទំនង (Contact)</th>
+                                    <th class="text-center">ស្ថានភាព</th>
+                                    <th>កាលបរិច្ឆេទ (Dates)</th>
+                                    <th class="text-end pe-4">សកម្មភាព (Actions)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for u in users %}
+                                <tr>
+                                    <td class="text-center text-dark fw-bold small">{{ loop.index }}</td>
+                                    
+                                    <td>
+                                        <div class="user-profile-group">
+                                            <div class="avatar-wrapper">
+                                                {% if u.profile_image %}
+                                                    <img src="{{ url_for('static', filename='uploads/profiles/' ~ u.profile_image) }}" 
+                                                         alt="Profile" class="avatar-img" 
+                                                         onclick="showImagePreview(this.src)" title="ចុចដើម្បីមើលរូបធំ">
+                                                {% else %}
+                                                    <div class="avatar-circle">{{ u.full_name[:1] | upper }}</div>
+                                                {% endif %}
+                                                
+                                                {% if u.gender == 'M' %}
+                                                    <div class="gender-badge gender-m" title="ប្រុស (Male)"><i class="fas fa-mars"></i></div>
+                                                {% elif u.gender == 'F' %}
+                                                    <div class="gender-badge gender-f" title="ស្រី (Female)"><i class="fas fa-venus"></i></div>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark fs-6 mb-1">{{ u.full_name }}</div>
+                                                <div class="text-muted small" style="font-family: monospace, sans-serif; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; display: inline-block;">
+                                                    <i class="fas fa-at text-primary opacity-50"></i>{{ u.username }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    
+                                    <td>
+                                        <div class="d-flex flex-column align-items-start gap-1">
+                                            <span class="role-badge {% if 'admin' in u.role_name|lower %}role-badge-admin{% endif %}">
+                                                <i class="fas fa-user-shield"></i> {{ u.role_name|title or 'គ្មានតួនាទី' }}
+                                            </span>
+                                            {% if u.role_name and u.role_name|lower == 'proctor' and u.test_room %}
+                                                <span class="small text-success fw-bold mt-1"><i class="fas fa-door-open me-1"></i> បន្ទប់: {{ u.test_room }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    
+                                    <td>
+                                        <div class="contact-stack">
+                                            <div class="contact-item" title="លេខទូរស័ព្ទ">
+                                                <i class="fas fa-phone-alt"></i> 
+                                                <span class="{% if not u.phone_number %}opacity-50 fst-italic{% else %}fw-medium text-dark{% endif %}">
+                                                    {{ u.phone_number or 'មិនមានលេខទូរស័ព្ទ' }}
+                                                </span>
+                                            </div>
+                                            <div class="contact-item" title="Telegram">
+                                                <i class="fab fa-telegram-plane {% if u.telegram_username %}text-info{% endif %}"></i> 
+                                                {% if u.telegram_username %}
+                                                    <a href="https://t.me/{{ u.telegram_username }}" target="_blank" class="text-decoration-none text-info fw-bold">@{{ u.telegram_username }}</a>
+                                                {% else %}
+                                                    <span class="opacity-50 fst-italic">មិនមាន Telegram</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="contact-item" title="អ៊ីមែល">
+                                                <i class="fas fa-envelope"></i> 
+                                                <span class="{% if not u.email %}opacity-50 fst-italic{% endif %}">{{ u.email or 'មិនមានអ៊ីមែល' }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    
+                                    <td class="text-center">
+                                        {% if u.is_active == 1 %}
+                                            <form action="/toggle_user_status/{{ u.id }}/0" method="POST" class="m-0">
+                                                <button type="submit" class="status-badge status-active" title="ចុចដើម្បីបិទគណនី"><i class="fas fa-check-circle me-1"></i> ដំណើរការ (Active)</button>
+                                            </form>
+                                        {% else %}
+                                            <form action="/toggle_user_status/{{ u.id }}/1" method="POST" class="m-0">
+                                                <button type="submit" class="status-badge status-inactive" title="ចុចដើម្បីបើកគណនីវិញ"><i class="fas fa-lock me-1"></i> បានបិទ (Inactive)</button>
+                                            </form>
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <td>
+                                        <div class="d-flex flex-column gap-1">
+                                            <div class="small text-dark" title="ថ្ងៃបង្កើតគណនី"><i class="far fa-calendar-plus text-muted me-1"></i> {{ u.created_at.strftime('%d-%b-%Y') if u.created_at else '-' }}</div>
+                                            <div class="small text-muted" title="ចូលប្រើប្រាស់ចុងក្រោយ"><i class="far fa-clock me-1"></i> {{ u.last_login.strftime('%d-%b %H:%M') if u.last_login else 'មិនទាន់ Login' }}</div>
+                                        </div>
+                                    </td>
+                                    
+                                    <td class="pe-4">
+                                        <div class="action-group">
+                                            <button type="button" class="btn-action btn-permission" data-bs-toggle="modal" data-bs-target="#userPermissionModal{{ u.id }}" title="កំណត់សិទ្ធិផ្តាច់មុខ (Permissions)">
+                                                <i class="fas fa-key"></i>
+                                            </button>
+
+                                            {% if u.role_name and u.role_name|lower == 'proctor' %}
+                                                <button type="button" class="btn-action btn-assign" 
+                                                        data-userid="{{ u.id }}" 
+                                                        data-username="{{ u.full_name }}" 
+                                                        data-userroom="{{ u.test_room or '' }}" 
+                                                        onclick="openAssignModal(this)" title="ចាត់តាំងបន្ទប់ប្រឡង">
+                                                    <i class="fas fa-chalkboard-teacher"></i>
+                                                </button>
+                                            {% endif %}
+                                            
+                                            <button type="button" class="btn-action btn-edit" data-bs-toggle="modal" data-bs-target="#editUserModal{{ u.id }}" title="កែប្រែគណនី"><i class="fas fa-pen"></i></button>
+                                            
+                                            <form action="/delete_user/{{ u.id }}" method="POST" class="m-0" onsubmit="return confirm('តើអ្នកពិតជាចង់លុបគណនី [{{ u.full_name }}] នេះមែនទេ?');">
+                                                <button type="submit" class="btn-action btn-delete" title="លុបគណនី"><i class="fas fa-trash-alt"></i></button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-5">
+                                        <div class="d-inline-flex justify-content-center align-items-center bg-light rounded-circle mb-3" style="width: 90px; height: 90px;">
+                                            <i class="fas fa-users-slash fa-2x text-muted opacity-50"></i>
+                                        </div>
+                                        <h5 class="fw-bold text-secondary mb-1">មិនទាន់មានទិន្នន័យគណនីទេ</h5>
+                                        <p class="text-muted small">សូមចុចប៊ូតុង "បង្កើតគណនីថ្មី" ដើម្បីបញ្ចូលទិន្នន័យ។</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% for u in users %}
+<div class="modal fade" id="userPermissionModal{{ u.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <form action="/update_user_permissions/{{ u.id }}" method="POST">
+                <div class="modal-header text-white border-0" style="background-color: #0f172a; padding: 1.25rem 1.5rem;">
+                    <h5 class="modal-title fw-bold" style="letter-spacing: 0.5px;">
+                        <i class="fas fa-sliders-h text-warning me-2"></i> គ្រប់គ្រងសិទ្ធិលម្អិត (Rights Management) : <span class="text-info">{{ u.full_name }}</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                
+                <div class="modal-body p-0 bg-white">
+                    <div class="table-responsive" style="max-height: 65vh; overflow-y: auto;">
+                        <table class="table matrix-table align-middle mb-0" style="border-collapse: separate; border-spacing: 0;">
+                            <thead style="position: sticky; top: 0; z-index: 10;">
+                                <tr>
+                                    <th style="background-color: #f1f5f9; color: #1e293b; padding: 1rem 1.5rem; border-bottom: 2px solid #cbd5e1; width: 28%;">មុខងារក្នុងប្រព័ន្ធ (Module)</th>
+                                    <th class="text-center" style="background-color: #e2e8f0; color: #334155; border-bottom: 2px solid #cbd5e1; width: 12%;">បើកទាំងអស់</th>
+                                    <th class="text-center" style="background-color: #f8fafc; color: #3b82f6; border-bottom: 2px solid #cbd5e1; width: 15%;"><i class="fas fa-eye me-1"></i> មើល</th>
+                                    <th class="text-center" style="background-color: #f8fafc; color: #10b981; border-bottom: 2px solid #cbd5e1; width: 15%;"><i class="fas fa-plus me-1"></i> បង្កើត</th>
+                                    <th class="text-center" style="background-color: #f8fafc; color: #f59e0b; border-bottom: 2px solid #cbd5e1; width: 15%;"><i class="fas fa-pen me-1"></i> កែប្រែ</th>
+                                    <th class="text-center" style="background-color: #f8fafc; color: #ef4444; border-bottom: 2px solid #cbd5e1; width: 15%;"><i class="fas fa-trash me-1"></i> លុប</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white">
+                                {% for category_name, perms in grouped_permissions.items() %}
+                                
+                                <tr>
+                                    <td colspan="6" class="fw-bold text-primary" style="background-color: #e0f2fe; border-bottom: 2px solid #bae6fd; padding: 0.75rem 1.5rem; letter-spacing: 0.5px;">
+                                        <i class="fas fa-folder-open text-info me-2"></i> {{ category_name }}
+                                    </td>
+                                </tr>
+                            
+                                    {% for p in perms %}
+                                        {% set up_view = 1 if u.id in user_perms and p.id in user_perms[u.id] and user_perms[u.id][p.id]['can_view'] else 0 %}
+                                        {% set up_create = 1 if u.id in user_perms and p.id in user_perms[u.id] and user_perms[u.id][p.id]['can_create'] else 0 %}
+                                        {% set up_edit = 1 if u.id in user_perms and p.id in user_perms[u.id] and user_perms[u.id][p.id]['can_edit'] else 0 %}
+                                        {% set up_delete = 1 if u.id in user_perms and p.id in user_perms[u.id] and user_perms[u.id][p.id]['can_delete'] else 0 %}
+                                        
+                                    <tr>
+                                        <td class="fw-bold text-dark ps-4" style="padding: 0.8rem 1.5rem; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;">
+                                            <i class="fas fa-caret-right text-muted me-2 opacity-50"></i> {{ p.description }} <br>
+                                            <small class="text-muted fw-normal ms-3" style="font-size: 0.75rem; font-family: monospace;">{{ p.name }}</small>
+                                        </td>
+                                        
+                                        <td class="text-center" style="background-color: rgba(226, 232, 240, 0.3); border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;">
+                                            <div class="form-check form-switch custom-switch d-inline-block m-0">
+                                                <input class="form-check-input switch-all" type="checkbox" 
+                                                       data-row-target="row_{{ u.id }}_{{ p.id }}" 
+                                                       title="បើក/បិទ ទាំងអស់ក្នុងជួរនេះ"
+                                                       {% if up_view and up_create and up_edit and up_delete %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                            
+                                        <td class="text-center" style="border-bottom: 1px solid #e2e8f0; border-right: 1px dashed #f1f5f9;">
+                                            <div class="form-check form-switch custom-switch d-inline-block m-0">
+                                                <input class="form-check-input switch-view perm-toggle row_{{ u.id }}_{{ p.id }}" 
+                                                       type="checkbox" name="perm_{{ p.id }}_view" value="1" 
+                                                       data-row-id="row_{{ u.id }}_{{ p.id }}" {% if up_view %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                                        
+                                        <td class="text-center" style="border-bottom: 1px solid #e2e8f0; border-right: 1px dashed #f1f5f9;">
+                                            <div class="form-check form-switch custom-switch d-inline-block m-0">
+                                                <input class="form-check-input switch-create perm-toggle row_{{ u.id }}_{{ p.id }}" 
+                                                       type="checkbox" name="perm_{{ p.id }}_create" value="1" 
+                                                       data-row-id="row_{{ u.id }}_{{ p.id }}" {% if up_create %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                                        
+                                        <td class="text-center" style="border-bottom: 1px solid #e2e8f0; border-right: 1px dashed #f1f5f9;">
+                                            <div class="form-check form-switch custom-switch d-inline-block m-0">
+                                                <input class="form-check-input switch-edit perm-toggle row_{{ u.id }}_{{ p.id }}" 
+                                                       type="checkbox" name="perm_{{ p.id }}_edit" value="1" 
+                                                       data-row-id="row_{{ u.id }}_{{ p.id }}" {% if up_edit %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                                        
+                                        <td class="text-center" style="border-bottom: 1px solid #e2e8f0;">
+                                            <div class="form-check form-switch custom-switch d-inline-block m-0">
+                                                <input class="form-check-input switch-delete perm-toggle row_{{ u.id }}_{{ p.id }}" 
+                                                       type="checkbox" name="perm_{{ p.id }}_delete" value="1" 
+                                                       data-row-id="row_{{ u.id }}_{{ p.id }}" {% if up_delete %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="modal-footer border-top bg-light px-4 py-3">
+                    <button type="button" class="btn btn-white border rounded-pill fw-bold px-4 shadow-sm" data-bs-dismiss="modal">បោះបង់</button>
+                    <button type="submit" class="btn btn-primary fw-bold rounded-pill px-5 shadow-sm"><i class="fas fa-save me-1"></i> រក្សាទុក (Save)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade text-start text-wrap" id="editUserModal{{ u.id }}" tabindex="-1" style="white-space: normal;">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content card-custom border-0 shadow-lg rounded-4">
+            <form action="/edit_user/{{ u.id }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-header card-header-custom">
+                    <h5 class="modal-title fw-bold text-dark"><i class="fas fa-user-edit text-warning me-2"></i> កែប្រែព័ត៌មានគណនី ({{ u.username }})</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-white">
+                    <div class="row">
+                        <div class="col-md-6 border-end pe-4">
+                            <div class="form-section-title"><i class="fas fa-id-card me-2"></i> ព័ត៌មានផ្ទាល់ខ្លួន</div>
+                            <div class="mb-3">
+                                <label class="form-label">ឈ្មោះពិត: <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="full_name" value="{{ u.full_name }}" required>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label">ភេទ:</label>
+                                    <select class="form-select" name="gender">
+                                        <option value="" {% if not u.gender %}selected{% endif %}>- ជ្រើសរើស -</option>
+                                        <option value="M" {% if u.gender == 'M' %}selected{% endif %}>ប្រុស</option>
+                                        <option value="F" {% if u.gender == 'F' %}selected{% endif %}>ស្រី</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">តួនាទី: <span class="text-danger">*</span></label>
+                                    <select class="form-select text-primary fw-bold" style="background-color: #f0fdf4; border-color: #bbf7d0;" name="role_id" required>
+                                        {% for r in roles %}
+                                        <option value="{{ r.role_id }}" {% if r.name == u.role_name %}selected{% endif %}>{{ r.name|title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">ផ្លាស់ប្តូររូបថត:</label>
+                                <input type="file" class="form-control" name="profile_image" accept="image/*" style="padding: 0.4rem;">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 ps-4">
+                            <div class="form-section-title"><i class="fas fa-lock me-2"></i> គណនី & ទំនាក់ទំនង</div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label">Username: <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control bg-light" name="username" value="{{ u.username }}" required readonly>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Password ថ្មី:</label>
+                                    <input type="password" class="form-control" name="password" placeholder="(ទុកទទេបើមិនប្តូរ)">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Telegram Username:</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fab fa-telegram text-info"></i></span>
+                                    <input type="text" class="form-control telegram-format" name="telegram_username" value="{{ u.telegram_username or '' }}">
+                                </div>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label">លេខទូរស័ព្ទ:</label>
+                                    <input type="tel" class="form-control phone-format" name="phone_number" value="{{ u.phone_number or '' }}" maxlength="12">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">អ៊ីមែល:</label>
+                                    <input type="email" class="form-control" name="email" value="{{ u.email or '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 px-4 py-3 bg-light" style="border-radius: 0 0 16px 16px;">
+                    <button type="button" class="btn btn-white border px-4 rounded-pill fw-bold shadow-sm" data-bs-dismiss="modal">បោះបង់</button>
+                    <button type="submit" class="btn btn-success px-5 rounded-pill fw-bold shadow-sm"><i class="fas fa-save me-1"></i> រក្សាទុកការកែប្រែ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content card-custom border-0 shadow-lg rounded-4">
+            <form action="/users" method="POST" enctype="multipart/form-data">
+                <div class="modal-header card-header-custom">
+                    <h5 class="modal-title fw-bold text-dark"><i class="fas fa-user-plus text-primary me-2"></i> បង្កើតគណនីថ្មី</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-white">
+                    <div class="row">
+                        <div class="col-md-6 border-end pe-4">
+                            <div class="form-section-title"><i class="fas fa-id-card me-2"></i> ព័ត៌មានផ្ទាល់ខ្លួន</div>
+                            <div class="mb-3">
+                                <label class="form-label">ឈ្មោះពិត (Full Name) <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="full_name" required placeholder="ឧ. OL KIM ENG">
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label">ភេទ (Gender)</label>
+                                    <select class="form-select" name="gender">
+                                        <option value="">- ជ្រើសរើស -</option>
+                                        <option value="M">ប្រុស (Male)</option>
+                                        <option value="F">ស្រី (Female)</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">តួនាទី (Role) <span class="text-danger">*</span></label>
+                                    <select class="form-select text-primary fw-bold" style="background-color: #f0fdf4; border-color: #bbf7d0;" name="role_id" required>
+                                        <option value="" selected disabled>-- ជ្រើសរើស --</option>
+                                        {% for r in roles %}
+                                        <option value="{{ r.role_id }}">{{ r.name|title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">រូបថត (Profile)</label>
+                                <input type="file" name="profile_image" class="form-control" accept="image/*" style="padding: 0.4rem;">
+                            </div>
+                        </div>
+                        <div class="col-md-6 ps-4">
+                            <div class="form-section-title"><i class="fas fa-lock me-2"></i> គណនី & ទំនាក់ទំនង</div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label">Username <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="username" required pattern="[a-zA-Z0-9_.]+" title="អក្សរអង់គ្លេស លេខ ឬ _ ." placeholder="ឧ. admin">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Password <span class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" name="password" required minlength="6" placeholder="••••••••">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Telegram Username</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fab fa-telegram-plane text-info"></i></span>
+                                    <input type="text" class="form-control telegram-format" name="telegram_username" placeholder="sok_chan">
+                                </div>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label">លេខទូរស័ព្ទ</label>
+                                    <input type="tel" class="form-control phone-format" name="phone_number" placeholder="012 345 678" maxlength="12" pattern="^[0-9]{3} [0-9]{3} [0-9]{3,4}$">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">អ៊ីមែល (Email)</label>
+                                    <input type="email" class="form-control" name="email" placeholder="mail@example.com">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 px-4 py-3 bg-light" style="border-radius: 0 0 16px 16px;">
+                    <button type="button" class="btn btn-white border px-4 rounded-pill fw-bold shadow-sm" data-bs-dismiss="modal">បោះបង់</button>
+                    <button type="submit" class="btn btn-primary px-5 rounded-pill fw-bold shadow-sm"><i class="fas fa-user-plus me-1"></i> បង្កើតគណនី</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="assignRoomModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <form action="/assign_room" method="POST">
+                <div class="modal-header text-center border-bottom pb-3 bg-white" style="border-radius: 16px 16px 0 0;">
+                    <h5 class="modal-title fw-bold text-dark w-100"><i class="fas fa-door-open text-primary me-2"></i> ចាត់តាំងបន្ទប់ប្រឡង</h5>
+                    <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-white text-center">
+                    <input type="hidden" name="user_id" id="assign_user_id">
+                    <p class="text-muted small mb-1">កំពុងចាត់តាំងឱ្យអនុរក្ស៖</p>
+                    <h5 class="fw-bold text-primary mb-4" id="assign_user_name"></h5>
+                    
+                    <div class="text-start">
+                        <label class="form-label">ជ្រើសរើសបន្ទប់ពីបញ្ជី <span class="text-danger">*</span></label>
+                        <select class="form-select form-select-lg shadow-sm border-primary fw-bold text-dark" name="test_room" id="assign_test_room" required>
+                            <option value="">-- ចុចរើសបន្ទប់ --</option>
+                            {% for room in rooms %}
+                                <option value="{{ room.test_room }}">{{ room.test_room }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 d-flex justify-content-between px-4 py-3 bg-light" style="border-radius: 0 0 16px 16px;">
+                    <button type="button" class="btn btn-white border px-4 rounded-pill fw-bold" data-bs-dismiss="modal">បោះបង់</button>
+                    <button type="submit" class="btn btn-primary px-4 rounded-pill fw-bold shadow-sm"><i class="fas fa-save me-1"></i> រក្សាទុក</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm"> 
+        <div class="modal-content position-relative">
+            <button type="button" class="btn-close-preview" data-bs-dismiss="modal" aria-label="Close">
+                <i class="fas fa-times fs-5"></i>
+            </button>
+            <div class="modal-body p-1 text-center">
+                <img src="" id="previewTargetImage" alt="Preview Image" class="img-fluid w-100" style="border-radius: 10px;">
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 💡 Script សម្រាប់បញ្ជាកុងតាក់ "បើកទាំងអស់ (Select All)" ក្នុងម៉ាទ្រីកសិទ្ធិ
+    document.addEventListener('change', function(e) {
+        // ១. ពេលចុចកុងតាក់ "បើកទាំងអស់"
+        if (e.target.classList.contains('switch-all')) {
+            const targetClass = e.target.getAttribute('data-row-target');
+            const checkboxes = document.querySelectorAll('.' + targetClass);
+            checkboxes.forEach(cb => {
+                cb.checked = e.target.checked;
+            });
+        } 
+        // ២. ពេលចុចកុងតាក់តូចៗ (View, Create...) វានឹងឆែកមើលថាបើបិទមួយ ត្រូវបិទ "បើកទាំងអស់" ដែរ
+        else if (e.target.classList.contains('perm-toggle')) {
+            const rowId = e.target.getAttribute('data-row-id');
+            const allSwitch = document.querySelector(`.switch-all[data-row-target="${rowId}"]`);
+            const allTogglesInRow = document.querySelectorAll(`.${rowId}`);
+            
+            // ឆែកមើលថាតើកុងតាក់ទាំង ៤ ក្នុងជួរនោះត្រូវបានបើកទាំងអស់ឬទេ?
+            let allChecked = true;
+            allTogglesInRow.forEach(cb => {
+                if (!cb.checked) allChecked = false;
+            });
+            
+            // បើបើកទាំង ៤ ឱ្យកុងតាក់មេបើកតាម បើបិទតែមួយ ឱ្យកុងតាក់មេបិទតាម
+            if (allSwitch) {
+                allSwitch.checked = allChecked;
+            }
+        }
+    });
+
+    // 💡 Script បើក Modal ចាត់តាំងបន្ទប់
+    function openAssignModal(btnElement) {
+        let userId = btnElement.getAttribute('data-userid');
+        let userName = btnElement.getAttribute('data-username');
+        let currentRoom = btnElement.getAttribute('data-userroom');
+        
+        document.getElementById('assign_user_id').value = userId;
+        document.getElementById('assign_user_name').innerText = userName;
+        
+        let roomSelect = document.getElementById('assign_test_room');
+        roomSelect.value = currentRoom || ""; 
+
+        new bootstrap.Modal(document.getElementById('assignRoomModal')).show();
+    }
+
+    // Script សម្រាប់បង្ហាញរូបភាពធំពេលចុច
+    function showImagePreview(imageSrc) {
+        document.getElementById('previewTargetImage').src = imageSrc;
+        var myModal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+        myModal.show();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const phoneInputs = document.querySelectorAll('.phone-format');
+        phoneInputs.forEach(input => {
+            input.value = formatPhoneNumber(input.value);
+            input.addEventListener('input', function(e) { this.value = formatPhoneNumber(this.value); });
+        });
+
+        function formatPhoneNumber(value) {
+            if (!value) return value;
+            const phoneNumber = value.replace(/[^\d]/g, ''); 
+            const len = phoneNumber.length;
+            if (len < 4) return phoneNumber;
+            if (len < 7) return `${phoneNumber.slice(0, 3)} ${phoneNumber.slice(3)}`;
+            return `${phoneNumber.slice(0, 3)} ${phoneNumber.slice(3, 6)} ${phoneNumber.slice(6, 10)}`;
+        }
+
+        const telegramInputs = document.querySelectorAll('.telegram-format');
+        telegramInputs.forEach(input => {
+            input.addEventListener('input', function(e) {
+                this.value = this.value.replace('https://t.me/', '').replace('@', '').replace(/\s+/g, '');
+            });
+        });
+    });
+</script>
+{% endblock %}

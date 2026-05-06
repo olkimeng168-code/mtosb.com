@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ស្ថានភាពពាក្យសុំ | EPS System</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @font-face { font-family: 'Khmer OS Siemreap'; src: local('Khmer OS Siemreap'); }
+        body { background-color: #f4f7fb; font-family: 'Khmer OS Siemreap', sans-serif; color: #334155; }
+        
+        .app-banner { background-color: #06427b; border-bottom: 5px solid #f6b024; color: white; text-align: center; padding: 25px 15px; }
+        
+        .success-card { background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); max-width: 480px; margin: 40px auto; padding: 40px 30px; text-align: center; border: 1px solid #e2e8f0; }
+        
+        /* ពណ៌ Icon សម្រាប់ជោគជ័យ និង បដិសេធ */
+        .success-icon { font-size: 5.5rem; color: #10b981; margin-bottom: 20px; animation: scaleIn 0.5s ease-out; }
+        .reject-icon { font-size: 5.5rem; color: #ef4444; margin-bottom: 20px; animation: scaleIn 0.5s ease-out; }
+        
+        @keyframes scaleIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        .queue-box { background: #eff6ff; border: 2px dashed #3b82f6; border-radius: 16px; padding: 25px 15px; margin: 25px 0; animation: slideUp 0.6s ease-out; }
+        .queue-title { color: #475569; font-weight: 600; font-size: 1rem; margin-bottom: 5px; }
+        .queue-number { font-size: 3.5rem; font-weight: 900; color: #1d4ed8; margin: 0; line-height: 1; letter-spacing: 2px;}
+        
+        @keyframes slideUp { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+
+        .info-box { background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 30px; border: 1px solid #e2e8f0; text-align: left; }
+
+        .btn-action { border-radius: 50px; padding: 14px 20px; font-size: 1.05rem; font-weight: bold; text-decoration: none; display: block; transition: all 0.3s; width: 100%; margin-bottom: 12px; }
+        .btn-edit { background: #fffbeb; color: #d97706; border: 2px solid #fcd34d; }
+        .btn-edit:hover { background: #fef3c7; color: #b45309; transform: translateY(-2px); }
+        .btn-disabled { background: #f1f5f9; color: #94a3b8; border: 2px solid #e2e8f0; cursor: not-allowed; pointer-events: none; }
+        
+        .btn-logout { background: linear-gradient(135deg, #0b5394, #1a73e8); color: white; border: none; box-shadow: 0 4px 15px rgba(26, 115, 232, 0.3); }
+        .btn-logout:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26, 115, 232, 0.4); color: white; }
+        
+        /* ប៊ូតុងយកលេខថ្មី */
+        .btn-requeue { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
+        .btn-requeue:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4); color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="app-banner">
+        <h4 class="mb-0 fw-bold">ទម្រង់ដាក់ពាក្យស្វែងរកការងារ</h4>
+    </div>
+
+    <div class="container px-3">
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mt-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} rounded-4 shadow-sm fw-bold border-0 text-center">
+                        <i class="fas fa-info-circle me-2"></i>{{ message }}
+                    </div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% if status_id == 3 %}
+        <div class="success-card" style="border: 2px solid #ef4444; background-color: #fff5f5;">
+            <i class="fas fa-exclamation-triangle reject-icon"></i>
+            
+            <h4 class="fw-bold text-danger mb-3">ឯកសាររបស់អ្នកមានការខ្វះខាត!</h4>
+            
+            <div class="alert alert-danger text-start mb-4 border-danger border-opacity-25 shadow-sm">
+                <p class="mb-1 fw-bold"><i class="fas fa-comment-dots me-1"></i> មូលហេតុពីមន្ត្រី៖</p>
+                <p class="mb-0" style="font-size: 1.1rem;">{{ remark }}</p>
+            </div>
+            
+            <p class="text-muted small mb-4">
+                ប្រសិនបើអ្នកបានរៀបចំឯកសារខាងលើនេះគ្រប់គ្រាន់ហើយ សូមចុចប៊ូតុងខាងក្រោមដើម្បីយកលេខរង់ចាំជួបមន្ត្រីម្តងទៀត (មិនបាច់វាយទិន្នន័យឡើងវិញទេ)។
+            </p>
+            
+            <div class="action-buttons">
+                <form action="/candidate/request_new_ticket" method="POST">
+                    <button type="submit" class="btn-action btn-requeue text-white">
+                        <i class="fas fa-ticket-alt me-2"></i> ស្នើសុំលេខរង់ចាំថ្មី
+                    </button>
+                </form>
+
+                <a href="/candidate/logout" class="btn-action btn-logout" style="background: #64748b; box-shadow: none;">
+                    <i class="fas fa-sign-out-alt me-2"></i> ចាកចេញសិន
+                </a>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="success-card">
+            <i class="fas fa-check-circle success-icon"></i>
+            
+            <h4 class="fw-bold text-dark mb-2">បញ្ជូនទិន្នន័យជោគជ័យ!</h4>
+            <p class="text-muted mb-0" style="font-size: 0.95rem;">
+                ទម្រង់ពាក្យសុំរបស់អ្នកត្រូវបានរក្សាទុកចូលក្នុងប្រព័ន្ធរួចរាល់។
+            </p>
+
+            <div class="queue-box">
+                <div class="queue-title">លេខរង់ចាំរបស់អ្នក (Queue No.)</div>
+                <div class="queue-number">{{ queue_number }}</div>
+                <div class="text-danger mt-3 small fw-bold">
+                    <i class="fas fa-camera me-1"></i> សូមថតអេក្រង់នេះទុកជាភស្តុតាង
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted"><i class="fas fa-id-badge me-2"></i>លេខកូដប្រឡង៖</span>
+                    <span class="fw-bold text-primary font-monospace">{{ app_no }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted"><i class="fas fa-user me-2"></i>ឈ្មោះ៖</span>
+                    <span class="fw-bold text-dark text-uppercase">{{ name }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted"><i class="fas fa-calendar-alt me-2"></i>កាលបរិច្ឆេទ៖</span>
+                    <span class="fw-bold text-dark">{{ apply_date_time }}</span>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                {% if has_requested_edit %}
+                    <button class="btn-action btn-disabled" disabled>
+                        <i class="fas fa-lock me-2"></i> អ្នកបានស្នើសុំកែតម្រូវរួចហើយ
+                    </button>
+                {% else %}
+                    <a href="/candidate/request_edit" class="btn-action btn-edit">
+                        <i class="fas fa-edit me-2"></i> ស្នើសុំកែតម្រូវទិន្នន័យ (បាន ១ ដង)
+                    </a>
+                {% endif %}
+
+                <a href="/candidate/logout" class="btn-action btn-logout">
+                    <i class="fas fa-sign-out-alt me-2"></i> ចាកចេញពីគណនី
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            localStorage.removeItem('eps_draft');
+            sessionStorage.clear(); 
+        });
+    </script>
+</body>
+</html>

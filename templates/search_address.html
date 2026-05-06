@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+
+{% block title %}បញ្ជីរាយនាមអាសយដ្ឋាន | EPS{% endblock %}
+{% block page_title %}តំបន់ (Address Explorer){% endblock %}
+
+{% block content %}
+<style>
+    /* =========================================
+       Professional Data Explorer UI (Updated)
+       ========================================= */
+    .column-container {
+        height: 48vh; 
+        overflow-y: auto;
+        background-color: #ffffff;
+        border-right: 1px solid #e9ecef;
+        padding: 0;
+    }
+    
+    .col-md-3:last-child .column-container {
+        border-right: none;
+    }
+
+    .column-container::-webkit-scrollbar {
+        width: 5px;
+    }
+    .column-container::-webkit-scrollbar-track {
+        background: #f8f9fa; 
+    }
+    .column-container::-webkit-scrollbar-thumb {
+        background: #ced4da; 
+        border-radius: 10px;
+    }
+    .column-container::-webkit-scrollbar-thumb:hover {
+        background: #adb5bd; 
+    }
+
+    .column-header {
+        padding: 10px 14px;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        font-size: 13.5px;
+        font-weight: 700;
+        color: #495057;
+        text-transform: uppercase;
+    }
+
+    .list-item-custom {
+        cursor: pointer;
+        padding: 7px 14px; 
+        font-size: 13.5px; 
+        color: #343a40;
+        transition: all 0.1s ease;
+        border-bottom: 1px solid #f1f3f5;
+        display: flex;
+        align-items: center;
+    }
+    .list-item-custom:hover {
+        background-color: #f8f9fa;
+    }
+    
+    /* 💡 កែប្រែពណ៌ពេលត្រូវបានជ្រើសរើស (Active Item) ឲ្យឌិត និងច្បាស់ជាងមុន */
+    .list-item-custom.active-item {
+        background-color: #d0e3ff; /* ពណ៌ខៀវរាងឌិតជាងមុន */
+        color: #002868; /* ពណ៌អក្សរខៀវចាស់ខ្លាំង */
+        border-left: 4px solid #0d6efd; /* បន្ទាត់កម្រាស់ 4px */
+        font-weight: 600; /* អក្សរដិតច្បាស់ */
+    }
+
+    .code-text {
+        color: #0d6efd;
+        margin-right: 8px;
+        font-family: 'Courier New', Courier, monospace;
+        font-weight: 600;
+        font-size: 13px;
+    }
+    
+    /* 💡 ពេល Active ក៏ប្តូរពណ៌លេខកូដឲ្យស៊ីគ្នាដែរ */
+    .list-item-custom.active-item .code-text {
+        color: #002868; 
+    }
+
+    .result-input-group {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        overflow: hidden;
+        background-color: #f8f9fa;
+    }
+    .result-input-group .form-control {
+        background-color: transparent;
+        border: none;
+        font-size: 13.5px;
+        padding: 5px 12px;
+        height: 34px; 
+        color: #495057;
+        box-shadow: none !important;
+    }
+    
+    /* 💡 កែប្រែប៊ូតុង Copy ទៅជាពណ៌ខៀវស្តង់ដារ (Primary Blue) */
+    .btn-copy {
+        background-color: #0d6efd; /* ពណ៌ខៀវ */
+        color: white;
+        border: none;
+        border-radius: 0;
+        padding: 0 12px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+    }
+    .btn-copy:hover {
+        background-color: #0b5ed7; /* ពណ៌ខៀវចាស់បន្តិចពេល Hover */
+        color: white;
+    }
+    .btn-success-copy {
+        background-color: #198754 !important; /* ពណ៌បៃតងពេល Copy ជោគជ័យ រក្សាដដែល */
+        color: white;
+    }
+    
+    .section-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #343a40;
+        margin-bottom: 8px;
+    }
+</style>
+
+<div class="container-fluid px-2 py-2">
+    
+    <div class="card shadow-sm border-0 rounded-3 mb-3"> <div class="card-body p-0">
+            <div class="row g-0">
+                <div class="col-12 col-md-3">
+                    <div class="column-header rounded-top-3">ខេត្ត / រាជធានី</div>
+                    <div class="column-container" id="col-province">
+                        <div class="text-center py-5 text-muted"><i class="fas fa-spinner fa-spin"></i> កំពុងផ្ទុក...</div>
+                    </div>
+                </div>
+                
+                <div class="col-12 col-md-3">
+                    <div class="column-header">ស្រុក / ខណ្ឌ / ក្រុង</div>
+                    <div class="column-container" id="col-district"></div>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <div class="column-header">ឃុំ / សង្កាត់</div>
+                    <div class="column-container" id="col-commune"></div>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <div class="column-header rounded-top-3">ភូមិ</div>
+                    <div class="column-container" id="col-village"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-3"> <div class="section-title">អាសយដ្ឋាន <span class="text-muted fw-normal ms-2">(Khmer)</span></div>
+            <div class="d-flex result-input-group mb-2">
+                <input type="text" class="form-control fw-bold text-dark" id="res_full_kh" readonly placeholder="...">
+                <button class="btn btn-copy" onclick="copyText('res_full_kh', this)" title="Copy អាសយដ្ឋានពេញ"><i class="far fa-copy"></i></button>
+            </div>
+
+            <div class="row g-2 mb-3"> <div class="col-md-3">
+                    <div class="d-flex result-input-group">
+                        <input type="text" class="form-control" id="res_prov_kh" readonly placeholder="ខេត្ត...">
+                        <button class="btn btn-copy" onclick="copyText('res_prov_kh', this)"><i class="far fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex result-input-group">
+                        <input type="text" class="form-control" id="res_dist_kh" readonly placeholder="ស្រុក...">
+                        <button class="btn btn-copy" onclick="copyText('res_dist_kh', this)"><i class="far fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex result-input-group">
+                        <input type="text" class="form-control" id="res_comm_kh" readonly placeholder="ឃុំ...">
+                        <button class="btn btn-copy" onclick="copyText('res_comm_kh', this)"><i class="far fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex result-input-group">
+                        <input type="text" class="form-control" id="res_vill_kh" readonly placeholder="ភូមិ...">
+                        <button class="btn btn-copy" onclick="copyText('res_vill_kh', this)"><i class="far fa-copy"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-title mt-3">Address <span class="text-muted fw-normal ms-2">(English)</span></div>
+            <div class="d-flex result-input-group mb-2">
+                <input type="text" class="form-control fw-bold text-dark" id="res_full_en" readonly placeholder="...">
+                <button class="btn btn-copy" onclick="copyText('res_full_en', this)" title="Copy Full Address"><i class="far fa-copy"></i></button>
+            </div>
+
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <div class="d-flex result-input-group">
+                        <input type="text" class="form-control" id="res_prov_en" readonly placeholder="Province...">
+                        <button class="btn btn-copy" onclick="copyText('res_prov_en', this)"><i class="far fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex result-input-group">
+                        <input type="text" class="form-control" id="res_dist_en" readonly placeholder="District...">
+                        <button class="btn btn-copy" onclick="copyText('res_dist_en', this)"><i class="far fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex result-input-group">
+                        <input type="text" class="form-control" id="res_comm_en" readonly placeholder="Commune...">
+                        <button class="btn btn-copy" onclick="copyText('res_comm_en', this)"><i class="far fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex result-input-group">
+                        <input type="text" class="form-control" id="res_vill_en" readonly placeholder="Village...">
+                        <button class="btn btn-copy" onclick="copyText('res_vill_en', this)"><i class="far fa-copy"></i></button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script id="provinces-data" type="application/json">
+    {{ provinces | tojson | safe }}
+</script>
+
+<script>
+    const provincesData = JSON.parse(document.getElementById('provinces-data').textContent);
+    
+    let sel = {
+        prov: {kh: '', en: '', type_en: 'Province'},
+        dist: {kh: '', en: '', type_en: 'District'},
+        comm: {kh: '', en: '', type_en: 'Commune'},
+        vill: {kh: '', en: '', type_en: 'Village'}
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        renderList('col-province', provincesData, 'province');
+    });
+
+    function renderList(containerId, data, level) {
+        let container = document.getElementById(containerId);
+        container.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            container.innerHTML = `<div class="text-center py-4 text-muted small">មិនមានទិន្នន័យ</div>`;
+            return;
+        }
+
+        data.forEach(item => {
+            let safeNameKh = item.name_kh.replace(/'/g, "\\'");
+            let safeNameEn = (item.name_en || '').replace(/'/g, "\\'");
+            let typeEn = item.type === 'រាជធានី' ? 'Capital' : 
+                         item.type === 'ក្រុង' ? 'Municipality' : 
+                         item.type === 'ខណ្ឌ' ? 'Khan' : 
+                         item.type === 'សង្កាត់' ? 'Sangkat' : 
+                         level === 'province' ? 'Province' : 
+                         level === 'district' ? 'District' : 
+                         level === 'commune' ? 'Commune' : 'Village';
+
+            container.innerHTML += `
+                <div class="list-item-custom" 
+                     id="item-${level}-${item.id}"
+                     onclick="handleSelection('${level}', ${item.id}, '${safeNameKh}', '${safeNameEn}', '${typeEn}')">
+                    <span class="code-text">(${item.code})</span> 
+                    <span class="text-truncate">${item.name_kh} ${item.name_en ? '- ' + item.name_en : ''}</span>
+                </div>
+            `;
+        });
+    }
+
+    async function handleSelection(level, id, nameKh, nameEn, typeEn) {
+        let container = document.getElementById(`col-${level}`);
+        let items = container.getElementsByClassName('list-item-custom');
+        for (let i = 0; i < items.length; i++) {
+            items[i].classList.remove('active-item');
+        }
+        document.getElementById(`item-${level}-${id}`).classList.add('active-item');
+
+        if (level === 'province') {
+            sel.prov = {kh: nameKh, en: nameEn, type_en: typeEn};
+            sel.dist = {kh: '', en: '', type_en: ''};
+            sel.comm = {kh: '', en: '', type_en: ''};
+            sel.vill = {kh: '', en: '', type_en: ''};
+            
+            document.getElementById('col-district').innerHTML = `<div class="text-center py-5 text-primary"><i class="fas fa-spinner fa-spin"></i></div>`;
+            document.getElementById('col-commune').innerHTML = '';
+            document.getElementById('col-village').innerHTML = '';
+            
+            try {
+                let res = await fetch(`/api/get_districts/${id}`);
+                let data = await res.json();
+                renderList('col-district', data, 'district');
+            } catch(e) {}
+        } 
+        else if (level === 'district') {
+            sel.dist = {kh: nameKh, en: nameEn, type_en: typeEn};
+            sel.comm = {kh: '', en: '', type_en: ''};
+            sel.vill = {kh: '', en: '', type_en: ''};
+            
+            document.getElementById('col-commune').innerHTML = `<div class="text-center py-5 text-primary"><i class="fas fa-spinner fa-spin"></i></div>`;
+            document.getElementById('col-village').innerHTML = '';
+            
+            try {
+                let res = await fetch(`/api/get_communes/${id}`);
+                let data = await res.json();
+                renderList('col-commune', data, 'commune');
+            } catch(e) {}
+        }
+        else if (level === 'commune') {
+            sel.comm = {kh: nameKh, en: nameEn, type_en: typeEn};
+            sel.vill = {kh: '', en: '', type_en: ''};
+            
+            document.getElementById('col-village').innerHTML = `<div class="text-center py-5 text-primary"><i class="fas fa-spinner fa-spin"></i></div>`;
+            
+            try {
+                let res = await fetch(`/api/get_villages/${id}`);
+                let data = await res.json();
+                renderList('col-village', data, 'village');
+            } catch(e) {}
+        }
+        else if (level === 'village') {
+            sel.vill = {kh: nameKh, en: nameEn, type_en: typeEn};
+        }
+
+        updateResultDisplay();
+    }
+
+    function updateResultDisplay() {
+        document.getElementById('res_prov_kh').value = sel.prov.kh;
+        document.getElementById('res_dist_kh').value = sel.dist.kh;
+        document.getElementById('res_comm_kh').value = sel.comm.kh;
+        document.getElementById('res_vill_kh').value = sel.vill.kh;
+
+        document.getElementById('res_prov_en').value = sel.prov.en;
+        document.getElementById('res_dist_en').value = sel.dist.en;
+        document.getElementById('res_comm_en').value = sel.comm.en;
+        document.getElementById('res_vill_en').value = sel.vill.en;
+
+        let fullKhArr = [];
+        if (sel.vill.kh) fullKhArr.push(`ភូមិ ${sel.vill.kh}`);
+        if (sel.comm.kh) fullKhArr.push(`ឃុំ ${sel.comm.kh}`);
+        if (sel.dist.kh) fullKhArr.push(`ស្រុក ${sel.dist.kh}`);
+        if (sel.prov.kh) fullKhArr.push(`ខេត្ត ${sel.prov.kh}`);
+        document.getElementById('res_full_kh').value = fullKhArr.join(', ');
+
+        let fullEnArr = [];
+        if (sel.vill.en) fullEnArr.push(`${sel.vill.en} ${sel.vill.type_en}`);
+        if (sel.comm.en) fullEnArr.push(`${sel.comm.en} ${sel.comm.type_en}`);
+        if (sel.dist.en) fullEnArr.push(`${sel.dist.en} ${sel.dist.type_en}`);
+        if (sel.prov.en) fullEnArr.push(`${sel.prov.en} ${sel.prov.type_en}`);
+        document.getElementById('res_full_en').value = fullEnArr.join(', ');
+    }
+
+    function copyText(inputId, btnElement) {
+        let copyText = document.getElementById(inputId);
+        if(!copyText.value) return;
+
+        copyText.select();
+        copyText.setSelectionRange(0, 99999); 
+        navigator.clipboard.writeText(copyText.value);
+
+        let originalHtml = btnElement.innerHTML;
+        btnElement.innerHTML = '<i class="fas fa-check"></i>';
+        btnElement.classList.add('btn-success-copy');
+        
+        setTimeout(() => {
+            btnElement.innerHTML = originalHtml;
+            btnElement.classList.remove('btn-success-copy');
+        }, 1200);
+    }
+</script>
+{% endblock %}

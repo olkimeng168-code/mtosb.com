@@ -1,0 +1,187 @@
+{% extends 'base.html' %} 
+
+{% block content %}
+<div class="container-fluid py-4" style="font-family: 'Khmer OS Siemreap', 'Battambang', sans-serif;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold text-primary mb-0" style="color: #0b2e59 !important;">
+            <i class="fas fa-qrcode me-2"></i> ការកំណត់ QR Code (QR Settings)
+        </h4>
+        <button type="button" class="btn btn-primary fw-bold rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addQRModal" style="background-color: #0b2e59; border: none;">
+            <i class="fas fa-plus-circle me-1"></i> បង្កើតថ្មី
+        </button>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="fas fa-info-circle me-2"></i> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-muted">
+                        <tr>
+                            <th class="py-3 px-4 text-center">ល.រ</th>
+                            <th class="py-3">ឈ្មោះ QR Code (មុខងារ)</th>
+                            <th class="py-3 text-center">តំណភ្ជាប់ (Link)</th>
+                            <th class="py-3 text-center">ថ្ងៃចាប់ផ្តើម</th>
+                            <th class="py-3 text-center">ថ្ងៃបញ្ចប់</th>
+                            <th class="py-3 text-center">ស្ថានភាព</th>
+                            <th class="py-3 text-center">សកម្មភាព</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in settings %}
+                        <tr>
+                            <td class="text-center px-4 fw-bold text-muted">{{ loop.index }}</td>
+                            
+                            <td><span class="fw-bold" style="color: #0b2e59;">{{ s.qr_name }}</span></td>
+                            
+                            <td class="text-center"><span class="badge bg-light text-primary border" style="font-family: Arial;">{{ s.target_url }}</span></td>
+                            <td class="text-center text-success fw-bold" style="font-family: Arial;">
+                                {{ s.start_datetime.strftime('%Y-%m-%d %H:%M') if s.start_datetime else 'មិនកំណត់' }}
+                            </td>
+                            <td class="text-center text-danger fw-bold" style="font-family: Arial;">
+                                {{ s.end_datetime.strftime('%Y-%m-%d %H:%M') if s.end_datetime else 'មិនកំណត់' }}
+                            </td>
+                            <td class="text-center">
+                                {% if s.is_active %}
+                                    <span class="badge bg-success rounded-pill px-3 py-2"><i class="fas fa-check me-1"></i> កំពុងបើក</span>
+                                {% else %}
+                                    <span class="badge bg-danger rounded-pill px-3 py-2"><i class="fas fa-lock me-1"></i> ផ្អាក</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button type="button" class="btn btn-warning btn-sm text-dark fw-bold rounded-3 shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#editQRModal{{ s.id }}">
+                                        <i class="fas fa-edit me-1"></i> កែប្រែ
+                                    </button>
+                                    
+                                    <form action="{{ url_for('delete_qr_setting', setting_id=s.id) }}" method="POST" onsubmit="return confirm('តើអ្នកពិតជាចង់លុបការកំណត់ QR Code នេះមែនទេ?');">
+                                        <button type="submit" class="btn btn-danger btn-sm fw-bold rounded-3 shadow-sm px-3">
+                                            <i class="fas fa-trash-alt me-1"></i> លុប
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <div class="modal fade" id="editQRModal{{ s.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content border-0 shadow-lg rounded-4">
+                                    <form action="{{ url_for('update_qr_setting', setting_id=s.id) }}" method="POST">
+                                        <div class="modal-header border-0" style="background-color: #0b2e59; color: white;">
+                                            <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2"></i> កែប្រែការកំណត់ QR Code</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body p-4 bg-light">
+                                            
+                                            <div class="row">
+                                                <div class="col-md-12 mb-3">
+                                                    <label class="form-label fw-bold text-dark">ឈ្មោះ QR Code (មុខងារ)</label>
+                                                    <input type="text" class="form-control" name="qr_name" value="{{ s.qr_name }}" required>
+                                                </div>
+                                                <div class="col-md-12 mb-4">
+                                                    <label class="form-label fw-bold text-dark">តំណភ្ជាប់ (Link)</label>
+                                                    <input type="text" class="form-control" name="target_url" value="{{ s.target_url }}" required>
+                                                </div>
+                                            </div>
+                                            
+                                            <hr class="text-muted">
+
+                                            <div class="row mt-3">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-bold text-success"><i class="fas fa-calendar-check me-1"></i> ថ្ងៃ/ម៉ោង ចាប់ផ្តើម</label>
+                                                    <input type="datetime-local" class="form-control" name="start_datetime" value="{{ s.start_datetime.strftime('%Y-%m-%dT%H:%M') if s.start_datetime else '' }}" required>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-bold text-danger"><i class="fas fa-calendar-times me-1"></i> ថ្ងៃ/ម៉ោង បញ្ចប់</label>
+                                                    <input type="datetime-local" class="form-control" name="end_datetime" value="{{ s.end_datetime.strftime('%Y-%m-%dT%H:%M') if s.end_datetime else '' }}" required>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-check form-switch mt-3 d-flex align-items-center">
+                                                <input class="form-check-input me-3" type="checkbox" role="switch" id="is_active_edit{{ s.id }}" name="is_active" style="width: 50px; height: 25px;" {% if s.is_active %}checked{% endif %}>
+                                                <label class="form-check-label fw-bold" for="is_active_edit{{ s.id }}" style="padding-top: 3px;">បើកដំណើរការ</label>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer justify-content-center bg-white border-top-0">
+                                            <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">បោះបង់</button>
+                                            <button type="submit" class="btn btn-warning text-dark fw-bold rounded-pill px-4 shadow-sm">
+                                                <i class="fas fa-save me-1"></i> រក្សាទុកការកែប្រែ
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addQRModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4" style="font-family: 'Khmer OS Siemreap', 'Battambang', sans-serif;">
+            <form action="{{ url_for('add_qr_setting') }}" method="POST">
+                
+                <div class="modal-header border-0" style="background-color: #0b2e59; color: white;">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-plus-circle me-2"></i> បង្កើតការកំណត់ QR Code ថ្មី</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                
+                <div class="modal-body p-4 bg-light">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold text-dark">ឈ្មោះ QR Code (មុខងារ)</label>
+                            <input type="text" class="form-control" name="qr_name" placeholder="ឧ. QR កាលវិភាគបេក្ខជន" required>
+                        </div>
+                        <div class="col-md-12 mb-4">
+                            <label class="form-label fw-bold text-dark">តំណភ្ជាប់ (Link)</label>
+                            <input type="text" class="form-control" name="target_url" placeholder="ឧ. /exam_schedule ឫ /candidate_login" required>
+                        </div>
+                    </div>
+
+                    <hr class="text-muted">
+
+                    <div class="row mt-3">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-success"><i class="fas fa-calendar-check me-1"></i> ថ្ងៃ/ម៉ោង ចាប់ផ្តើម</label>
+                            <input type="datetime-local" class="form-control" name="start_datetime" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-danger"><i class="fas fa-calendar-times me-1"></i> ថ្ងៃ/ម៉ោង បញ្ចប់</label>
+                            <input type="datetime-local" class="form-control" name="end_datetime" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-check form-switch mt-3 d-flex align-items-center">
+                        <input class="form-check-input me-3" type="checkbox" role="switch" id="is_active_new" name="is_active" style="width: 50px; height: 25px;" checked>
+                        <label class="form-check-label fw-bold" for="is_active_new" style="padding-top: 3px;">បើកដំណើរការភ្លាមៗ</label>
+                    </div>
+                </div>
+                
+                <div class="modal-footer justify-content-center bg-white border-top-0">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">បោះបង់</button>
+                    <button type="submit" class="btn btn-primary fw-bold rounded-pill px-4 shadow-sm" style="background-color: #0b2e59; border-color: #0b2e59;">
+                        <i class="fas fa-save me-1"></i> បង្កើតថ្មី
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

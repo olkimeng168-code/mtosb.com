@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="format-detection" content="telephone=no">
+    <title>EPS Exam System - 2FA Enrollment</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @font-face { font-family: 'Khmer OS Siemreap'; src: local('Khmer OS Siemreap'); }
+        body { 
+            font-family: 'Khmer OS Siemreap', sans-serif; 
+            background-color: #f4f7f6; 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow-x: hidden;
+        }
+        
+        .navbar { background-color: #1a1e21 !important; border-bottom: 4px solid #ffc107; padding: 10px 20px; }
+        
+        /* កែសម្រួល padding ដើម្បីកុំឱ្យឃ្លាតពីលើពេក */
+        .main-container { flex-grow: 1; padding: 15px 20px; display: flex; flex-direction: column; }
+        
+        .glass-card {
+            background: #ffffff; border-radius: 20px; border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden;
+            display: flex; flex-direction: column; 
+            /* លុប height: 100% ចេញ ដើម្បីកុំឱ្យវាយឺតធ្លាក់បាត */
+            height: auto; 
+        }
+
+        .search-container { max-width: 600px; margin: 0 auto 15px auto; width: 100%; }
+        .search-input {
+            border-radius: 50px 0 0 50px !important; padding: 10px 25px; font-size: 1.1rem;
+            border: 2px solid #eef0f2; border-right: none; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        }
+        .search-input:focus { box-shadow: none; border-color: #0d6efd; }
+        .search-btn {
+            border-radius: 0 50px 50px 0 !important; padding: 0 35px; font-weight: bold;
+            font-size: 1.1rem; background-color: #0d6efd; box-shadow: 0 4px 15px rgba(13, 110, 253, 0.2);
+        }
+
+        .candidate-avatar {
+            width: 140px; height: 180px; object-fit: cover; border-radius: 16px;
+            border: 4px solid #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.15); background-color: #f8f9fa;
+        }
+        .candidate-name { font-size: 1.5rem; font-weight: 900; color: #1a202c; letter-spacing: 0.5px; }
+        .badge-id { font-size: 1rem; padding: 5px 15px; border-radius: 30px; background: #eef2f7; color: #0d6efd; font-weight: bold; }
+        
+        .info-list { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+        .info-list .list-group-item {
+            padding: 12px 20px; border-color: #f1f3f5; background: transparent;
+            display: flex; justify-content: space-between; align-items: center; font-size: 1rem;
+        }
+        .info-label { color: #6c757d; font-weight: 600; display: flex; align-items: center;}
+        .info-label i { width: 25px; text-align: center; color: #adb5bd; margin-right: 10px; font-size: 1.1rem; }
+        .info-value { color: #212529; font-weight: bold; text-align: right;}
+
+        .camera-section { background-color: #1a1d20; padding: 20px; }
+        
+        .video-wrapper { 
+            position: relative; width: 100%; 
+            /* កំណត់ទំហំកាមេរ៉ាឱ្យមានស្តង់ដារ 4:3 និងមិនឱ្យរុញប៊ូតុងចុះក្រោម */
+            aspect-ratio: 4 / 3; max-height: 48vh; margin: 0 auto;
+            border-radius: 16px; overflow: hidden; background: #000; 
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5); border: 4px solid #2c3136;
+        }
+        
+        #webcam { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+
+        .viewfinder {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 45%; aspect-ratio: 3.5 / 4.5;
+            border: 3px solid rgba(255, 193, 7, 0.8); border-radius: 12px;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65);
+            pointer-events: none; z-index: 5; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 15px;
+        }
+        
+        .viewfinder-text { background: rgba(0,0,0,0.8); color: #ffc107; padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; letter-spacing: 1px; }
+
+        .percent-badge { 
+            position: absolute; top: 15px; right: 15px; font-size: 1.3rem; font-weight: bold; 
+            padding: 8px 15px; z-index: 10; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); 
+        }
+
+        .btn-action { padding: 12px; border-radius: 12px; font-weight: bold; font-size: 1.05rem; transition: all 0.2s ease; letter-spacing: 0.5px; }
+        .btn-verify { background-color: #0d6efd; color: white; border: none; box-shadow: 0 6px 20px rgba(13, 110, 253, 0.3); }
+        .btn-verify:hover { background-color: #0b5ed7; transform: translateY(-2px); }
+        
+        .btn-fingerprint { background-color: #10b981; color: white; border: none; box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3); transition: all 0.3s; }
+        .btn-fingerprint:hover:not(:disabled) { background-color: #059669; color: white; transform: translateY(-2px); }
+
+        .btn-retake { background-color: transparent; color: #ffc107; border: 2px solid #ffc107; }
+        .btn-retake:hover { background-color: #ffc107; color: #000; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark shadow-sm">
+    <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
+        <a class="btn btn-outline-warning text-white border-0 fw-bold fs-6 fs-md-5" href="/dashboard">
+            <i class="fas fa-arrow-left me-2"></i> ត្រឡប់ក្រោយ
+        </a>
+        <span class="text-white h4 mb-0 fw-bold text-uppercase d-none d-md-block" style="letter-spacing: 2px;">បញ្ជរផ្ទៀងផ្ទាត់ (VERIFICATION STATION)</span>
+        <button class="btn btn-warning fw-bold rounded-pill px-4 fs-6 shadow-sm d-none d-sm-block" onclick="toggleFullScreen()">
+            <i class="fas fa-expand me-2"></i> ពង្រីកអេក្រង់
+        </button>
+    </div>
+</nav>
+
+<div class="main-container">
+    <div class="search-container text-center">
+        <form id="search-form" onsubmit="searchCandidate(event)">
+            <div class="input-group shadow-sm rounded-pill overflow-hidden border border-2 border-white">
+                <span class="input-group-text bg-white border-0 ps-4 text-primary"><i class="fas fa-barcode fs-4"></i></span>
+                <input type="text" id="search-input" name="application_no" class="form-control search-input" placeholder="វាយបញ្ចូលលេខកូដ UBT ឬ Barcode..." required autofocus autocomplete="off">
+                <button type="submit" id="search-btn" class="btn btn-primary search-btn">ស្វែងរក</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="row justify-content-center" id="alert-container" style="display: none;">
+        <div class="col-md-8">
+            <div id="alert-message" class="alert alert-danger text-center shadow-sm border-0 rounded-4 fw-bold mb-3 fs-6"></div>
+        </div>
+    </div>
+
+    <div id="welcome-state" class="flex-grow-1 align-items-center justify-content-center" {% if candidate %}style="display: none;"{% else %}style="display: flex;"{% endif %}>
+        <div class="text-center text-muted opacity-25">
+            <i class="fas fa-fingerprint mb-3" style="font-size: 8rem;"></i>
+            <h2 class="fw-bold text-uppercase">ប្រព័ន្ធត្រៀមរួចរាល់</h2>
+        </div>
+    </div>
+
+    <div id="exam-state" class="row g-4 justify-content-center align-items-start" {% if candidate %}style="display: flex;"{% else %}style="display: none;"{% endif %}>
+        
+        <div class="col-lg-5 col-xl-4 d-flex flex-column pb-2">
+            <div class="glass-card">
+                <div class="text-center p-3 bg-white border-bottom">
+                    {% set photo_url = url_for('static', filename='uploads/reference_photos/' + (candidate.original_photo_path if candidate and candidate.original_photo_path else 'missing.png')) %}
+                    
+                    <div class="position-relative d-inline-block mb-2 mt-2">
+                        <img id="c-photo" src="{{ photo_url }}" onerror="this.onerror=null; this.src='/static/default.png';" class="candidate-avatar">
+                        <span id="c-gender-icon" class="position-absolute bottom-0 end-0 {% if candidate and candidate.gender == 'M' %}bg-primary{% else %}bg-danger{% endif %} text-white rounded-circle p-2 shadow border border-3 border-white">
+                            <i class="fas {% if candidate and candidate.gender == 'M' %}fa-mars{% else %}fa-venus{% endif %} fs-5"></i>
+                        </span>
+                    </div>
+                    
+                    <h3 id="c-name" class="candidate-name mb-1">{{ candidate.name_en if candidate else '-' }}</h3>
+                    <div><span class="badge-id"><i class="fas fa-id-badge me-1"></i><span id="c-id">{{ candidate.application_no if candidate else '-' }}</span></span></div>
+                </div>
+
+                <ul class="list-group list-group-flush info-list bg-white">
+                    <li class="list-group-item"><span class="info-label"><i class="fas fa-calendar-alt"></i> ថ្ងៃខែឆ្នាំកំណើត</span><span id="c-dob" class="info-value">{{ candidate.dob.strftime('%Y-%m-%d') if candidate and candidate.dob else '-' }}</span></li>
+                    <li class="list-group-item"><span class="info-label"><i class="fas fa-passport"></i> Passport/ID</span><span id="c-passport" class="info-value text-primary fs-5">{{ candidate.id_card_no or candidate.passport_no if candidate else '-' }}</span></li>
+                    <li class="list-group-item bg-light"><span class="info-label"><i class="fas fa-calendar-check text-success"></i> ថ្ងៃប្រឡង</span><span id="c-testdate" class="info-value text-success fs-5">{{ candidate.test_date if candidate else '-' }}</span></li>
+                    <li class="list-group-item bg-light"><span class="info-label"><i class="fas fa-door-open text-primary"></i> បន្ទប់ & ម៉ោង</span><span id="c-room" class="info-value fs-6">{{ candidate.test_room if candidate else '-' }} <br><small class="text-muted">{{ candidate.exam_session if candidate else '-' }}</small></span></li>
+                    <li class="list-group-item"><span class="info-label"><i class="fas fa-briefcase"></i> វិស័យ</span><span id="c-industry" class="info-value text-muted" style="font-size: 0.9rem; max-width: 60%;">{{ candidate.industry if candidate else '-' }}</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-lg-7 col-xl-6 d-flex flex-column pb-2">
+            <div class="glass-card camera-section">
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-3 gap-2">
+                    <h5 class="text-white fw-bold mb-0 text-nowrap"><i class="fas fa-camera text-warning me-2"></i> Live Scan</h5>
+                    <select id="camera-select" class="form-select form-select-sm bg-dark text-white border-secondary fw-bold w-100" style="max-width: 300px; box-shadow: none;">
+                        <option value="">កំពុងស្វែងរក...</option>
+                    </select>
+                </div>
+                
+                <div class="video-wrapper mb-3">
+                    <video id="webcam" autoplay playsinline></video>
+                    <div class="viewfinder"><span class="viewfinder-text"><i class="fas fa-crop-alt me-1"></i> 3.5 x 4.5</span></div>
+                    <span id="percent-overlay" class="badge bg-dark text-white percent-badge" style="display: none;">0%</span>
+                </div>
+                
+                <div class="d-grid gap-2 mt-auto">
+                    <button id="btn-verify" class="btn btn-verify btn-action"><i class="fas fa-camera fs-5 me-2"></i> ១. ផ្ទៀងផ្ទាត់ផ្ទៃមុខ (Face Scan)</button>
+                    <button id="btn-enroll-fp" class="btn btn-fingerprint btn-action opacity-50" onclick="openEnrollScannerModal()" disabled style="cursor: not-allowed;">
+                        <i class="fas fa-fingerprint fs-5 me-2"></i> ២. ចាប់យកក្រយៅដៃ (Enroll Fingerprint)
+                    </button>
+                    <button id="btn-update-photo" class="btn btn-retake btn-action"><i class="fas fa-sync-alt fs-5 me-2"></i> ថតរូបថ្មី (Overwrite)</button>
+                </div>
+                
+                <div id="result-box" class="mt-2 mb-0" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="enrollScannerModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0 justify-content-end">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center pt-0 pb-5 px-4">
+                <h4 class="fw-bold text-dark mb-1">ចុះឈ្មោះក្រយៅដៃ</h4>
+                <p class="text-muted small mb-4">តម្រូវឱ្យស្កែនមេដៃស្តាំ ៣ដង និងមេដៃឆ្វេង ៣ដង</p>
+                
+                <div class="mb-4 position-relative d-inline-block">
+                    <i class="fas fa-fingerprint" id="enrollFpIcon" style="font-size: 90px; color: #cbd5e1; transition: all 0.3s;"></i>
+                    <div class="spinner-border text-primary position-absolute top-50 start-50 translate-middle d-none" id="enrollFpSpinner" style="width: 120px; height: 120px; opacity: 0.2;" role="status"></div>
+                </div>
+
+                <h5 class="fw-bold px-3 py-2 rounded-3 d-inline-block text-primary bg-light border border-primary" id="fpInstructionText" style="transition: all 0.3s;">
+                    សូមដាក់ "មេដៃស្តាំ" លើម៉ាស៊ីន
+                </h5>
+
+                <div class="mt-4 text-start">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="small fw-bold text-secondary" id="fpHandIndicator">វគ្គទី ១៖ មេដៃស្តាំ (Right Thumb)</span>
+                        <span class="small fw-bold text-primary" id="fpPercentText">0%</span>
+                    </div>
+                    <div class="progress" style="height: 12px; border-radius: 10px; background-color: #e2e8f0;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" id="fpProgressBar" role="progressbar" style="width: 0%; transition: width 0.4s ease;"></div>
+                    </div>
+                </div>
+                
+                <div class="mt-5 d-flex justify-content-center gap-2">
+                    <button type="button" class="btn btn-light border px-4 fw-bold text-secondary" data-bs-dismiss="modal">បោះបង់</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // កូដ JS របស់បងនៅរក្សាដដែលទាំងអស់
+    let activeAppNo = "{{ candidate.application_no if candidate else '' }}";
+
+    function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => console.log(err));
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+        }
+    }
+
+    let currentStream = null;
+    async function startStream(deviceId) {
+        if (currentStream) currentStream.getTracks().forEach(track => track.stop());
+        try {
+            currentStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } } });
+            document.getElementById('webcam').srcObject = currentStream;
+        } catch (err) { console.error("Error:", err); }
+    }
+
+    async function initializeCameras() {
+        try {
+            await navigator.mediaDevices.getUserMedia({ video: true });
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(d => d.kind === 'videoinput');
+            if (videoDevices.length === 0) return;
+
+            const select = document.getElementById('camera-select');
+            select.innerHTML = ''; 
+            videoDevices.forEach((d, i) => {
+                const opt = document.createElement('option'); opt.value = d.deviceId; opt.text = d.label || `Camera ${i + 1}`;
+                select.appendChild(opt);
+            });
+
+            let savedId = localStorage.getItem('preferred_eps_camera');
+            let targetId = videoDevices[0].deviceId; 
+            if (savedId && videoDevices.some(d => d.deviceId === savedId)) targetId = savedId; 
+            else {
+                let extCam = videoDevices.find(d => d.label.toLowerCase().includes('logitech') || d.label.toLowerCase().includes('c922') || d.label.toLowerCase().includes('usb'));
+                if (extCam) targetId = extCam.deviceId;
+            }
+
+            select.value = targetId;
+            startStream(targetId);
+            select.addEventListener('change', (e) => { localStorage.setItem('preferred_eps_camera', e.target.value); startStream(e.target.value); });
+        } catch (err) { alert("❌ សូមពិនិត្យ Permission កាមេរ៉ា។"); }
+    }
+
+    function searchCandidate(e) {
+        e.preventDefault();
+        const appNoInput = document.getElementById('search-input');
+        const searchVal = appNoInput.value.trim();
+        if (!searchVal) return;
+
+        const btnSearch = document.getElementById('search-btn');
+        const originalText = btnSearch.innerHTML;
+        btnSearch.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btnSearch.disabled = true;
+
+        fetch('/api/search_candidate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ search_query: searchVal })
+        })
+        .then(res => res.json())
+        .then(data => {
+            btnSearch.innerHTML = originalText;
+            btnSearch.disabled = false;
+            
+            if (data.status === 'success') {
+                document.getElementById('alert-container').style.display = 'none';
+                document.getElementById('welcome-state').style.display = 'none';
+                document.getElementById('exam-state').style.display = 'flex'; 
+                
+                const c = data.candidate;
+                activeAppNo = c.application_no;
+                
+                document.getElementById('c-name').innerText = c.name_en;
+                document.getElementById('c-id').innerText = c.application_no;
+                document.getElementById('c-dob').innerText = c.dob || '-';
+                document.getElementById('c-passport').innerText = c.passport_no || c.id_card_no || '-';
+                document.getElementById('c-testdate').innerText = c.test_date || '-';
+                document.getElementById('c-room').innerHTML = `${c.test_room || '-'} <br><small class="text-muted fs-6">${c.exam_session || '-'}</small>`;
+                document.getElementById('c-industry').innerText = c.industry || '-';
+                
+                const ts = new Date().getTime();
+                const photoName = c.original_photo_path || 'missing.png';
+                document.getElementById('c-photo').src = `/static/uploads/reference_photos/${photoName}?t=${ts}`;
+                
+                const genderIcon = document.getElementById('c-gender-icon');
+                if (c.gender === 'M') {
+                    genderIcon.className = 'position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-2 shadow border border-3 border-white';
+                    genderIcon.innerHTML = '<i class="fas fa-mars fs-5"></i>';
+                } else {
+                    genderIcon.className = 'position-absolute bottom-0 end-0 bg-danger text-white rounded-circle p-2 shadow border border-3 border-white';
+                    genderIcon.innerHTML = '<i class="fas fa-venus fs-5"></i>';
+                }
+
+                document.getElementById('result-box').style.display = 'none';
+                document.getElementById('percent-overlay').style.display = 'none';
+                
+                const fpBtn = document.getElementById('btn-enroll-fp');
+                fpBtn.disabled = true;
+                fpBtn.classList.add('opacity-50');
+                fpBtn.style.cursor = 'not-allowed';
+
+                appNoInput.value = ''; 
+                appNoInput.focus();
+            } else {
+                document.getElementById('alert-container').style.display = 'flex';
+                document.getElementById('alert-message').innerHTML = '<i class="fas fa-exclamation-circle me-2"></i> រកមិនឃើញបេក្ខជននេះទេ!';
+                document.getElementById('exam-state').style.display = 'none';
+                document.getElementById('welcome-state').style.display = 'flex';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            btnSearch.innerHTML = originalText;
+            btnSearch.disabled = false;
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeCameras();
+
+        const video = document.getElementById('webcam');
+        
+        function getOptimizedCroppedPhoto() {
+            if (!video || video.videoWidth === 0) return '';
+            
+            const wrapper = document.querySelector('.video-wrapper');
+            const vf = document.querySelector('.viewfinder');
+            
+            const wrRect = wrapper.getBoundingClientRect();
+            const vfRect = vf.getBoundingClientRect();
+            
+            const videoRatio = video.videoWidth / video.videoHeight;
+            const wrapperRatio = wrRect.width / wrRect.height;
+            
+            let scale, offsetLeft = 0, offsetTop = 0;
+            
+            if (videoRatio > wrapperRatio) {
+                scale = video.videoHeight / wrRect.height;
+                const displayedWidth = video.videoWidth / scale;
+                offsetLeft = (displayedWidth - wrRect.width) / 2;
+            } else {
+                scale = video.videoWidth / wrRect.width;
+                const displayedHeight = video.videoHeight / scale;
+                offsetTop = (displayedHeight - wrRect.height) / 2;
+            }
+            
+            const vfLeft = vfRect.left - wrRect.left;
+            const vfTop = vfRect.top - wrRect.top;
+            
+            let sX = (vfLeft + offsetLeft) * scale;
+            let sY = (vfTop + offsetTop) * scale;
+            let sW = vfRect.width * scale;
+            let sH = vfRect.height * scale;
+            
+            const tCanvas = document.createElement('canvas');
+            tCanvas.width = 350; 
+            tCanvas.height = 450;
+            const tCtx = tCanvas.getContext('2d');
+            
+            tCtx.translate(350, 0);
+            tCtx.scale(-1, 1);
+            tCtx.drawImage(video, sX, sY, sW, sH, 0, 0, 350, 450);
+            
+            return tCanvas.toDataURL('image/jpeg', 0.6);
+        }
+
+        document.getElementById('btn-verify')?.addEventListener('click', function() {
+            if (!activeAppNo) return;
+            const btn = this;
+            const resBox = document.getElementById('result-box');
+            const pBadge = document.getElementById('percent-overlay');
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin fs-5 me-2"></i>កំពុងស្កេនមុខ...';
+            btn.disabled = true;
+            resBox.style.display = "none";
+            pBadge.style.display = "none";
+
+            const verifyImage = getOptimizedCroppedPhoto(); 
+
+            fetch('/verify_face', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ application_no: activeAppNo, image: verifyImage }) 
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.innerHTML = '<i class="fas fa-camera fs-5 me-2"></i> ១. ផ្ទៀងផ្ទាត់ផ្ទៃមុខ (Face Scan)';
+                btn.disabled = false;
+                resBox.style.display = "block";
+                pBadge.style.display = "block";
+                pBadge.innerHTML = data.percent ? data.percent + "%" : "0%";
+
+                if (data.status === 'success' && data.match) {
+                    new Audio('/static/sounds/ThanksYou.mp3').play();
+                    resBox.className = "alert alert-success shadow-sm rounded-4 text-start border-0 py-2";
+                    resBox.innerHTML = `<div class="d-flex align-items-center"><div class="bg-success text-white rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 45px; height: 45px; min-width: 45px;"><i class="fas fa-check fs-4"></i></div><div><h6 class="fw-bold text-success mb-0">ត្រឹមត្រូវ! ផ្ទៀងផ្ទាត់ជោគជ័យ</h6></div></div>`;
+                    pBadge.className = "badge bg-success percent-badge shadow-sm";
+                    
+                    const fpBtn = document.getElementById('btn-enroll-fp');
+                    fpBtn.disabled = false;
+                    fpBtn.classList.remove('opacity-50');
+                    fpBtn.style.cursor = 'pointer';
+
+                } else {
+                    new Audio('/static/sounds/Again.mp3').play();
+                    resBox.className = "alert alert-danger shadow-sm rounded-4 text-start border-0 py-2";
+                    resBox.innerHTML = `<div class="d-flex align-items-center"><div class="bg-danger text-white rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 45px; height: 45px; min-width: 45px;"><i class="fas fa-times fs-4"></i></div><div><h6 class="fw-bold text-danger mb-0">មិនត្រឹមត្រូវ! ផ្ទៃមុខខុសគ្នា</h6></div></div>`;
+                    pBadge.className = "badge bg-danger percent-badge shadow-sm";
+                }
+            })
+            .catch(err => { btn.disabled = false; btn.innerHTML = '<i class="fas fa-camera fs-5 me-2"></i> ១. ផ្ទៀងផ្ទាត់ផ្ទៃមុខ (Face Scan)'; });
+        });
+
+        document.getElementById('btn-update-photo')?.addEventListener('click', function() {
+            if (!activeAppNo) return;
+            if (!confirm("តើអ្នកពិតជាចង់ថតរូបថ្មីមែនទេ?")) return;
+            
+            const btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin fs-5 me-2"></i>កំពុងរក្សាទុក...';
+            
+            const newResizedImage = getOptimizedCroppedPhoto(); 
+
+            fetch('/update_reference_photo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ application_no: activeAppNo, image: newResizedImage }) 
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if (data.status === 'success') {
+                    const ts = new Date().getTime();
+                    const photoImg = document.getElementById('c-photo');
+                    const currentSrc = photoImg.src.split('?')[0]; 
+                    photoImg.src = currentSrc + "?t=" + ts;
+                }
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sync-alt fs-5 me-2"></i> ថតរូបថ្មី (Overwrite)';
+            })
+            .catch(err => { btn.disabled = false; });
+        });
+    });
+
+    let enrollModal;
+    let enrollData = { right_thumb: null, left_thumb: null };
+    let currentHand = 'right';
+    let scanCount = 0;
+    let scannerInterval; 
+    let isFingerLifted = true; 
+
+    function openEnrollScannerModal() {
+        if(!activeAppNo) {
+            alert("សូមស្វែងរកបេក្ខជនជាមុនសិន!");
+            return;
+        }
+        enrollModal = new bootstrap.Modal(document.getElementById('enrollScannerModal'));
+        resetEnrollUI();
+        enrollModal.show();
+        startDeviceListener();
+    }
+
+    function resetEnrollUI() {
+        enrollData = { right_thumb: null, left_thumb: null };
+        currentHand = 'right';
+        scanCount = 0;
+        isFingerLifted = true; 
+        updateEnrollUI("សូមដាក់ <b>មេដៃស្តាំ</b> លើម៉ាស៊ីន", "text-primary bg-light border-primary");
+        document.getElementById('enrollFpIcon').style.color = "#cbd5e1";
+        document.getElementById('enrollFpSpinner').classList.remove('d-none');
+        document.getElementById('fpHandIndicator').innerHTML = "វគ្គទី ១៖ មេដៃស្តាំ (Right Thumb)";
+        setProgressBar(0);
+        if(scannerInterval) clearInterval(scannerInterval);
+    }
+
+    function updateEnrollUI(text, className) {
+        let el = document.getElementById('fpInstructionText');
+        el.innerHTML = text;
+        el.className = `fw-bold px-3 py-2 rounded-3 d-inline-block border ${className}`;
+    }
+
+    function setProgressBar(percent) {
+        document.getElementById('fpProgressBar').style.width = percent + "%";
+        document.getElementById('fpPercentText').innerText = percent + "%";
+        
+        if(percent === 100) {
+            document.getElementById('fpProgressBar').className = "progress-bar progress-bar-striped progress-bar-animated bg-success";
+            document.getElementById('fpPercentText').className = "small fw-bold text-success";
+        } else {
+            document.getElementById('fpProgressBar').className = "progress-bar progress-bar-striped progress-bar-animated bg-primary";
+            document.getElementById('fpPercentText').className = "small fw-bold text-primary";
+        }
+    }
+
+    function startDeviceListener() {
+        if(scannerInterval) clearInterval(scannerInterval);
+
+        scannerInterval = setInterval(async () => {
+            if (currentHand === 'done') return; 
+
+            try {
+                let res = await fetch('http://127.0.0.1:8080/api/check_finger');
+                let deviceResponse = await res.json(); 
+
+                if (deviceResponse.has_finger) {
+                    if (isFingerLifted) {
+                        processScanStep(deviceResponse.template);
+                        isFingerLifted = false; 
+                    }
+                } else {
+                    isFingerLifted = true; 
+                    if (scanCount > 0 && scanCount < 3) {
+                        let handName = currentHand === 'right' ? 'មេដៃស្តាំ' : 'មេដៃឆ្វេង';
+                        updateEnrollUI(`សូមដាក់ <b>${handName}</b> លើម៉ាស៊ីនម្តងទៀត`, "text-primary bg-light border-primary");
+                        document.getElementById('enrollFpIcon').style.color = "#cbd5e1";
+                    }
+                }
+            } catch(e) {
+                console.log("កំពុងរង់ចាំភ្ជាប់ម៉ាស៊ីនស្កែន...");
+            }
+        }, 1000); 
+    }
+
+    function processScanStep(fpTemplate) {
+        scanCount++;
+        let percent = Math.round((scanCount / 3) * 100);
+        setProgressBar(percent);
+        
+        let fpIcon = document.getElementById('enrollFpIcon');
+        fpIcon.style.color = "#3b82f6"; 
+
+        if (scanCount < 3) {
+            updateEnrollUI(`ល្អណាស់! សូម<b>លើកម្រាមដៃចេញ</b>`, "text-warning bg-light border-warning");
+        } else if (scanCount === 3) {
+            fpIcon.style.color = "#10b981";
+            updateEnrollUI(`✅ ជោគជ័យ!`, "text-success bg-light border-success");
+
+            if (currentHand === 'right') {
+                enrollData.right_thumb = fpTemplate;
+                setTimeout(() => {
+                    currentHand = 'left';
+                    scanCount = 0;
+                    isFingerLifted = true; 
+                    setProgressBar(0);
+                    fpIcon.style.color = "#cbd5e1";
+                    document.getElementById('fpHandIndicator').innerHTML = "វគ្គទី ២៖ មេដៃឆ្វេង (Left Thumb)";
+                    updateEnrollUI(`សូមប្តូរទៅដាក់ <b>មេដៃឆ្វេង</b> លើម៉ាស៊ីនវិញ`, "text-primary bg-light border-primary");
+                }, 2000);
+            } 
+            else if (currentHand === 'left') {
+                enrollData.left_thumb = fpTemplate; 
+                currentHand = 'done';
+                clearInterval(scannerInterval); 
+                document.getElementById('enrollFpSpinner').classList.add('d-none');
+                
+                updateEnrollUI(`កំពុងកត់ត្រាចូលប្រព័ន្ធ... <i class="fas fa-spinner fa-spin"></i>`, "text-dark bg-light border-dark");
+                saveFingerprintToServer();
+            }
+        }
+    }
+
+    async function saveFingerprintToServer() {
+        try {
+            let res = await fetch('/api/enroll_fingerprint', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ 
+                    application_no: activeAppNo, 
+                    right_thumb: enrollData.right_thumb,
+                    left_thumb: enrollData.left_thumb
+                })
+            });
+            let result = await res.json();
+
+            if(result.status === 'success') {
+                updateEnrollUI("🎉 កត់ត្រាក្រយៅដៃបានជោគជ័យ ១០០%!", "text-white bg-success border-success");
+                document.getElementById('enrollFpIcon').style.color = "#10b981";
+                
+                setTimeout(() => {
+                    enrollModal.hide();
+                    document.getElementById('search-input').value = '';
+                    document.getElementById('search-input').focus();
+                }, 2500);
+            } else {
+                updateEnrollUI("❌ បរាជ័យ៖ " + result.message, "text-white bg-danger border-danger");
+            }
+        } catch(e) {
+            updateEnrollUI("❌ មានបញ្ហាបណ្តាញទាក់ទង!", "text-white bg-danger border-danger");
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const modalEl = document.getElementById('enrollScannerModal');
+        if(modalEl) {
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                if(scannerInterval) clearInterval(scannerInterval);
+            });
+        }
+    });
+</script>
+</body>
+</html>

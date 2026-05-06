@@ -1,0 +1,744 @@
+{% extends "base.html" %}
+
+{% block title %}បញ្ជីឈ្មោះតេស្តជំនាញ | EPS{% endblock %}
+{% block page_title %}បញ្ជីឈ្មោះតេស្តជំនាញ{% endblock %}
+
+{% block head %}
+<style>
+    .card-custom { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); background: #fff; overflow: hidden; }
+    .filter-label { font-size: 0.85rem; font-weight: 600; color: #5a6268; margin-bottom: 0.4rem; }
+    .form-select, .form-control { border-radius: 8px; border: 1px solid #ced4da; padding: 0.6rem 1rem; font-size: 0.95rem; background-color: #fcfdfd; transition: all 0.2s; }
+    .form-select:focus, .form-control:focus { box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1); border-color: #86b7fe; background-color: #fff; }
+    .table-custom { margin-bottom: 0; border-collapse: separate; border-spacing: 0; }
+    .table-custom thead th { background-color: #02407f !important; color: #ffffff !important; border: none !important; font-weight: 500; padding: 15px 10px; white-space: nowrap; text-align: center; }
+    .table-custom thead th:first-child { border-top-left-radius: 8px; }
+    .table-custom thead th:last-child { border-top-right-radius: 8px; }
+    .table-custom td { padding: 12px 10px; vertical-align: middle; border-bottom: 1px solid #f0f2f5; text-align: center; transition: all 0.3s ease;}
+    .table-custom tbody tr:hover { background-color: #f8fafd; }
+    .table-success-subtle { background-color: #f2fcf5 !important; }
+    .table-danger-subtle { background-color: #fff5f5 !important; }
+    .candidate-photo { width: 40px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6; cursor: pointer; transition: transform 0.2s ease; background: #fff; }
+    .candidate-photo:hover { transform: scale(1.1); box-shadow: 0 4px 8px rgba(0,0,0,0.2); border-color: #0d6efd; }
+    .badge-btn { border: none; cursor: pointer; transition: all 0.2s; }
+    .badge-btn:hover { filter: brightness(0.9); transform: scale(1.05); }
+    #imagePreviewModal .modal-content { background-color: transparent; border: none; }
+    #previewImage { max-width: 100%; max-height: 80vh; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 mt-2 gap-3">
+        <div class="d-flex flex-column">
+            <h4 class="mb-1 fw-bold text-dark"><i class="fas fa-hard-hat text-primary me-2"></i>គ្រប់គ្រងបញ្ជីឈ្មោះ តេស្តជំនាញ</h4>
+            <div class="text-secondary" style="font-size: 0.95rem;">ស្វែងរក ត្រងទិន្នន័យ និងគ្រប់គ្រងអ្នកជាប់ជាស្ថាពរ</div>
+        </div>
+        
+        <div class="d-flex gap-2 flex-wrap">
+            {% if has_perm('mark_all_present_skill', 'can_edit') %}
+                {% set is_past_date = selected_date and selected_date != 'all' and selected_date < today_date %}
+                
+                {% if is_past_date and user_role|lower != 'super admin' %}
+                    <button class="btn btn-secondary fw-bold shadow-sm" disabled title="ទិន្នន័យចាស់ត្រូវបានចាក់សោរ">
+                        <i class="fas fa-lock me-1"></i> ដាក់វត្តមានទាំងអស់
+                    </button>
+                {% else %}
+                    <button class="btn btn-success fw-bold shadow-sm" onclick="markAllPresentOnPage()">
+                        <i class="fas fa-check-double me-1"></i> ដាក់វត្តមានទាំងអស់
+                    </button>
+                {% endif %}
+            {% endif %}
+            
+            {% if has_perm('generate_qr_skill', 'can_view') %}
+                <button class="btn btn-info text-white fw-bold shadow-sm" onclick="generateQRCode()">
+                    <i class="fas fa-qrcode me-1"></i> QR Code (បេក្ខជន)
+                </button>
+            {% endif %}
+            
+            {% if has_perm('download_report_skill', 'can_view') %}
+                <button class="btn btn-warning text-dark fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#exportReportModal">
+                    <i class="fas fa-file-download me-1"></i> ទាញយករបាយការណ៍
+                </button>
+            {% endif %}
+            
+            {% if has_perm('import_skill_data', 'can_create') %}
+                <button class="btn btn-primary fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#importFinalPassersModal">
+                    <i class="fas fa-file-import me-1"></i> Import
+                </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card card-custom mb-4">
+        <div class="card-body p-4 bg-white"> 
+            <form action="/skill_test_candidates" method="GET" id="filterForm" class="mb-0">
+                <div class="row row-cols-1 row-cols-md-3 row-cols-xl-5 g-3 align-items-end">
+                    
+                    <div class="col">
+                        <label class="filter-label">ថ្ងៃប្រឡង</label>
+                        <select name="test_date" id="filter_test_date" class="form-select shadow-sm fw-bold" onchange="this.form.submit()">
+                            <option value="all" {% if not selected_date or selected_date == 'all' %}selected{% endif %}>-- ទាំងអស់ --</option>
+                            {% for d in dates %}
+                                <option value="{{ d.test_date }}" {% if selected_date == d.test_date|string %}selected{% endif %}>{{ d.test_date }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col">
+                        <label class="filter-label">ម៉ោងចូល</label>
+                        <select name="entry_time" class="form-select shadow-sm fw-bold" onchange="this.form.submit()">
+                            <option value="">-- ទាំងអស់ --</option>
+                            {% for t in times %}
+                                <option value="{{ t.entry_time }}" {% if selected_time == t.entry_time %}selected{% endif %}>{{ t.entry_time }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col">
+                        <label class="filter-label">ក្រុម</label>
+                        <select name="group_no" class="form-select shadow-sm fw-bold" onchange="this.form.submit()">
+                            <option value="">-- ទាំងអស់ --</option>
+                            {% for g in groups %}
+                                <option value="{{ g.group_no }}" {% if selected_group == g.group_no %}selected{% endif %}>ក្រុមទី {{ g.group_no }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col">
+                        <label class="filter-label">វត្តមាន</label>
+                        <select name="present" class="form-select shadow-sm fw-bold" onchange="this.form.submit()">
+                            <option value="">-- ទាំងអស់ --</option>
+                            <option value="1" class="text-success" {% if attendance_status == '1' %}selected{% endif %}>វត្តមាន</option>
+                            <option value="0" class="text-danger" {% if attendance_status == '0' %}selected{% endif %}>អវត្តមាន</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col">
+                        <label class="filter-label text-primary">លទ្ធផលចុងក្រោយ</label>
+                        <select name="status_filter" class="form-select shadow-sm fw-bold border-primary" onchange="this.form.submit()">
+                            <option value="">-- ទាំងអស់ --</option>
+                            <option value="final_passer" {% if status_filter == 'final_passer' %}selected{% endif %}>✅ ជាប់ស្ថាពរ</option>
+                            <option value="skill_test_failed" {% if status_filter == 'skill_test_failed' %}selected{% endif %}>❌ ធ្លាប់តេស្តតែមិនជាប់</option>
+                        </select>
+                    </div>
+                    
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card card-custom mb-5 border-0 shadow-sm rounded-3 overflow-hidden">
+       <div class="bg-white p-3 border-bottom d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-3">
+            
+            <div class="d-flex flex-wrap align-items-center gap-2 gap-sm-3">
+                <h5 class="mb-0 text-primary fw-bold text-nowrap"><i class="fas fa-list me-2"></i> បញ្ជីឈ្មោះ</h5>
+                <div class="text-muted d-flex flex-wrap align-items-center gap-2 pt-1 pt-sm-0" style="border-left: 2px solid #dee2e6; padding-left: 1rem;">
+                    <span class="fw-bold text-nowrap"><i class="fas fa-users text-primary me-1"></i> សរុប៖ <span class="text-dark">{{ total_records }}</span></span> 
+                    <span class="text-black-50 d-none d-sm-inline">|</span> 
+                    <span class="fw-bold text-nowrap"><i class="fas fa-female text-danger me-1"></i> ស្រី៖ <span class="text-dark">{{ total_female | default('0') }}</span></span>
+                </div>
+            </div>
+
+            <div class="ms-lg-auto w-100" style="max-width: 500px;">
+                <div class="input-group shadow-sm">
+                    <input type="text" name="search_query" form="filterForm" class="form-control fw-bold" placeholder="វាយបញ្ចូល លេខកូដ ឬ ឈ្មោះ..." value="{{ search_query or '' }}">
+                    <button type="submit" form="filterForm" class="btn btn-primary px-4 fw-bold">ស្វែងរក</button>
+                    <a href="/skill_test_candidates" class="btn btn-light border px-3" title="សម្អាតការស្វែងរក (Reset)"><i class="fas fa-sync-alt text-muted"></i></a>
+                </div>
+            </div>
+
+        </div>
+        
+        {% if not selected_date or selected_date == 'all' %}
+        <div class="alert alert-warning py-2 mb-3 mt-3 mx-3 fw-bold border-warning shadow-sm" role="alert" style="font-size: 0.9rem;">
+            <i class="fas fa-exclamation-triangle me-2 text-danger"></i> ប៊ូតុងដាក់វត្តមានត្រូវបានបិទជាបណ្តោះអាសន្ន។ សូមជ្រើសរើស <span class="text-danger">"ថ្ងៃប្រឡង"</span> នៅផ្នែកខាងលើជាមុនសិន ដើម្បីអាចបញ្ជូលវត្តមានបាន!
+        </div>
+        {% endif %}
+        
+        <div class="table-responsive">
+            <table class="table table-hover table-custom align-middle"> 
+                <thead> 
+                    <tr>
+                        <th class="text-center">វត្តមាន</th>
+                        <th class="text-center">ល.រ</th>
+                        <th class="text-center">រូបថត</th>
+                        <th class="text-start">លេខកូដ UBT</th>
+                        <th class="text-start">ឈ្មោះបេក្ខជន</th>
+                        <th class="text-center">ភេទ</th>
+                        <th class="text-center">ថ្ងៃខែឆ្នាំកំណើត</th>
+                        <th class="text-center text-success">ថ្ងៃប្រឡង</th>
+                        <th class="text-center text-warning">ម៉ោងចូល</th>
+                        <th class="text-center">ក្រុម/តុ</th>
+                        <th class="text-center">វិស័យ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in candidates %}
+                    <tr id="row-{{ c.application_no }}" class="{% if c.is_present|string == '1' %}table-success-subtle{% elif c.is_present|string == '0' %}table-danger-subtle{% endif %}">
+                        
+                        <td class="text-center">
+                            {% set is_disabled = '' %}
+                            {% if not selected_date or selected_date == 'all' %}
+                                {% set is_disabled = 'disabled' %}
+                            {% elif c.test_date and c.test_date|string < today_date and user_role|lower != 'super admin' %}
+                                {% set is_disabled = 'disabled title="ទិន្នន័យចាស់ត្រូវបានចាក់សោរ"' %}
+                            {% endif %}
+                            
+                            {% if c.is_present is none %}
+                                <button {{ is_disabled }} data-app-no="{{ c.application_no }}" onclick="toggleAttendance('{{ c.application_no }}')" class="badge bg-secondary px-3 py-2 rounded-pill fw-bold badge-btn btn-attendance">
+                                    <i class="fas fa-hourglass-half"></i> រង់ចាំ
+                                </button>
+                            {% elif c.is_present|string == '1' %}
+                                <button {{ is_disabled }} data-app-no="{{ c.application_no }}" onclick="toggleAttendance('{{ c.application_no }}')" class="badge bg-success px-3 py-2 rounded-pill fw-bold badge-btn btn-attendance">
+                                    <i class="fas fa-check-circle"></i> វត្តមាន
+                                </button>
+                            {% else %}
+                                <button {{ is_disabled }} data-app-no="{{ c.application_no }}" onclick="toggleAttendance('{{ c.application_no }}')" class="badge bg-danger px-3 py-2 rounded-pill fw-bold badge-btn btn-attendance">
+                                    <i class="fas fa-times-circle"></i> អវត្តមាន
+                                </button>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center text-muted fw-bold">{{ loop.index + (page - 1) * 48 }}</td>
+                        <td class="text-center">
+                            {% set photo_src = '/static/latest_scans/' ~ c.latest_scan_photo if c.latest_scan_photo else '/static/uploads/reference_photos/' ~ c.original_photo_path if c.original_photo_path else '/static/default_avatar.png' %}
+                            <img src="{{ photo_src }}" class="candidate-photo" alt="Photo" onclick="previewImage('{{ photo_src }}', '{{ c.name_en }}')">
+                        </td>
+                        <td class="text-start text-dark fw-bold">{{ c.application_no }}</td>
+                        
+                        <td class="text-start text-primary fw-bold text-nowrap">
+                        {{ c.name_en }}
+                        {% if c.is_final_passer|string == '1' %}
+                            <i class="fas fa-check-circle text-success ms-1 fs-5" title="ជាប់ជាស្ថាពរ (Final Passer)"></i>
+                        {% elif c.is_final_passer|string == '0' %}
+                            <i class="fas fa-times-circle text-danger ms-1 fs-5" title="ធ្លាក់ជាស្ថាពរ (Failed)"></i>
+                        {% endif %}
+                        </td>
+                        
+                        <td class="text-center fw-bold">{{ c.gender or '-' }}</td>
+                        <td class="text-center">{{ c.dob if c.dob else '-' }}</td>
+                        <td class="text-center fw-bold text-success">{{ c.test_date or '-' }}</td>
+                        <td class="text-center fw-bold text-warning">{{ c.entry_time or '-' }}</td>
+                        <td class="text-center fw-bold">
+                            <span class="text-primary">G{{ c.group_no or '-' }}</span> / 
+                            <span class="text-danger">{{ c.seat_no or '-' }}</span>
+                        </td>
+                        <td class="text-center text-muted small">{{ c.specialized_tasks or '-' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="11" class="text-center py-5 text-muted bg-light"><h5 class="fw-bold">មិនមានទិន្នន័យទេ</h5></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="p-3 bg-white border-top d-flex justify-content-center">
+            <nav>
+                <ul class="pagination mb-0 shadow-sm rounded-3">
+                    <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                        <a class="page-link text-dark fw-bold" href="{{ url_for('manage_skill_test_candidates', page=page-1, test_date=selected_date, entry_time=selected_time, group_no=selected_group, present=attendance_status, search_query=search_query, status_filter=status_filter) }}">មុន</a>
+                    </li>
+                    <li class="page-item disabled"><span class="page-link bg-light fw-bold text-dark px-4">ទំព័រ {{ page }} នៃ {{ total_pages }}</span></li>
+                    <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                        <a class="page-link text-dark fw-bold" href="{{ url_for('manage_skill_test_candidates', page=page+1, test_date=selected_date, entry_time=selected_time, group_no=selected_group, present=attendance_status, search_query=search_query, status_filter=status_filter) }}">បន្ទាប់</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="imagePreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center">
+            <div class="modal-body p-0 position-relative">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" style="background-color: rgba(0,0,0,0.5); padding: 10px;"></button>
+                <img id="previewImage" src="" class="img-fluid bg-white p-2 w-100">
+                <h5 id="previewName" class="text-white mt-3 fw-bold bg-dark bg-opacity-75 py-2 mx-auto rounded" style="max-width: 80%;"></h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="importFinalPassersModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form action="/import_final_passers" method="POST" enctype="multipart/form-data">
+                <div class="modal-header bg-primary text-white border-0">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-file-import me-2"></i> Import ឈ្មោះជាប់ស្ថាពរ</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <i class="fas fa-file-csv fa-4x text-primary mb-3 opacity-50"></i>
+                    <p class="text-muted mb-3">សូមជ្រើសរើសឯកសារ Excel ឬ .csv របស់អ្នក។</p>
+                    <input class="form-control" type="file" name="file" accept=".xlsx, .xls, .csv" required>
+                </div>
+                <div class="modal-footer bg-light border-top">
+                    <button type="button" class="btn btn-secondary px-4 rounded-pill" data-bs-dismiss="modal">បោះបង់</button>
+                    <button type="submit" class="btn btn-primary fw-bold px-4 rounded-pill">យល់ព្រម Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="exportReportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form id="reportForm" method="GET" target="_blank" onsubmit="return handleReportSubmit(event)">
+                <div class="modal-header bg-warning border-0">
+                    <h5 class="modal-title fw-bold text-dark"><i class="fas fa-print me-2"></i> ទាញយករបាយការណ៍វត្តមាន</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <div class="modal-body p-4 bg-light">
+                    
+                    <div class="mb-4 bg-white p-3 border rounded shadow-sm">
+                        <h6 class="text-primary mb-3"><i class="fas fa-heading me-2"></i>១. កំណត់ចំណងជើងរបាយការណ៍</h6>
+                        <div class="form-group mb-0">
+                            <label for="report_title" class="form-label text-muted" style="font-size: 14px;">ចំណងជើងរបាយការណ៍ផ្នែកខាងលើគេ <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="report_title" name="report_title" 
+                                placeholder="វាយបញ្ចូលចំណងជើងរបាយការណ៍នៅទីនេះ..." 
+                                value="របាយការណ៍វត្តមានបេក្ខជនប្រចាំវេន (Skill Test)" required>
+                            <small class="text-danger" style="font-size: 12px;">*អ្នកអាចលុប ឬកែប្រែចំណងជើងនេះបានទៅតាមវគ្គនីមួយៗ</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-4 bg-white p-3 border rounded shadow-sm">
+                        <label class="form-label fw-bold text-primary mb-2"><i class="fas fa-list-alt me-1"></i> ២. ជ្រើសរើសទម្រង់របាយការណ៍</label>
+                        <select id="report_type_select" class="form-select fw-bold border-primary" style="background-color: #f8fbff;" onchange="handleReportTypeChange(this)">
+                            <option value="daily">១. របាយការណ៍វត្តមានបេក្ខជន "ប្រចាំថ្ងៃ"</option>
+                            <option value="session" selected>២. របាយការណ៍វត្តមានបេក្ខជន "ប្រចាំវេន"</option>
+                        </select>
+                    </div>
+
+                    <div class="bg-white p-3 border rounded shadow-sm">
+                        <label class="form-label fw-bold text-primary mb-3"><i class="fas fa-calendar-alt me-1"></i> ៣. កំណត់កាលបរិច្ឆេទ និងវេន</label>
+                        
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="filter-label fw-bold text-dark">ថ្ងៃប្រឡង (ចាំបាច់) <span class="text-danger">*</span></label>
+                                <select name="test_date" id="report_date" class="form-select fw-bold" required>
+                                    <option value="">-- សូមជ្រើសរើសថ្ងៃ --</option>
+                                    {% for d in dates %}
+                                        <option value="{{ d.test_date }}" {% if selected_date == d.test_date|string %}selected{% endif %}>{{ d.test_date }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label class="filter-label fw-bold text-dark">ម៉ោងចូល / វេន</label>
+                                <select name="entry_time" id="report_time" class="form-select fw-bold">
+                                    <option value="">-- ទាំងអស់ -- (សម្រាប់តែប្រចាំថ្ងៃ)</option>
+                                    {% for t in times %}
+                                        <option value="{{ t.entry_time }}" {% if selected_time == t.entry_time %}selected{% endif %}>{{ t.entry_time }}</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted" id="time_hint" style="font-size: 0.8rem;">*របាយការណ៍ប្រចាំវេន តម្រូវឱ្យជ្រើសរើសម៉ោង</small>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                
+                <div class="modal-footer border-top bg-white">
+                    <button type="button" class="btn btn-light border fw-bold px-4 rounded-pill" data-bs-dismiss="modal">បោះបង់</button>
+                    <button type="submit" class="btn btn-primary fw-bold px-4 rounded-pill"><i class="fas fa-external-link-alt me-1"></i> បង្កើតរបាយការណ៍</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="qrCodeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center border-0 shadow-lg rounded-4" style="font-family: 'Khmer OS Siemreap', 'Battambang', sans-serif;">
+            <div class="modal-header border-0" style="background-color: #0b2e59; color: #ffffff;">
+                <div class="d-flex align-items-center w-100 justify-content-center position-relative">
+                    <h5 class="modal-title fw-bold m-0" style="font-size: 1.1rem;">
+                        <i class="fas fa-qrcode text-warning me-2"></i> តំណភ្ជាប់ QR Code សម្រាប់បេក្ខជន
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white position-absolute end-0" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+
+            <div class="modal-body p-4 p-md-5 bg-light">
+                <p class="text-muted fw-bold mb-4" style="color: #0b2e59 !important;">សូមស្កេន QR ខាងក្រោមដើម្បីចូលទៅកាន់ព័ត៌មានបន្ថែម</p>
+                <div class="d-flex justify-content-center align-items-center mb-4">
+                    <div style="border: 1px solid #0b2e59; padding: 6px; border-radius: 6px; background-color: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                        <div style="border: 3px solid #0b2e59; padding: 25px; border-radius: 8px; background-color: #ffffff;">
+                            <div id="qrcodeBox" class="d-flex justify-content-center"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-2"><span class="text-muted small fw-bold">តំណភ្ជាប់ (Link):</span></div>
+                <div class="d-inline-block px-3 py-2 rounded-3 shadow-sm border" style="background-color: #ffffff; border-color: #c2d1e0 !important;">
+                    <a href="#" id="qrLinkText" target="_blank" class="fw-bold text-decoration-none text-break" style="font-size: 0.95rem; color: #0b2e59; font-family: Arial, sans-serif;">
+                        <i class="fas fa-link text-muted me-1"></i> <span></span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="modal-footer d-flex flex-column align-items-stretch bg-white border-top-0 pt-0 pb-4 px-4 px-md-5">
+                <div class="d-flex justify-content-center gap-2 mb-3 w-100 flex-wrap">
+                    <button type="button" class="btn btn-light border fw-bold rounded-pill px-4 text-secondary shadow-sm" data-bs-dismiss="modal" style="transition: all 0.2s;">បិទ</button>
+                    <button type="button" id="btnDownloadPdf" class="btn btn-danger fw-bold rounded-pill px-4 shadow-sm" onclick="downloadQRCodePDF()" style="transition: all 0.2s;"><i class="fas fa-file-pdf me-1"></i> ទាញយក PDF</button>
+                    <button type="button" class="btn btn-primary fw-bold rounded-pill px-4 shadow-sm" onclick="printQRCode()" style="background-color: #0b2e59; border-color: #0b2e59; transition: all 0.2s;"><i class="fas fa-print me-1"></i> Print</button>
+                </div>
+                <div class="d-flex justify-content-center align-items-center mt-2 opacity-50">
+                    <i class="fas fa-graduation-cap text-warning me-1"></i>
+                    <span style="font-size: 0.75rem; font-family: Arial, sans-serif; font-weight: bold; color: #555;">Powered by EPS SYSTEM v2.0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<script>
+    // ==========================================
+    // មុខងារទូទៅ & វត្តមាន (ទាក់ទងនឹង Python Route)
+    // ==========================================
+    let previewModal;
+    function previewImage(src, name) {
+        document.getElementById('previewImage').src = src;
+        document.getElementById('previewName').innerText = name;
+        if(!previewModal) previewModal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+        previewModal.show();
+    }
+
+    function toggleAttendance(appNo) {
+        let dateFilter = document.getElementById('filter_test_date').value;
+        if (!dateFilter || dateFilter === 'all') {
+            alert('⚠️ សូមជ្រើសរើស "ថ្ងៃប្រឡង" ជាមុនសិន!');
+            document.getElementById('filter_test_date').focus();
+            return;
+        }
+
+        fetch('/toggle_skill_attendance/' + appNo, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') { location.reload(); }
+            else { alert("⚠️ បញ្ហា៖ " + data.message); }
+        });
+    }
+
+    // មុខងារដាក់វត្តមានទាំងអស់ Bulk Update
+    function markAllPresentOnPage() {
+        let testDate = document.getElementById('filter_test_date').value;
+        let entryTime = document.querySelector('select[name="entry_time"]').value;
+        let groupNo = document.querySelector('select[name="group_no"]').value;
+
+        if (!testDate || testDate === 'all') {
+            alert('⚠️ សូមជ្រើសរើស "ថ្ងៃប្រឡង" ជាក់លាក់ណាមួយជាមុនសិន មុននឹងធ្វើការដាក់វត្តមាន!');
+            document.getElementById('filter_test_date').focus();
+            return;
+        }
+
+        let confirmMsg = `តើអ្នកពិតជាចង់ដាក់ "វត្តមាន" ដល់បេក្ខជនទាំងអស់ដែលប្រឡងនៅ៖\n\n📅 ថ្ងៃទី៖ ${testDate}`;
+        if (entryTime) confirmMsg += `\n⏰ ម៉ោង៖ ${entryTime}`;
+        if (groupNo) confirmMsg += `\n👥 ក្រុមទី៖ ${groupNo}`;
+        confirmMsg += `\n\n(ទិន្នន័យនឹងត្រូវកែប្រែគ្រប់ទំព័រទាំងអស់ក្នុងពេលតែមួយ!)`;
+
+        if (!confirm(confirmMsg)) return;
+
+        let btn = document.querySelector('.btn-success');
+        let originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> កំពុងដំណើរការ...';
+        btn.disabled = true;
+
+        fetch('/api/bulk_mark_present', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                test_date: testDate,
+                entry_time: entryTime,
+                group_no: groupNo
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') { 
+                alert('✅ ' + data.message);
+                window.location.reload(); 
+            } else { 
+                alert("❌ បញ្ហា៖ " + data.message); 
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        })
+        .catch(error => {
+            alert("❌ មានបញ្ហាប្រព័ន្ធពេលភ្ជាប់ទៅកាន់ Server!");
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        });
+    }
+
+    // ==========================================
+    // 💡 មុខងាររបាយការណ៍ (ស្តារមកវិញ ១០០%)
+    // ==========================================
+    function handleReportTypeChange(selectElement) {
+        let timeLabel = document.getElementById('time_hint');
+        let timeSelect = document.getElementById('report_time');
+        
+        if (timeLabel && timeSelect) {
+            if(selectElement.value === 'session'){
+                timeLabel.className = "text-danger fw-bold";
+                timeSelect.style.border = "1px solid red";
+            } else {
+                timeLabel.className = "text-muted";
+                timeSelect.style.border = "1px solid #ced4da";
+            }
+        }
+    }
+
+    function handleReportSubmit(e) {
+        let type = document.getElementById('report_type_select').value;
+        let timeField = document.getElementById('report_time').value;
+        let currentTitle = document.getElementById('report_title').value;
+
+        // ការពារការទាញយកប្រចាំវេន ដោយមិនបានរើសម៉ោង
+        if (type === 'session' && !timeField) {
+            e.preventDefault(); 
+            alert('⚠️ សម្រាប់របាយការណ៍ "ប្រចាំវេន" សូមជ្រើសរើស "ម៉ោងចូល" ឱ្យបានត្រឹមត្រូវ!');
+            document.getElementById('report_time').focus();
+            return false;
+        }
+
+        // កំណត់ Action ទៅកាន់ Route Python ឱ្យបានត្រឹមត្រូវ
+        let form = document.getElementById('reportForm');
+        if (type === 'daily') {
+            form.action = '/report/daily_attendance';
+        } else if (type === 'session') {
+            form.action = '/report/session_attendance';
+        }
+
+        // រក្សាទុកចំណងជើង ដើម្បីកុំឱ្យវាយម្តងទៀត
+        localStorage.setItem('saved_global_report_title', currentTitle);
+
+        // បិទ Modal ក្រោយចុចរួច
+        setTimeout(() => {
+            try {
+                let modalEl = document.getElementById('exportReportModal');
+                if(modalEl) {
+                    let modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                    modalInstance.hide();
+                }
+            } catch(err) { console.error(err); }
+        }, 1000);
+        
+        return true;
+    }
+
+    // ពេលទំព័របើក ត្រូវកំណត់ Option និងទាញយកចំណងជើងដែលបាន Save ទុក
+    document.addEventListener('DOMContentLoaded', function() {
+        let reportTypeSelect = document.getElementById('report_type_select');
+        if(reportTypeSelect) handleReportTypeChange(reportTypeSelect);
+        
+        let savedTitle = localStorage.getItem('saved_global_report_title');
+        let reportTitleInput = document.getElementById('report_title');
+        if (savedTitle && reportTitleInput) {
+            reportTitleInput.value = savedTitle;
+        }
+    });
+
+    // ==========================================
+    // មុខងារ QR Code (បង្កើត, Print, Download PDF)
+    // ==========================================
+    function generateQRCode() {
+        let baseUrl = window.location.origin; 
+        let targetUrl = baseUrl + '/exam_schedule';
+
+        let linkElement = document.getElementById('qrLinkText');
+        if(linkElement) {
+            linkElement.href = targetUrl;
+            let spanElement = linkElement.querySelector('span');
+            if(spanElement) spanElement.innerText = targetUrl;
+            else linkElement.innerText = targetUrl;
+        }
+
+        let qrBox = document.getElementById('qrcodeBox');
+        qrBox.innerHTML = ""; 
+        
+        new QRCode(qrBox, {
+            text: targetUrl,
+            width: 180,      
+            height: 180,     
+            colorDark : "#0b2e59", 
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H 
+        });
+
+        let qrModal = new bootstrap.Modal(document.getElementById('qrCodeModal'));
+        qrModal.show();
+    }
+
+    function printQRCode() {
+        let qrBox = document.getElementById('qrcodeBox');
+        let qrImage = qrBox.querySelector('img');
+        let qrContent = "";
+        
+        if(qrImage && qrImage.src) {
+            qrContent = `<img src="${qrImage.src}" style="width: 250px; height: 250px; display: block; margin: 0 auto;">`;
+        } else {
+            let canvas = qrBox.querySelector('canvas');
+            if(canvas) qrContent = `<img src="${canvas.toDataURL()}" style="width: 250px; height: 250px; display: block; margin: 0 auto;">`;
+        }
+
+        let targetUrl = document.getElementById('qrLinkText').innerText;
+        let printWindow = window.open('', '', 'height=800,width=800');
+        
+        let html = `
+        <!DOCTYPE html>
+        <html lang="km">
+        <head>
+            <meta charset="UTF-8">
+            <title>Print QR Code</title>
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+            <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Moul&display=swap" rel="stylesheet">
+            <style>
+                @page { size: A4 portrait; margin: 0; }
+                body { font-family: 'Battambang', 'Khmer OS Siemreap', Arial, sans-serif; background: #fdfdfd; margin: 0; padding: 0; color: #333; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .page-container { width: 210mm; height: 297mm; padding: 25mm 20mm 20mm 20mm; box-sizing: border-box; margin: 0 auto; display: flex; flex-direction: column; }
+                .official-header { text-align: center; margin-bottom: 40px; border-bottom: 3px double #0b2e59; padding-bottom: 20px; }
+                .ministry-name { font-family: 'Moul', 'Khmer OS Muol Light', cursive; font-size: 24px; color: #0b2e59; margin: 0 0 10px 0; line-height: 1.5; }
+                .committee-name { font-family: 'Battambang', 'Khmer OS Siemreap', sans-serif; font-size: 18px; font-weight: bold; color: #333; margin: 0; line-height: 1.5; }
+                .main-title { text-align: center; margin-bottom: 45px; margin-top: 10px;}
+                .main-title h1 { color: #0b2e59; font-size: 34px; font-family: 'Moul', 'Khmer OS Muol Light', cursive; margin-bottom: 15px; font-weight: normal; line-height: 1.5; }
+                .main-title p { color: #555; font-size: 20px; font-weight: bold; margin: 0; }
+                .qr-section { text-align: center; flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 20px; }
+                .qr-outer-frame { border: 1px solid #0b2e59; padding: 8px; border-radius: 4px; margin-bottom: 30px; display: inline-block; background: #fff; }
+                .qr-inner-frame { border: 3px solid #0b2e59; padding: 20px; border-radius: 6px; background: #fff; }
+                .url-display { font-size: 20px; color: #0b2e59; font-family: Arial, sans-serif; display: flex; align-items: center; justify-content: center; font-weight: bold; letter-spacing: 0.5px; background-color: #f0f4f8; padding: 12px 25px; border-radius: 8px; border: 1px dashed #c2d1e0; }
+                .url-display i { margin-right: 12px; font-size: 22px; }
+                .footer { border-top: 2px solid #0b2e59; padding-top: 15px; text-align: center; color: #0b2e59; margin-top: auto; }
+                .contact-text { font-size: 14px; line-height: 1.6; margin: 0 0 10px 0; }
+                .contact-text .phone { font-weight: bold; color: #d32f2f; }
+            </style>
+        </head>
+        <body>
+            <div class="page-container">
+                <div class="official-header">
+                    <p class="ministry-name">ក្រសួងការងារ និងបណ្តុះបណ្តាលវិជ្ជាជីវៈ</p>
+                    <p class="committee-name">គណៈកម្មាធិការបណ្តុះបណ្តាល និងបញ្ជូនពលករទៅបរទេស</p>
+                </div>
+                <div class="main-title">
+                    <h1>ស្វែងរកព័ត៌មាន និងកាលវិភាគប្រឡង</h1>
+                    <p>សូមស្កេនកូដខាងក្រោម ដើម្បីពិនិត្យមើលព័ត៌មានរបស់អ្នក</p>
+                </div>
+                <div class="qr-section">
+                    <div class="qr-outer-frame"><div class="qr-inner-frame">${qrContent}</div></div>
+                    <div class="url-display"><i class="fas fa-link"></i> ${targetUrl}</div>
+                </div>
+                <div class="footer">
+                    <p class="contact-text">
+                        សម្រាប់ព័ត៌មានបន្ថែម សូមទំនាក់ទំនងមកគណៈកម្មាធិការបណ្តុះបណ្តាល និងបញ្ជូនពលករទៅបរទេស<br>
+                        តាមរយៈទូរស័ព្ទ <span class="phone"><i class="fas fa-phone-alt ms-1 me-1"></i> ០១២ ៤៦៦ ២២២ / ០១៦ ៤៦៦ ២២២</span> នៅរៀងរាល់ម៉ោងធ្វើការ។
+                    </p>
+                </div>
+            </div>
+            <script>
+                window.onload = function() {
+                    if (document.fonts) {
+                        document.fonts.ready.then(function() { setTimeout(function() { window.print(); }, 300); });
+                    } else { setTimeout(function() { window.print(); }, 1000); }
+                };
+            <\/script>
+        </body>
+        </html>
+        `;
+
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.focus();
+    }
+
+    function downloadQRCodePDF() {
+        let btn = document.getElementById('btnDownloadPdf');
+        let originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> កំពុងរៀបចំ...';
+        btn.disabled = true;
+
+        let qrBox = document.getElementById('qrcodeBox');
+        let canvas = qrBox.querySelector('canvas');
+        let img = qrBox.querySelector('img');
+        let qrDataUrl = "";
+
+        if (canvas) {
+            qrDataUrl = canvas.toDataURL("image/png");
+        } else if (img && img.src) {
+            qrDataUrl = img.src;
+        }
+
+        let targetUrl = document.getElementById('qrLinkText').innerText;
+        
+        let element = document.createElement('div');
+        element.style.width = '210mm';
+        element.style.padding = '25mm 20mm';
+        element.style.backgroundColor = '#ffffff';
+        
+        element.innerHTML = `
+            <div style="text-align: center; margin-bottom: 40px; border-bottom: 3px double #0b2e59; padding-bottom: 20px; font-family: 'Khmer OS Muol Light', 'Moul', serif;">
+                <p style="font-size: 22px; color: #0b2e59; margin: 0 0 10px 0;">ក្រសួងការងារ និងបណ្តុះបណ្តាលវិជ្ជាជីវៈ</p>
+                <p style="font-size: 16px; margin: 0; color: #333;">គណៈកម្មាធិការបណ្តុះបណ្តាល និងបញ្ជូនពលករទៅបរទេស</p>
+            </div>
+            
+            <div style="text-align: center; margin-bottom: 40px; font-family: 'Khmer OS Muol Light', 'Moul', serif;">
+                <h1 style="color: #0b2e59; font-size: 28px; margin-bottom: 15px;">ពិនិត្យកាលវិភាគ និងលេខតុប្រឡង</h1>
+                <p style="color: #555; font-size: 18px; font-family: 'Khmer OS Siemreap', 'Battambang', sans-serif;">សូមស្កេនកូដខាងក្រោម ដើម្បីពិនិត្យមើលព័ត៌មានរបស់អ្នក</p>
+            </div>
+            
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="border: 1px solid #0b2e59; padding: 10px; border-radius: 5px; display: inline-block;">
+                    <div style="border: 3px solid #0b2e59; padding: 20px; border-radius: 8px; background: white;">
+                        <img src="${qrDataUrl}" style="width: 250px; height: 250px; display: block;">
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-bottom: 60px;">
+                <span style="font-size: 18px; color: #0b2e59; font-family: Arial; font-weight: bold; background: #f0f4f8; padding: 10px 20px; border-radius: 8px; border: 1px dashed #c2d1e0;">
+                    ${targetUrl}
+                </span>
+            </div>
+            
+            <div style="border-top: 2px solid #0b2e59; padding-top: 20px; text-align: center; color: #0b2e59; font-family: 'Khmer OS Siemreap', 'Battambang', sans-serif;">
+                <p style="font-size: 14px; line-height: 1.8; margin: 0;">
+                    សម្រាប់ព័ត៌មានបន្ថែម សូមទំនាក់ទំនងមកគណៈកម្មាធិការបណ្តុះបណ្តាល និងបញ្ជូនពលករទៅបរទេស<br>
+                    តាមរយៈទូរស័ព្ទ <span style="font-weight: bold; color: #d32f2f;">០១២ ៤៦៦ ២២២ / ០១៦ ៤៦៦ ២២២</span> នៅរៀងរាល់ម៉ោងធ្វើការ។
+                </p>
+            </div>
+        `;
+
+        let opt = {
+            margin: 0,
+            filename: 'QR_Code_EPS_Schedule.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2, 
+                useCORS: true, 
+                letterRendering: true 
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(element).toPdf().get('pdf').then(function (pdf) {
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }).catch(err => {
+            console.error(err);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,710 @@
+{% extends "base.html" %}
+
+{% block title %}ការប្រឡងរបស់បេក្ខជន - EPS{% endblock %}
+{% block page_title %}ការប្រឡងរបស់បេក្ខជន (UBT){% endblock %}
+
+{% block head %}
+<style>
+    .card-custom { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); background: #fff; overflow: hidden; }
+    
+    .filter-label { font-size: 0.85rem; font-weight: 600; color: #5a6268; margin-bottom: 0.4rem; }
+    .form-select, .form-control { border-radius: 8px; border: 1px solid #ced4da; padding: 0.6rem 1rem; font-size: 0.95rem; color: #495057; background-color: #fcfdfd; transition: all 0.2s; }
+    .form-select:focus, .form-control:focus { box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1); border-color: #86b7fe; background-color: #fff; }
+    
+    .btn-filter-action { border-radius: 8px; padding: 0.6rem 1rem; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .btn-reset { background-color: #f8f9fa; border: 1px solid #ced4da; color: #6c757d; }
+    .btn-reset:hover { background-color: #e2e6ea; color: #212529; }
+
+    .table-custom { margin-bottom: 0; border-collapse: separate; border-spacing: 0; }
+    .table-custom thead th { 
+        background-color: #02407f !important; 
+        color: #ffffff !important; 
+        border: none !important;
+        font-weight: 500; 
+        padding: 15px 10px; 
+        white-space: nowrap; 
+        text-align: center; 
+    }
+    .table-custom thead th:first-child { border-top-left-radius: 8px; }
+    .table-custom thead th:last-child { border-top-right-radius: 8px; }
+    .table-custom td { padding: 12px 10px; vertical-align: middle; border-bottom: 1px solid #f0f2f5; text-align: center; transition: all 0.3s ease;}
+    .table-custom tbody tr:hover { background-color: #f8fafd; }
+    
+    .table-success-subtle { background-color: #f2fcf5 !important; }
+    .table-danger-subtle { background-color: #fff5f5 !important; }
+
+    .candidate-photo { width: 40px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6; cursor: pointer; transition: transform 0.2s ease; background: #fff; }
+    .candidate-photo:hover { transform: scale(1.1); box-shadow: 0 4px 8px rgba(0,0,0,0.2); border-color: #0d6efd; }
+    #imagePreviewModal .modal-content { background-color: transparent; border: none; }
+    #previewImage { max-width: 100%; max-height: 80vh; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain; }
+
+    .btn-icon { width: 34px; height: 34px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; transition: all 0.2s ease; border: none; font-size: 0.95rem; }
+    .btn-icon-primary { background-color: #e0f2fe; color: #0284c7; }
+    .btn-icon-primary:hover { background-color: #0284c7; color: #ffffff; box-shadow: 0 4px 8px rgba(2, 132, 199, 0.25); transform: translateY(-2px); }
+    .btn-icon-warning { background-color: #fef08a; color: #ca8a04; }
+    .btn-icon-warning:hover { background-color: #eab308; color: #ffffff; box-shadow: 0 4px 8px rgba(234, 179, 8, 0.25); transform: translateY(-2px); }
+    .btn-icon-danger { background-color: #fee2e2; color: #e11d48; }
+    .btn-icon-danger:hover { background-color: #e11d48; color: #ffffff; box-shadow: 0 4px 8px rgba(225, 29, 72, 0.25); transform: translateY(-2px); }
+
+    .pagination .page-link { border-radius: 6px; margin: 0 3px; border: 1px solid #dee2e6; color: #495057; font-weight: 500; }
+    .pagination .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; color: white; box-shadow: 0 3px 6px rgba(13,110,253,0.2); }
+    .pagination .page-link:hover { background-color: #e9ecef; }
+    
+    .badge-btn { border: none; cursor: pointer; transition: all 0.2s; }
+    .badge-btn:hover { filter: brightness(0.9); transform: scale(1.05); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div class="d-flex flex-column">
+            <h4 class="mb-1 fw-bold text-dark">
+                <i class="fas fa-clipboard-user text-primary me-2"></i>គ្រប់គ្រងការប្រឡងរបស់បេក្ខជន
+            </h4>
+            <div class="text-secondary" style="font-size: 0.95rem;">
+                ស្វែងរក ត្រងទិន្នន័យ និងគ្រប់គ្រងវត្តមានបេក្ខជនតាមវគ្គប្រឡងនីមួយៗ
+            </div>
+        </div>
+        
+        {% if role_name|lower != 'proctor' %}
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-success fw-bold shadow-sm d-flex align-items-center px-4 rounded-3" style="height: 45px;" data-bs-toggle="modal" data-bs-target="#importScoreModal">
+                <i class="fas fa-file-excel me-2 fs-5"></i> <span>Import ពិន្ទុពី Excel</span>
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="card card-custom mb-4">
+        <div class="card-body p-4 bg-white"> 
+            <form action="/candidates" method="GET" id="filterForm" class="mb-0">
+                <input type="hidden" name="sort_by" value="application_no">
+                <input type="hidden" name="order" value="ASC">
+
+                <div class="row g-3 align-items-end">
+                    <div class="col-xl-2 col-lg-3 col-md-4">
+                        <label class="filter-label">ថ្ងៃប្រឡង</label>
+                        <select name="test_date" class="form-select shadow-sm fw-bold text-dark" onchange="this.form.submit()">
+                            <option value="">-- ទាំងអស់ --</option>
+                            {% for d in dates %}
+                                <option value="{{ d.test_date }}" {% if selected_date == d.test_date|string %}selected{% endif %}>{{ d.test_date }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-xl-2 col-lg-3 col-md-4">
+                        <label class="filter-label">វេន និងម៉ោង</label>
+                        <select name="exam_session" class="form-select shadow-sm fw-bold text-dark" onchange="this.form.submit()">
+                            <option value="">-- ទាំងអស់ --</option>
+                            {% for t in times %}
+                                <option value="{{ t.exam_session }}" {% if selected_time == t.exam_session %}selected{% endif %}>{{ t.exam_session }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-xl-2 col-lg-3 col-md-4">
+                        <label class="filter-label">បន្ទប់ប្រឡង</label>
+                        <select name="test_room" class="form-select shadow-sm fw-bold text-dark" onchange="this.form.submit()">
+                            {% if role_name|lower != 'proctor' %}
+                                <option value="">-- ទាំងអស់ --</option>
+                            {% endif %}
+                            {% for r in rooms %}
+                                <option value="{{ r.test_room }}" {% if selected_room == r.test_room %}selected{% endif %}>{{ r.test_room }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-xl-2 col-lg-3 col-md-4">
+                        <label class="filter-label">ស្ថានភាពវត្តមាន</label>
+                        <select name="present" class="form-select shadow-sm fw-bold {% if attendance_status == '0' %}text-danger{% elif attendance_status == '1' %}text-success{% else %}text-secondary{% endif %}" onchange="this.form.submit()">
+                            <option value="" class="text-dark">-- ទាំងអស់ --</option>
+                            <option value="1" class="text-success" {% if attendance_status == '1' %}selected{% endif %}>វត្តមាន</option>
+                            <option value="0" class="text-danger" {% if attendance_status == '0' %}selected{% endif %}>អវត្តមាន</option>
+                            <option value="none" class="text-secondary" {% if attendance_status == 'none' %}selected{% endif %}>រង់ចាំ</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-xl-1 col-lg-2 col-md-4">
+                        <label class="filter-label text-success"><i class="fas fa-trophy me-1"></i>ពិន្ទុ &ge;</label>
+                        <input type="number" step="0.5" name="min_score" class="form-control shadow-sm fw-bold text-success border-success bg-success bg-opacity-10" placeholder="ឧ. 45" value="{{ min_score or '' }}" onchange="this.form.submit()" style="font-size: 1.05rem;">
+                    </div>
+
+                    <div class="col-xl-3 col-lg-10 col-md-8 mt-3 mt-xl-0 ms-auto">
+                        <label class="filter-label d-xl-block d-none">ស្វែងរកបេក្ខជន</label>
+                        <div class="input-group shadow-sm">
+                            <input type="text" name="search_query" class="form-control fw-bold" placeholder="ស្វែងរកឈ្មោះ, លេខកូដ..." value="{{ search_query or '' }}">
+                            <button type="submit" class="btn btn-primary btn-filter-action px-3"><i class="fas fa-search"></i></button>
+                            <a href="/candidates" class="btn btn-reset btn-filter-action px-3" title="ជម្រះការស្វែងរក"><i class="fas fa-sync-alt"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card card-custom mb-5 border-0 shadow-sm rounded-3 overflow-hidden">
+        
+        <div class="bg-white p-3 border-bottom d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <h5 class="mb-0 text-primary fw-bold text-nowrap d-flex align-items-center" style="font-family: 'Khmer Mool1', 'Khmer OS Siemreap';">
+                    <i class="fas fa-list text-primary me-2"></i> បញ្ជីឈ្មោះ
+                </h5>
+                <div class="text-muted border-start border-2 ps-3 py-1 ms-sm-2 d-flex flex-wrap align-items-center gap-2">
+                    <span class="fw-bold text-nowrap"><i class="fas fa-users me-1 text-primary"></i>សរុប៖ <span class="text-dark">{{ total_records }}</span></span>
+                    <span class="text-black-50 d-none d-sm-inline">|</span>
+                    <span class="fw-bold text-nowrap"><i class="fas fa-female me-1 text-danger"></i>ស្រី៖ <span class="text-dark">{{ total_female | default('0') }}</span></span>
+                </div>
+            </div>
+
+            {% if min_score %}
+            <div class="border border-success bg-success bg-opacity-10 rounded-pill px-3 py-2 d-flex align-items-center shadow-sm">
+                <span class="fw-bold text-success me-2"><i class="fas fa-check-circle me-1"></i>សរុប៖ (ពិន្ទុ &ge; {{ min_score }}) ៖ <span class="fs-5 text-dark ms-1">{{ total_passed | default('0') }}</span> នាក់</span>
+                <span class="text-success opacity-50 mx-2">|</span>
+                <span class="fw-bold text-success ms-1"><i class="fas fa-female me-1"></i>ស្រី៖ <span class="fs-5 text-danger ms-1">{{ female_passed | default('0') }}</span></span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover table-custom align-middle"> 
+                <thead> 
+                    <tr>
+                        <th class="text-nowrap text-center">វត្តមាន</th>
+                        <th class="text-nowrap text-center pe-3">ល.រ</th>
+                        <th class="text-nowrap text-center">រូបថត</th>
+                        <th class="text-nowrap text-start">លេខកូដ</th>
+                        <th class="text-nowrap text-start">ឈ្មោះបេក្ខជន</th>
+                        <th class="text-nowrap text-start">ID/Passport</th>
+                        <th class="text-nowrap text-center">ភេទ</th>
+                        <th class="text-nowrap text-center">ថ្ងៃខែឆ្នាំកំណើត</th>
+                        <th class="text-nowrap text-center text-success">ពិន្ទុ</th>
+                        <th class="text-nowrap text-center text-warning">លេខតុ</th>
+                        <th class="text-nowrap text-center">ស្ថានភាព</th>
+                        <th class="text-nowrap text-center" style="width: 120px;">សកម្មភាព (Action)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in candidates %}
+                    <tr id="row-{{ c.application_no }}" class="{% if c.is_present == 1 %}table-success-subtle{% elif c.is_present == 0 %}table-danger-subtle{% endif %}">
+                        <td class="text-center align-middle text-nowrap">
+                            {% if c.is_present is none %}
+                                <button onclick="toggleAttendanceAJAX('{{ c.application_no }}', 'none')" class="badge bg-secondary px-3 py-2 shadow-sm rounded-pill fw-bold badge-btn"><i class="fas fa-hourglass-half me-1"></i> រង់ចាំ</button>
+                            {% elif c.is_present == 1 %}
+                                <button onclick="toggleAttendanceAJAX('{{ c.application_no }}', '1')" class="badge bg-success px-3 py-2 shadow-sm rounded-pill fw-bold badge-btn"><i class="fas fa-check-circle me-1"></i> វត្តមាន</button>
+                            {% else %}
+                                <button onclick="toggleAttendanceAJAX('{{ c.application_no }}', '0')" class="badge bg-danger px-3 py-2 shadow-sm rounded-pill fw-bold badge-btn"><i class="fas fa-times-circle me-1"></i> អវត្តមាន</button>
+                            {% endif %}
+                        </td>
+                        <td class="text-center text-muted fw-bold align-middle pe-3">{{ loop.index + (page - 1) * 48 }}</td>
+                        
+                        <td class="text-center align-middle">
+                            {% set photo_src = '/static/latest_scans/' ~ c.latest_scan_photo if c.latest_scan_photo else '/static/uploads/reference_photos/' ~ c.original_photo_path if c.original_photo_path else '/static/default_avatar.png' %}
+                            <img src="{{ photo_src }}" class="candidate-photo" alt="Photo" onclick="previewImage('{{ photo_src }}', '{{ c.name_en }}')">
+                        </td>
+
+                        <td class="text-start text-dark fw-bold text-nowrap align-middle">{{ c.application_no }}</td>
+                        <td class="text-start text-primary fw-bold text-nowrap align-middle">{{ c.name_en }}</td>
+                        <td class="text-start text-muted fw-bold text-nowrap align-middle">
+                            {% if c.id_card_no and c.passport_no %} {{ c.id_card_no }} / {{ c.passport_no }}
+                            {% elif c.id_card_no %} {{ c.id_card_no }}
+                            {% elif c.passport_no %} {{ c.passport_no }}
+                            {% else %} - {% endif %}
+                        </td>
+                        <td class="text-center text-secondary fw-bold align-middle">{{ c.gender or '-' }}</td>
+                        <td class="text-center text-muted text-nowrap align-middle">{{ c.dob.strftime('%Y-%m-%d') if c.dob else '-' }}</td>
+                        <td class="text-center text-nowrap fw-bold align-middle">
+                            {% if c.score is not none %}
+                                <span class="badge bg-success px-3 py-2 rounded-pill fs-6">{{ c.score }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center text-nowrap fw-bold text-primary align-middle fs-6">{{ c.SeatNo or '-' }}</td>
+                        <td class="text-center align-middle text-nowrap">
+                            {% if c.req_status == 'Pending' %}
+                                <span class="badge bg-warning text-dark shadow-sm px-3 py-2 rounded-pill fw-bold"><i class="fas fa-spinner fa-spin me-1"></i> កំពុងស្នើកែ</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center text-nowrap align-middle">
+                            {% set safe_test_date = c.test_date.strftime('%Y-%m-%d') if c.test_date else '' %}
+                            {% set safe_dob = c.dob.strftime('%Y-%m-%d') if c.dob else '' %}
+                            {% set safe_name = c.name_en | replace("'", "\\'") %}
+                            {% set safe_industry = c.industry or '' %}
+                            {% set safe_session = c.exam_session or '' %}
+                            {% set safe_room = c.test_room or '' %}
+                            {% set safe_gender = c.gender or '' %}
+                            {% set safe_id_card = c.id_card_no or '' %}
+                            {% set safe_passport = c.passport_no or '' %}
+                            {% set safe_seat = c.SeatNo or '' %}
+                            {% set safe_req_seat = c.req_seat_no or '' %}
+                            {% set safe_note = (c.correction_note or '') | replace("'", "\\'") | replace('"', '&quot;') | replace('\n', ' ') %}
+
+                            <div class="d-flex justify-content-center gap-2"> 
+                                <button type="button" class="btn-icon btn-icon-primary shadow-sm" title="កំណត់វត្តមាន" onclick="toggleAttendanceAJAX('{{ c.application_no }}', 'none')">
+                                    <i class="fas fa-clock"></i>
+                                </button>
+                                
+                                {% if c.is_present == 1 %}
+                                    <button class="btn-icon btn-icon-warning shadow-sm"
+                                        onclick="openCorrectionModal('{{ c.application_no }}', '{{ safe_industry }}', '{{ safe_test_date }}', '{{ safe_session }}', '{{ safe_room }}', '{{ safe_name }}', '{{ safe_gender }}', '{{ safe_dob }}', '{{ safe_id_card }}', '{{ safe_passport }}', '{{ safe_seat }}', '{{ safe_note }}', '{{ safe_req_seat }}')" 
+                                        title="ស្នើកែព័ត៌មានបេក្ខជន">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                {% else %}
+                                    <div style="width: 34px; height: 34px;"></div>
+                                {% endif %}
+                                <button class="btn-icon btn-icon-danger shadow-sm" onclick="markCandidateAbsent('{{ c.application_no }}', '{{ safe_req_seat or safe_seat }}')" title="កំណត់អវត្តមាន">
+                                    <i class="fas fa-user-times"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="12" class="text-center py-5 text-muted bg-light">
+                            <i class="fas fa-folder-open fa-3x mb-3 opacity-25 text-secondary"></i>
+                            <h5 class="fw-bold">មិនមានទិន្នន័យទេ</h5>
+                            <p class="mb-0">សូមសាកល្បងផ្លាស់ប្តូរលក្ខខណ្ឌស្វែងរករបស់អ្នក។</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="p-3 bg-white border-top d-flex justify-content-center align-items-center">
+            <nav aria-label="Page navigation">
+                <ul class="pagination mb-0 shadow-sm rounded-3">
+                    <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                        <a class="page-link shadow-sm text-dark fw-bold" href="{{ url_for('manage_candidates', page=page-1, test_date=selected_date, test_room=selected_room, exam_session=selected_time, present=attendance_status, search_query=search_query, min_score=min_score) }}">
+                            <i class="fas fa-chevron-left me-1"></i> មុន
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link bg-light text-dark fw-bold shadow-sm px-4">ទំព័រ {{ page }} នៃ {{ total_pages }}</span>
+                    </li>
+                    <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                        <a class="page-link shadow-sm text-dark fw-bold" href="{{ url_for('manage_candidates', page=page+1, test_date=selected_date, test_room=selected_room, exam_session=selected_time, present=attendance_status, search_query=search_query, min_score=min_score) }}">
+                            បន្ទាប់ <i class="fas fa-chevron-right ms-1"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center">
+            <div class="modal-body p-0 position-relative">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close" style="z-index: 1050; background-color: rgba(0,0,0,0.5); padding: 10px;"></button>
+                <img id="previewImage" src="" alt="Candidate Photo" class="img-fluid bg-white p-2 w-100">
+                <h5 id="previewName" class="text-white mt-3 fw-bold bg-dark bg-opacity-75 py-2 mx-auto rounded" style="max-width: 80%;"></h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="importScoreModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form action="/import_scores" method="POST" enctype="multipart/form-data">
+                <div class="modal-header bg-success text-white border-0">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-upload me-2"></i> បញ្ចូលពិន្ទុពី Excel/CSV</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <i class="fas fa-file-csv fa-4x text-success mb-3 opacity-50"></i>
+                    <p class="text-muted mb-3">សូមជ្រើសរើសឯកសារ Excel (.xlsx) ឬ .csv របស់អ្នក។ <br><small>(ប្រព័ន្ធនឹងអាន Column A ជាលេខកូដ និង Column C ជាពិន្ទុ)</small></p>
+                    <input class="form-control" type="file" name="file" accept=".xlsx, .xls, .csv" required>
+                </div>
+                <div class="modal-footer border-top bg-light">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4 shadow-sm" data-bs-dismiss="modal">បោះបង់</button>
+                    <button type="submit" class="btn btn-success fw-bold rounded-pill px-4 shadow-sm">
+                        <i class="fas fa-check-circle me-1"></i> យល់ព្រម Import
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="correctionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-light border-bottom">
+                <h5 class="modal-title fw-bold text-dark">ការកែប្រែព័ត៌មានបេក្ខជន</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-white" style="overflow-x: hidden;">
+                <input type="hidden" id="edit_app_no">
+                
+                <div class="position-relative mb-4">
+                    <hr class="text-primary border-2 opacity-50">
+                    <span class="position-absolute top-0 start-50 translate-middle bg-white px-3 fw-bold text-primary">ព័ត៌មានផ្ទៀងផ្ទាត់បេក្ខជន</span>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted mb-1">លេខកូដប្រឡង</label>
+                        <input type="text" class="form-control bg-light" id="display_app_no" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted mb-1">ប្រភេទការងារ</label>
+                        <input type="text" class="form-control bg-light" id="display_industry" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted mb-1">ថ្ងៃប្រឡង</label>
+                        <input type="text" class="form-control bg-light" id="display_test_date" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted mb-1">ម៉ោងប្រឡង</label>
+                        <input type="text" class="form-control bg-light" id="display_session" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted mb-1">បន្ទប់ប្រឡង</label>
+                        <input type="text" class="form-control bg-light" id="display_room" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-danger mb-1">លេខតុប្រឡង *</label>
+                        <input type="hidden" id="edit_seat_no" value="">
+                        <div class="dropdown">
+                            <button class="form-select border-danger text-start d-flex justify-content-between align-items-center" type="button" id="seatDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: white;">
+                                <span id="seatDropdownText">-- ជ្រើសរើស --</span>
+                            </button>
+                            <ul class="dropdown-menu w-100 shadow border-0" style="max-height: 220px; overflow-y: auto;">
+                                <li><a class="dropdown-item text-muted" href="javascript:void(0)" onclick="selectSeat('', '-- ជ្រើសរើស --')">-- ជ្រើសរើស --</a></li>
+                                {% for i in range(1, 49) %}
+                                    {% set seat_num = "%02d"|format(i) %}
+                                    <li><a class="dropdown-item fw-bold" href="javascript:void(0)" onclick="selectSeat('{{ seat_num }}', '{{ seat_num }}')">{{ seat_num }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="position-relative mb-4 mt-5">
+                    <hr class="text-primary border-2 opacity-25">
+                    <span class="position-absolute top-0 start-50 translate-middle bg-white px-3 fw-bold text-primary">ព័ត៌មានផ្ទាល់ខ្លួនបេក្ខជន</span>
+                </div>
+
+                <div id="alert_container"></div>
+
+                <div class="row align-items-center mb-3">
+                    <div class="col-md-5">
+                        <label class="form-label small fw-bold text-muted mb-1">ឈ្មោះដើម</label>
+                        <input type="text" class="form-control bg-light text-muted border-0 fw-bold" id="curr_name" readonly>
+                    </div>
+                    <div class="col-md-2 text-center mt-4">
+                        <button type="button" class="btn btn-sm btn-outline-secondary border-0" onclick="revertToOriginal('name')" title="ទាញទិន្នន័យដើមមកវិញ">
+                            <i class="fas fa-arrow-right d-block mb-1 small opacity-50"></i>
+                            <i class="fas fa-undo"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label small fw-bold text-primary mb-1">កែប្រែឈ្មោះថ្មី (ឡាតាំង)</label>
+                        <input type="text" class="form-control text-uppercase" id="edit_name" 
+                            oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '').toUpperCase(); checkDifference('name');" 
+                            placeholder="ឧ. SOK SAN">
+                    </div>
+                </div>
+
+                <div class="row align-items-center mb-3">
+                    <div class="col-md-5">
+                        <label class="form-label small fw-bold text-muted mb-1">ភេទដើម</label>
+                        <input type="text" class="form-control bg-light text-muted border-0 fw-bold" id="curr_gender" readonly>
+                    </div>
+                    <div class="col-md-2 text-center mt-4">
+                        <button type="button" class="btn btn-sm btn-outline-secondary border-0" onclick="revertToOriginal('gender')" title="ទាញទិន្នន័យដើមមកវិញ">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label small fw-bold text-primary mb-1">កែប្រែភេទថ្មី</label>
+                        <select class="form-select" id="edit_gender" onchange="checkDifference('gender')">
+                            <option value="M">M</option>
+                            <option value="F">F</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row align-items-center mb-3">
+                    <div class="col-md-5">
+                        <label class="form-label small fw-bold text-muted mb-1">ថ្ងៃកំណើតដើម</label>
+                        <input type="text" class="form-control bg-light text-muted border-0 fw-bold" id="curr_dob" readonly>
+                    </div>
+                    <div class="col-md-2 text-center mt-4">
+                        <button type="button" class="btn btn-sm btn-outline-secondary border-0" onclick="revertToOriginal('dob')" title="ទាញទិន្នន័យដើមមកវិញ">
+                            <i class="fas fa-arrow-right d-block mb-1 small opacity-50"></i>
+                            <i class="fas fa-undo"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label small fw-bold text-primary mb-1">កែប្រែថ្ងៃកំណើតថ្មី</label>
+                        <input type="date" class="form-control" id="edit_dob" onchange="checkDifference('dob');">
+                    </div>
+                </div>
+
+                <div class="row align-items-center mb-3">
+                    <div class="col-md-5">
+                        <label class="form-label small fw-bold text-muted mb-1">ID/Passport ដើម</label>
+                        <input type="text" class="form-control bg-light text-muted border-0 fw-bold" id="curr_id_passport" readonly>
+                    </div>
+                    <div class="col-md-2 text-center mt-4">
+                        <button type="button" class="btn btn-sm btn-outline-secondary border-0" onclick="revertToOriginal('id_passport')" title="ទាញទិន្នន័យដើមមកវិញ">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label small fw-bold text-primary mb-1">កែប្រែ ID/Passport ថ្មី</label>
+                        <input type="text" class="form-control text-uppercase" id="edit_id_passport" oninput="this.value = this.value.toUpperCase(); checkDifference('id_passport');">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">បោះបង់</button>
+                <button type="button" class="btn btn-primary px-5" onclick="saveCorrectionRequest()">រក្សាទុក</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="absentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content shadow-lg border-0 rounded-3">
+            <div class="modal-header bg-danger text-white border-0 py-2">
+                <h6 class="modal-title fw-bold"><i class="fas fa-user-times me-2"></i>បញ្ជាក់បេក្ខជនអវត្តមាន</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <p class="text-muted mb-3 small">កំណត់បេក្ខជនលេខ <span id="absent_app_no_display" class="fw-bold text-dark"></span> ថាអវត្តមាន។</p>
+                <input type="hidden" id="absent_app_no">
+                <div class="mb-3 text-start">
+                    <label class="form-label fw-bold text-danger small mb-1">សូមជ្រើសរើសលេខតុ *</label>
+                    <select class="form-select border-danger text-center fw-bold shadow-sm" id="absent_seat_no" style="font-size: 1.1rem;">
+                        <option value="">-- រើសលេខតុ --</option>
+                        {% for i in range(1, 49) %}
+                            {% set seat_num = "%02d"|format(i) %}
+                            <option value="{{ seat_num }}">តុលេខ {{ seat_num }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-top-0 d-flex justify-content-between p-2">
+                <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">បោះបង់</button>
+                <button type="button" class="btn btn-danger btn-sm px-4 fw-bold" onclick="submitAbsent()"><i class="fas fa-save me-1"></i> រក្សាទុក</button>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // មុខងារ Preview រូបថត
+    let previewModal;
+    function previewImage(src, name) {
+        document.getElementById('previewImage').src = src;
+        document.getElementById('previewName').innerText = name;
+        if(!previewModal) previewModal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+        previewModal.show();
+    }
+
+    function silentlyReloadRow(appNo) {
+        let row = document.getElementById('row-' + appNo);
+        if (row) row.style.opacity = '0.4'; 
+        
+        fetch(window.location.href)
+        .then(response => response.text())
+        .then(html => {
+            let parser = new DOMParser();
+            let doc = parser.parseFromString(html, 'text/html');
+            let newRow = doc.getElementById('row-' + appNo);
+            
+            if (newRow && row) {
+                row.innerHTML = newRow.innerHTML;
+                row.className = newRow.className;
+                row.style.opacity = '1'; 
+            }
+        });
+    }
+
+    function toggleAttendanceAJAX(appNo, currentStatus) {
+        if (currentStatus === '1') {
+            if (!confirm('តើអ្នកពិតជាចង់ដកវត្តមានបេក្ខជននេះវិញមែនទេ? (លេខតុក៏នឹងត្រូវលុបដែរ)')) return;
+        } else if (currentStatus === '0') {
+            if (!confirm('តើអ្នកពិតជាចង់ដកអវត្តមានបេក្ខជននេះវិញមែនទេ?')) return;
+        }
+        
+        let row = document.getElementById('row-' + appNo);
+        if (row) row.style.opacity = '0.5';
+
+        fetch('/toggle_attendance/' + appNo, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                silentlyReloadRow(appNo); 
+            } else {
+                alert("⚠️ " + data.message);
+                if (row) row.style.opacity = '1';
+            }
+        }).catch(err => {
+            alert("មានបញ្ហាក្នុងការភ្ជាប់ទៅប្រព័ន្ធ!");
+            if (row) row.style.opacity = '1';
+        });
+    }
+
+    let absentModal;
+    function markCandidateAbsent(appNo, currentSeat) {
+        document.getElementById('absent_app_no').value = appNo;
+        document.getElementById('absent_app_no_display').innerText = appNo;
+        let seatSelect = document.getElementById('absent_seat_no');
+        if (currentSeat && currentSeat.trim() !== '' && currentSeat !== 'None') {
+            seatSelect.value = currentSeat.toString().padStart(2, '0');
+        } else {
+            seatSelect.value = ''; 
+        }
+        if (!absentModal) absentModal = new bootstrap.Modal(document.getElementById('absentModal'));
+        absentModal.show();
+    }
+    
+    function submitAbsent() {
+        const appNo = document.getElementById('absent_app_no').value;
+        const seatNo = document.getElementById('absent_seat_no').value;
+        if (!seatNo) { alert("សូមជ្រើសរើស 'លេខតុ' ជាមុនសិន!"); return; }
+
+        fetch('/mark_absent', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ application_no: appNo, seat_no: seatNo })
+        }).then(res => res.json()).then(data => {
+            if(data.status === 'success') { 
+                absentModal.hide(); 
+                silentlyReloadRow(appNo); 
+            } else { alert("⚠️ " + data.message); }
+        });
+    }
+
+    let correctionModal;
+    function setOriginalValue(field, value) {
+        let el = document.getElementById('curr_' + field);
+        el.value = value || '';
+        el.dataset.original = value || '';
+    }
+
+    function checkDifference(field) {
+        let editEl = document.getElementById('edit_' + field);
+        let currEl = document.getElementById('curr_' + field);
+        let editVal = editEl.value.trim().toUpperCase();
+        let origVal = (currEl.dataset.original || '').trim().toUpperCase();
+        if (editVal !== origVal) {
+            editEl.classList.add('bg-warning', 'text-dark', 'fw-bold', 'border-warning');
+            editEl.classList.remove('border-danger', 'bg-danger', 'bg-opacity-10', 'text-danger');
+        } else {
+            editEl.classList.remove('bg-warning', 'text-dark', 'fw-bold', 'border-warning');
+        }
+    }
+
+    function openCorrectionModal(appNo, industry, testDate, sessionTime, room, name, gender, dob, idCard, passport, currentSeat, pendingNote, pendingSeat) {
+        document.getElementById('edit_app_no').value = appNo;
+        document.getElementById('display_app_no').value = appNo;
+        document.getElementById('display_industry').value = industry || '-';
+        document.getElementById('display_test_date').value = testDate || '-';
+        document.getElementById('display_session').value = sessionTime || '-';
+        document.getElementById('display_room').value = room || '-';
+
+        let combinedIdPass = "";
+        if (idCard && passport) combinedIdPass = idCard + " / " + passport;
+        else if (idCard) combinedIdPass = idCard;
+        else if (passport) combinedIdPass = passport;
+
+        setOriginalValue('name', name);
+        setOriginalValue('gender', gender);
+        setOriginalValue('dob', dob);
+        setOriginalValue('id_passport', combinedIdPass);
+        document.getElementById('alert_container').innerHTML = '';
+
+        if (pendingNote && pendingNote.trim() !== '' && pendingNote !== 'None') {
+            let showSeat = pendingSeat || currentSeat || '';
+            selectSeat(showSeat, showSeat || '-- ជ្រើសរើស --');
+
+            let nameMatch = pendingNote.match(/\[ឈ្មោះពី:.*?ទៅជា:\s*(.*?)\]/);
+            let genderMatch = pendingNote.match(/\[ភេទពី:.*?ទៅជា:\s*(.*?)\]/);
+            let dobMatch = pendingNote.match(/\[ថ្ងៃកំណើតពី:.*?ទៅជា:\s*(.*?)\]/);
+            let idMatch = pendingNote.match(/\[ID\/Passportពី:.*?ទៅជា:\s*(.*?)\]/);
+
+            document.getElementById('edit_name').value = nameMatch ? nameMatch[1] : (name || '');
+            document.getElementById('edit_gender').value = genderMatch ? genderMatch[1] : (gender || 'M');
+            document.getElementById('edit_dob').value = dobMatch ? dobMatch[1] : (dob || '');
+            document.getElementById('edit_id_passport').value = idMatch ? idMatch[1] : combinedIdPass;
+
+            document.getElementById('alert_container').innerHTML = `
+                <div class="alert alert-warning fw-bold mb-3 d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle fa-2x me-3"></i> 
+                    បេក្ខជននេះកំពុងមានសំណើកែប្រែ។ លោកអ្នកអាចកែប្រែបន្ថែម រួចចុចរក្សាទុក។
+                </div>
+            `;
+        } else {
+            selectSeat(currentSeat, currentSeat || '-- ជ្រើសរើស --');
+            document.getElementById('edit_name').value = name || '';
+            document.getElementById('edit_gender').value = gender || 'M';
+            document.getElementById('edit_dob').value = dob || '';
+            document.getElementById('edit_id_passport').value = combinedIdPass || '';
+        }
+
+        ['name', 'gender', 'dob', 'id_passport'].forEach(id => { checkDifference(id); });
+
+        if (!correctionModal) correctionModal = new bootstrap.Modal(document.getElementById('correctionModal'));
+        correctionModal.show();
+    }
+
+    function revertToOriginal(field) {
+        document.getElementById('edit_' + field).value = document.getElementById('curr_' + field).dataset.original;
+        checkDifference(field);
+    }
+
+    function selectSeat(value, text) {
+        document.getElementById('edit_seat_no').value = value;
+        document.getElementById('seatDropdownText').innerText = text;
+    }
+
+    function saveCorrectionRequest() {
+        const appNo = document.getElementById('edit_app_no').value;
+        const seatNo = document.getElementById('edit_seat_no').value.trim();
+        if (!seatNo) { alert("សូមជ្រើសរើស 'លេខតុប្រឡង' ជាមុនសិន!"); return; }
+
+        const nName = document.getElementById('edit_name').value.trim();
+        const nGender = document.getElementById('edit_gender').value;
+        const nDob = document.getElementById('edit_dob').value;
+        const nIdPass = document.getElementById('edit_id_passport').value.trim();
+        const oName = document.getElementById('curr_name').dataset.original;
+        const oGender = document.getElementById('curr_gender').dataset.original;
+        const oDob = document.getElementById('curr_dob').dataset.original;
+        const oIdPass = document.getElementById('curr_id_passport').dataset.original;
+
+        let changes = [];
+        if (nName !== oName) changes.push(`[ឈ្មោះពី: ${oName || 'ទទេ'} ទៅជា: ${nName}]`);
+        if (nGender !== oGender) changes.push(`[ភេទពី: ${oGender || 'ទទេ'} ទៅជា: ${nGender}]`);
+        if (nDob !== oDob) changes.push(`[ថ្ងៃកំណើតពី: ${oDob || 'ទទេ'} ទៅជា: ${nDob}]`);
+        if (nIdPass !== oIdPass) changes.push(`[ID/Passportពី: ${oIdPass || 'ទទេ'} ទៅជា: ${nIdPass}]`);
+
+        if (changes.length === 0) { alert("លោកអ្នកមិនទាន់បានកែប្រែព័ត៌មានណាមួយនៅឡើយទេ!"); return; }
+
+        let correctionNote = `បានស្នើកែព័ត៌មាន (តុលេខ: ${seatNo}) ទៅជា៖ ` + changes.join(', ');
+
+        fetch('/request_correction', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ application_no: appNo, seat_no: seatNo, correction_note: correctionNote })
+        }).then(res => res.json()).then(data => {
+            if(data.status === 'success') {
+                correctionModal.hide();
+                silentlyReloadRow(appNo); 
+            } else { alert("⚠️ បរាជ័យ៖ " + data.message); }
+        });
+    }
+</script>
+{% endblock %}

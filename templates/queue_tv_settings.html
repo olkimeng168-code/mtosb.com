@@ -1,0 +1,635 @@
+{% extends "base.html" %}
+{% block title %}ការកំណត់ទូរទស្សន៍ | EPS System{% endblock %}
+{% block page_title %}ការកំណត់ទូរទស្សន៍ TV (Display Settings){% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <ul class="nav nav-pills mb-4 gap-2" id="settingsTabs" role="tablist">
+        <li class="nav-item"><a class="nav-link active fw-bold" data-bs-toggle="tab" href="#general"><i class="fas fa-cogs me-2"></i> ទូទៅ & ពណ៌ផ្ទៃ</a></li>
+        <li class="nav-item"><a class="nav-link fw-bold" data-bs-toggle="tab" href="#logo_header"><i class="fas fa-crown me-2"></i> ឡូហ្គោ & គម្លាត</a></li>
+        <li class="nav-item"><a class="nav-link fw-bold" data-bs-toggle="tab" href="#header_kh"><i class="fas fa-font me-2"></i> ចំណងជើង (ខ្មែរ)</a></li>
+        <li class="nav-item"><a class="nav-link fw-bold" data-bs-toggle="tab" href="#header_en"><i class="fas fa-font me-2"></i> ចំណងជើង (Eng)</a></li>
+        <li class="nav-item"><a class="nav-link fw-bold" data-bs-toggle="tab" href="#footer"><i class="fas fa-grip-lines me-2"></i> អក្សររត់ (Footer)</a></li>
+        <li class="nav-item"><a class="nav-link fw-bold" data-bs-toggle="tab" href="#slides"><i class="fas fa-images me-2"></i> ផ្ទាំងរូបភាព/វីដេអូ</a></li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="general">
+            
+            <form action="{{ url_for('queue.manage_queue_tv_settings') }}" method="POST">
+                <input type="hidden" name="action" value="save_general">
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-4 text-primary border-bottom pb-2">ការកំណត់ទូទៅ (General Settings)</h5>
+                        
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <label class="fw-bold mb-2">ល្បឿនប្តូររូបភាព (មិល្លីវិនាទី - 1000=1s)</label>
+                                <input type="number" class="form-control" name="slideshow_speed" value="{{ settings.get('slideshow_speed') or '8000' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="fw-bold mb-2">លាងអេក្រង់ស្វ័យប្រវត្តិ (វិនាទី)</label>
+                                <input type="number" class="form-control" name="auto_clear_timer" value="{{ settings.get('auto_clear_timer') or '300' }}">
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold mb-3 text-primary border-bottom pb-2 mt-5">ពណ៌ផ្ទៃខាងក្រោយ (Background Colors)</h5>
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <label class="fw-bold mb-2 text-secondary"><i class="fas fa-desktop me-1"></i> ពណ៌ផ្ទៃ TV ទាំងមូល</label>
+                                <input type="color" class="form-control form-control-color w-100" name="tv_bg_color" value="{{ settings.get('tv_bg_color') or '#f1f5f9' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="fw-bold mb-2 text-secondary"><i class="fas fa-heading me-1"></i> ពណ៌ផ្ទៃចំណងជើងខាងលើ</label>
+                                <input type="color" class="form-control form-control-color w-100" name="tv_header_bg" value="{{ settings.get('tv_header_bg') or '#1e3a8a' }}">
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold mb-3 text-primary border-bottom pb-2 mt-5">ការគ្រប់គ្រងសំឡេង និង មេឌៀ (Audio & Media)</h5>
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <div class="form-check form-switch fs-5 mb-2">
+                                    <input class="form-check-input" type="checkbox" name="enable_chime" id="enable_chime" {% if settings.get('enable_chime', 'true') == 'true' %}checked{% endif %}>
+                                    <label class="form-check-label ms-2 fw-bold" for="enable_chime">បើកសំឡេង តេង-តុង</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check form-switch fs-5 mb-2">
+                                    <input class="form-check-input" type="checkbox" name="enable_voice" id="enable_voice" {% if settings.get('enable_voice', 'true') == 'true' %}checked{% endif %}>
+                                    <label class="form-check-label ms-2 fw-bold" for="enable_voice">បើកសំឡេងមនុស្សអាន</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check form-switch fs-5 mb-2">
+                                    <input class="form-check-input" type="checkbox" name="enable_video_audio" id="enable_video_audio" {% if settings.get('enable_video_audio', 'false') == 'true' %}checked{% endif %}>
+                                    <label class="form-check-label ms-2 fw-bold text-danger" for="enable_video_audio">បើកសំឡេងវីដេអូ</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12 mt-4">
+                                <style>
+                                    /* រចនាបថ Slider ស្តង់ដារ Professional (គាំទ្រគ្រប់ Browser) */
+                                    input[type="range"].premium-slider {
+                                        -webkit-appearance: none; /* សម្រាប់ Chrome, Safari, Edge */
+                                        appearance: none; /* ស្តង់ដារទូទៅ */
+                                        width: 100%;
+                                        height: 8px;
+                                        background: #e2e8f0;
+                                        border-radius: 5px;
+                                        outline: none;
+                                        padding: 0;
+                                        margin: 0;
+                                    }
+
+                                    /* 🌟 ក្បាលអូស (Thumb) សម្រាប់ Chrome, Safari, Edge */
+                                    input[type="range"].premium-slider::-webkit-slider-thumb {
+                                        -webkit-appearance: none;
+                                        appearance: none;
+                                        width: 24px;
+                                        height: 24px;
+                                        border-radius: 50%;
+                                        background: #2563eb;
+                                        border: 4px solid #ffffff;
+                                        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+                                        cursor: pointer;
+                                        transition: transform 0.1s ease-in-out;
+                                    }
+                                    
+                                    input[type="range"].premium-slider::-webkit-slider-thumb:hover {
+                                        transform: scale(1.2);
+                                    }
+
+                                    /* 🌟 ក្បាលអូស (Thumb) សម្រាប់ Firefox */
+                                    input[type="range"].premium-slider::-moz-range-thumb {
+                                        width: 16px; /* Firefox គិតទំហំ Border បញ្ចូលគ្នា ទើបត្រូវបន្ថយលេខបន្តិច */
+                                        height: 16px;
+                                        border-radius: 50%;
+                                        background: #2563eb;
+                                        border: 4px solid #ffffff;
+                                        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+                                        cursor: pointer;
+                                        transition: transform 0.1s ease-in-out;
+                                    }
+
+                                    input[type="range"].premium-slider::-moz-range-thumb:hover {
+                                        transform: scale(1.2);
+                                    }
+                                    
+                                    /* លុបបន្ទាត់ពណ៌ខៀវពេលចុចលើ Firefox */
+                                    input[type="range"].premium-slider::-moz-focus-outer {
+                                        border: 0;
+                                    }
+                                </style>
+
+                                <div class="p-4 bg-white border border-primary border-opacity-25 rounded-4 shadow-sm" style="position: relative; overflow: hidden;">
+                                    <div style="position: absolute; top: -50%; left: -10%; width: 150px; height: 150px; background: radial-gradient(circle, rgba(37,99,235,0.05) 0%, transparent 70%); border-radius: 50%;"></div>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center mb-4 position-relative z-1">
+                                        <label class="fw-bold text-primary mb-0 fs-5">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-tachometer-alt"></i>
+                                                </div>
+                                                កម្រិតល្បឿនសំឡេងហៅលេខ
+                                            </div>
+                                        </label>
+                                        <span class="badge bg-primary px-3 py-2 fs-6 rounded-pill shadow-sm" id="speedValueDisplay">{{ settings.get('voice_speed') or '1.25' }}x</span>
+                                    </div>
+                                    
+                                    <div class="d-flex align-items-center gap-3 px-3 position-relative z-1">
+                                        <i class="fas fa-volume-down text-secondary fs-5" title="យឺត (Slow)"></i>
+                                        <input type="range" class="premium-slider flex-grow-1" name="voice_speed" id="voice_speed" 
+                                               min="0.5" max="2.0" step="0.05" 
+                                               value="{{ settings.get('voice_speed') or '1.25' }}"
+                                               oninput="updateSliderUI(this)">
+                                        <i class="fas fa-volume-up text-primary fs-4" title="លឿន (Fast)"></i>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between mt-3 px-3 small text-muted fw-bold position-relative z-1">
+                                        <span><i class="fas fa-tortoise me-1"></i>0.5x</span>
+                                        <span>1.0x</span>
+                                        <span>2.0x<i class="fas fa-rabbit-fast ms-1"></i></span>
+                                    </div>
+                                    
+                                    <div class="form-text small mt-4 border-top border-secondary border-opacity-10 pt-3 text-secondary position-relative z-1">
+                                        <i class="fas fa-info-circle me-1 text-primary"></i> សូមអូសឆ្វេង ឬ ស្តាំ ដើម្បីកំណត់ភាពលឿនឬយឺតនៃការបញ្ចេញសំឡេង។ ល្បឿនស្តង់ដារដែលណែនាំគឺ <strong>1.25x</strong>។
+                                    </div>
+                                </div>
+
+                                <script>
+                                    // មុខងារសម្រាប់ធ្វើឱ្យ Slider មានពណ៌រត់តាមពេលអូស (Dynamic Progress Fill)
+                                    function updateSliderUI(el) {
+                                        if(!el) return;
+                                        
+                                        let displayEl = document.getElementById('speedValueDisplay');
+                                        if(displayEl) {
+                                            displayEl.innerText = parseFloat(el.value).toFixed(2) + 'x';
+                                        }
+                                        
+                                        const min = parseFloat(el.min);
+                                        const max = parseFloat(el.max);
+                                        const val = parseFloat(el.value);
+                                        const percentage = ((val - min) / (max - min)) * 100;
+                                        
+                                        el.style.background = `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${percentage}%, #e2e8f0 ${percentage}%, #e2e8f0 100%)`;
+                                    }
+
+                                    // ដំណើរការពេលទំព័របើកភ្លាមៗ
+                                    document.addEventListener("DOMContentLoaded", function() {
+                                        const slider = document.getElementById('voice_speed');
+                                        if(slider) {
+                                            updateSliderUI(slider);
+                                        }
+                                    });
+                                </script>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light text-end p-3">
+                        <button type="submit" class="btn btn-primary px-4 fw-bold"><i class="fas fa-save me-2"></i>រក្សាទុកទូទៅ</button>
+                    </div>
+                </div>
+            </form>
+
+            <form action="{{ url_for('queue.manage_queue_tv_settings') }}" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="upload_chime">
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3 text-primary"><i class="fas fa-music me-2"></i>ផ្លាស់ប្តូរសំឡេងកណ្តឹង (Chime Audio)</h5>
+                        
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="me-3">
+                                <span class="badge bg-secondary">កំពុងប្រើ៖</span>
+                                <span class="fw-bold text-dark ms-2">{{ settings.get('chime_filename') or 'dingdong.mp3' }}</span>
+                            </div>
+                            <audio controls style="height: 30px;">
+                                <source src="{{ url_for('static', filename='sounds/' ~ (settings.get('chime_filename') or 'dingdong.mp3')) }}" type="audio/mpeg">
+                            </audio>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3 mt-3">
+                            <div class="flex-grow-1">
+                                <input type="file" class="form-control" name="tv_chime" accept="audio/mpeg, audio/wav, audio/ogg" required>
+                                <div class="form-text small text-muted">អនុញ្ញាតត្រឹមឯកសារ .mp3, .wav, .ogg តែប៉ុណ្ណោះ។ (កុំ Upload ឯកសារធំពេក)</div>
+                            </div>
+                            <button type="submit" class="btn btn-success fw-bold px-4 py-2 shadow-sm align-self-start">
+                                <i class="fas fa-cloud-upload-alt me-2"></i>Upload ថ្មី
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+<style>
+    /* បង្កើត effect ពន្លឺថ្នមៗបែបទំនើបជុំវិញ Card */
+    .glowing-card {
+        transition: all 0.3s ease-in-out;
+        border: 1px solid rgba(0, 255, 255, 0.1) !important; /* ខ្សែបន្ទាត់ស្តើងពណ៌ខៀវខ្ចី */
+        box-shadow: 0 0 15px rgba(0, 200, 255, 0.1) !important; /* ពន្លឺដំបូង */
+    }
+
+    /* Effect ពេលដាក់ Mouse ពីលើ ឱ្យពន្លឺខ្លាំងជាងមុនបន្តិច */
+    .glowing-card:hover {
+        box-shadow: 0 0 25px rgba(0, 200, 255, 0.2) !important;
+        transform: translateY(-2px); /* ឱ្យកាតងើបឡើងបន្តិច */
+    }
+
+    /* កំណត់រចនាប័ទ្មប្រអប់បង្ហាញឡូហ្គោឱ្យមានពន្លឺ និងមានជម្រៅ */
+    .logo-preview-box {
+        background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); /* ពណ៌ Gradient ងងឹត */
+        border-radius: 1rem;
+        padding: 1.5rem;
+        display: inline-block;
+        box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+</style>
+
+        <div class="tab-pane fade" id="logo_header">
+            <div class="row g-4">
+                
+                <div class="col-md-5">
+                    <div class="card glowing-card border-0 rounded-4 mb-4 h-100 shadow-sm">
+                        <div class="card-body p-4 d-flex flex-column">
+                            <h5 class="fw-bold mb-4 text-primary d-flex align-items-center">
+                                <i class="fas fa-image me-2 fs-4"></i>ប្តូរឡូហ្គោស្ថាប័ន (Logo)
+                            </h5>
+                            
+                            <div class="text-center mb-4 flex-grow-1 d-flex align-items-center justify-content-center">
+                                <div class="logo-preview-box">
+                                    <img src="{{ url_for('static', filename='uploads/profiles/' ~ (settings.get('tv_logo') or 'MTOSB Big Size.png')) }}" 
+                                        alt="Current Logo" 
+                                        style="height: 110px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3));">
+                                </div>
+                            </div>
+                            
+                            <div class="mt-auto">
+                                <form action="{{ url_for('queue.manage_queue_tv_settings') }}" method="POST" enctype="multipart/form-data">
+                                    <input type="hidden" name="action" value="upload_logo">
+                                    <div class="mb-3">
+                                        <label class="form-label small text-muted fw-bold">ជ្រើសរើសឯកសាររូបភាព (PNG, JPG)</label>
+                                        <input type="file" class="form-control form-control-sm" name="tv_logo" accept="image/png, image/jpeg" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm">
+                                        <i class="fas fa-cloud-upload-alt me-2"></i>Upload ឡូហ្គោថ្មី
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-7">
+                    <form action="{{ url_for('queue.manage_queue_tv_settings') }}" method="POST" class="h-100">
+                        <input type="hidden" name="action" value="save_header">
+                        <div class="card glowing-card border-0 rounded-4 mb-4 h-100 shadow-sm">
+                            <div class="card-body p-4 d-flex flex-column">
+                                <h5 class="fw-bold mb-4 text-primary d-flex align-items-center">
+                                    <i class="fas fa-sliders-h me-2 fs-4"></i>គ្រប់គ្រងទំហំ និង ចលនាឡូហ្គោ
+                                </h5>
+                                
+                                <div class="flex-grow-1">
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-6">
+                                            <label class="fw-bold mb-1 text-secondary"><i class="fas fa-expand-arrows-alt me-1"></i> ទំហំឡូហ្គោ (px)</label>
+                                            <input type="number" class="form-control" name="logo_size" value="{{ settings.get('logo_size') or '90' }}" placeholder="ឧ. 90">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="fw-bold mb-1 text-secondary"><i class="fas fa-arrows-alt-h me-1"></i> ទីតាំងពីគែមឆ្វេង (px)</label>
+                                            <input type="number" class="form-control" name="logo_margin_left" value="{{ settings.get('logo_margin_left') or '50' }}" placeholder="ឧ. 150">
+                                        </div>
+                                    </div>
+
+                                    <hr class="text-muted opacity-25 mb-4">
+
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-8">
+                                            <label class="fw-bold mb-1 text-secondary"><i class="fas fa-magic me-1"></i> ស្ទីលចលនា (Animation)</label>
+                                            {% set anim = settings.get('logo_animation') or 'fade-float' %}
+                                            <select class="form-select font-monospace" name="logo_animation">
+                                                <option value="none" {% if anim == 'none' %}selected{% endif %}>Static (នៅស្ងៀម)</option>
+                                                <optgroup label="Professional (ទន់ភ្លន់)">
+                                                    <option value="fade-float" {% if anim == 'fade-float' %}selected{% endif %}>Fade & Float</option>
+                                                    <option value="reveal" {% if anim == 'reveal' %}selected{% endif %}>Reveal</option>
+                                                    <option value="shine" {% if anim == 'shine' %}selected{% endif %}>Shine</option>
+                                                    <option value="breathing" {% if anim == 'breathing' %}selected{% endif %}>Breathing</option>
+                                                </optgroup>
+                                                <optgroup label="Classic (ចលនាដើម)">
+                                                    <option value="pulse" {% if anim == 'pulse' %}selected{% endif %}>Pulse</option>
+                                                    <option value="float" {% if anim == 'float' %}selected{% endif %}>Float</option>
+                                                    <option value="spin" {% if anim == 'spin' %}selected{% endif %}>Spin</option>
+                                                </optgroup>
+                                                <optgroup label="Premium (ទំនើប)">
+                                                    <option value="flip-3d" {% if anim == 'flip-3d' %}selected{% endif %}>3D Flip</option>
+                                                    <option value="soft-glow" {% if anim == 'soft-glow' %}selected{% endif %}>Soft Glow</option>
+                                                    <option value="gentle-swing" {% if anim == 'gentle-swing' %}selected{% endif %}>Gentle Swing</option>
+                                                    <option value="heartbeat" {% if anim == 'heartbeat' %}selected{% endif %}>Heartbeat</option>
+                                                </optgroup>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="fw-bold mb-1 text-secondary"><i class="fas fa-stopwatch me-1"></i> ល្បឿន (វិនាទី)</label>
+                                            <input type="number" step="0.5" class="form-control" name="logo_animation_speed" value="{{ settings.get('logo_animation_speed') or '4' }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-auto">
+                                    <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow-sm">
+                                        <i class="fas fa-save me-2"></i>រក្សាទុកការកំណត់ឡូហ្គោ
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="header_kh">
+            <form action="{{ url_for('queue.manage_queue_tv_settings') }}" method="POST">
+                <input type="hidden" name="action" value="save_khmer">
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                            <label class="fw-bold mb-2">ចំណងជើងភាសាខ្មែរ (Header Title)</label>
+                            <input type="text" class="form-control form-control-lg font-monospace" name="header_title_kh" value="{{ settings.get('header_title_kh') or 'គណៈកម្មាធិការបណ្តុះបណ្តាល និងបញ្ជូនពលករទៅបរទេស' }}">
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-md-3">
+                                <label class="fw-bold mb-1 text-secondary">Font Family</label>
+                                {% set cur_font = settings.get('kh_font_family') or "'Moul', serif" %}
+                                <select class="form-select" name="kh_font_family">
+                                    <option value="'Moul', serif" {% if cur_font == "'Moul', serif" %}selected{% endif %}>Moul (មូល)</option>
+                                    <option value="'Siemreap', sans-serif" {% if cur_font == "'Siemreap', sans-serif" %}selected{% endif %}>Siemreap (សៀមរាប)</option>
+                                    <option value="'Battambang', cursive" {% if cur_font == "'Battambang', cursive" %}selected{% endif %}>Battambang (បាត់ដំបង)</option>
+                                    <option value="'Hanuman', serif" {% if cur_font == "'Hanuman', serif" %}selected{% endif %}>Hanuman (ហនុមាន)</option>
+                                    <option value="'Suwannaphum', serif" {% if cur_font == "'Suwannaphum', serif" %}selected{% endif %}>Suwannaphum (សុវណ្ណភូមិ)</option>
+                                    <option value="'Koulen', cursive" {% if cur_font == "'Koulen', cursive" %}selected{% endif %}>Koulen (គូលែន)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fw-bold mb-1 text-secondary">Font Size (px)</label>
+                                <input type="number" class="form-control" name="kh_font_size" value="{{ settings.get('kh_font_size') or '36' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fw-bold mb-1 text-secondary">Color</label>
+                                <input type="color" class="form-control form-control-color w-100" name="kh_color" value="{{ settings.get('kh_color') or '#ffffff' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fw-bold mb-1 text-secondary">Font Weight</label>
+                                {% set cur_weight = settings.get('kh_font_weight') or "normal" %}
+                                <select class="form-select" name="kh_font_weight">
+                                    <option value="normal" {% if cur_weight == "normal" %}selected{% endif %}>ធម្មតា (Normal)</option>
+                                    <option value="bold" {% if cur_weight == "bold" %}selected{% endif %}>ដិត (Bold)</option>
+                                    <option value="900" {% if cur_weight == "900" %}selected{% endif %}>ដិតខ្លាំង (Extra Bold)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fw-bold mb-1 text-secondary">Line Height</label>
+                                {% set cur_lh = settings.get('kh_line_height') or "1.4" %}
+                                <select class="form-select" name="kh_line_height">
+                                    <option value="1.0" {% if cur_lh == "1.0" %}selected{% endif %}>ចង្អៀត (Tight)</option>
+                                    <option value="1.2" {% if cur_lh == "1.2" %}selected{% endif %}>ធម្មតា (Normal)</option>
+                                    <option value="1.4" {% if cur_lh == "1.4" %}selected{% endif %}>លំនាំដើម (Default)</option>
+                                    <option value="1.8" {% if cur_lh == "1.8" %}selected{% endif %}>ទូលាយ (Loose)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fw-bold mb-1 text-secondary">Margin Bottom</label>
+                                <input type="number" class="form-control" name="kh_margin_bottom" value="{{ settings.get('kh_margin_bottom') or '2' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fw-bold mb-1 text-secondary">Letter Spacing (px)</label>
+                                <input type="number" class="form-control" name="kh_letter_spacing" value="{{ settings.get('kh_letter_spacing') or '0' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fw-bold mb-1 text-secondary">Text Shadow</label>
+                                {% set cur_ts = settings.get('kh_text_shadow') or "2px 2px 4px rgba(0,0,0,0.4)" %}
+                                <select class="form-select" name="kh_text_shadow">
+                                    <option value="none" {% if cur_ts == "none" %}selected{% endif %}>គ្មានស្រមោល (None)</option>
+                                    <option value="1px 1px 2px rgba(0,0,0,0.3)" {% if cur_ts == "1px 1px 2px rgba(0,0,0,0.3)" %}selected{% endif %}>ស្តើង (Light)</option>
+                                    <option value="2px 2px 4px rgba(0,0,0,0.4)" {% if cur_ts == "2px 2px 4px rgba(0,0,0,0.4)" %}selected{% endif %}>លំនាំដើម (Default)</option>
+                                    <option value="0 0 10px rgba(255,255,255,0.8)" {% if cur_ts == "0 0 10px rgba(255,255,255,0.8)" %}selected{% endif %}>ពន្លឺ (Glow)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light text-end p-3"><button type="submit" class="btn btn-primary px-4 fw-bold"><i class="fas fa-save me-2"></i>រក្សាទុករចនាបថខ្មែរ</button></div>
+                </div>
+            </form>
+        </div>
+
+        <div class="tab-pane fade" id="header_en">
+            <form action="{{ url_for('queue.manage_queue_tv_settings') }}" method="POST">
+                <input type="hidden" name="action" value="save_english">
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                            <label class="fw-bold mb-2">ចំណងជើងភាសាអង់គ្លេស (Header Title EN)</label>
+                            <input type="text" class="form-control form-control-lg font-monospace" name="header_title_en" value="{{ settings.get('header_title_en') or 'Manpower Training and Overseas Sending Board' }}">
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-md-3">
+                                <label class="fw-bold mb-1 text-secondary">Font Family</label>
+                                {% set cur_font_en = settings.get('en_font_family') or "Arial, sans-serif" %}
+                                <select class="form-select" name="en_font_family">
+                                    <option value="Arial, sans-serif" {% if cur_font_en == "Arial, sans-serif" %}selected{% endif %}>Arial</option>
+                                    <option value="'Times New Roman', Times, serif" {% if cur_font_en == "'Times New Roman', Times, serif" %}selected{% endif %}>Times New Roman</option>
+                                    <option value="Tahoma, sans-serif" {% if cur_font_en == "Tahoma, sans-serif" %}selected{% endif %}>Tahoma</option>
+                                    <option value="'Roboto', sans-serif" {% if cur_font_en == "'Roboto', sans-serif" %}selected{% endif %}>Roboto</option>
+                                    <option value="'Montserrat', sans-serif" {% if cur_font_en == "'Montserrat', sans-serif" %}selected{% endif %}>Montserrat</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fw-bold mb-1 text-secondary">Font Size (px)</label>
+                                <input type="number" class="form-control" name="en_font_size" value="{{ settings.get('en_font_size') or '20' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fw-bold mb-1 text-secondary">Color</label>
+                                <input type="color" class="form-control form-control-color w-100" name="en_color" value="{{ settings.get('en_color') or '#93c5fd' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fw-bold mb-1 text-secondary">Font Weight</label>
+                                {% set cur_weight_en = settings.get('en_font_weight') or "bold" %}
+                                <select class="form-select" name="en_font_weight">
+                                    <option value="normal" {% if cur_weight_en == "normal" %}selected{% endif %}>ធម្មតា (Normal)</option>
+                                    <option value="bold" {% if cur_weight_en == "bold" %}selected{% endif %}>ដិត (Bold)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fw-bold mb-1 text-secondary">Line Height</label>
+                                {% set cur_lh_en = settings.get('en_line_height') or "1.2" %}
+                                <select class="form-select" name="en_line_height">
+                                    <option value="1.0" {% if cur_lh_en == "1.0" %}selected{% endif %}>ចង្អៀត (Tight)</option>
+                                    <option value="1.2" {% if cur_lh_en == "1.2" %}selected{% endif %}>លំនាំដើម (Default)</option>
+                                    <option value="1.4" {% if cur_lh_en == "1.4" %}selected{% endif %}>ទូលាយ (Loose)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fw-bold mb-1 text-secondary">Margin Bottom</label>
+                                <input type="number" class="form-control" name="en_margin_bottom" value="{{ settings.get('en_margin_bottom') or '0' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fw-bold mb-1 text-secondary">Letter Spacing (px)</label>
+                                <input type="number" class="form-control" name="en_letter_spacing" value="{{ settings.get('en_letter_spacing') or '2' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fw-bold mb-1 text-secondary">Text Shadow</label>
+                                {% set cur_ts_en = settings.get('en_text_shadow') or "none" %}
+                                <select class="form-select" name="en_text_shadow">
+                                    <option value="none" {% if cur_ts_en == "none" %}selected{% endif %}>គ្មានស្រមោល (None)</option>
+                                    <option value="1px 1px 2px rgba(0,0,0,0.3)" {% if cur_ts_en == "1px 1px 2px rgba(0,0,0,0.3)" %}selected{% endif %}>ស្តើង (Light)</option>
+                                    <option value="2px 2px 4px rgba(0,0,0,0.4)" {% if cur_ts_en == "2px 2px 4px rgba(0,0,0,0.4)" %}selected{% endif %}>លំនាំដើម (Default)</option>
+                                    <option value="0 0 10px rgba(255,255,255,0.8)" {% if cur_ts_en == "0 0 10px rgba(255,255,255,0.8)" %}selected{% endif %}>ពន្លឺ (Glow)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light text-end p-3"><button type="submit" class="btn btn-primary px-4 fw-bold"><i class="fas fa-save me-2"></i>រក្សាទុករចនាបថអង់គ្លេស</button></div>
+                </div>
+            </form>
+        </div>
+
+        <div class="tab-pane fade" id="footer">
+            <form action="{{ url_for('queue.manage_queue_tv_settings') }}" method="POST">
+                <input type="hidden" name="action" value="save_footer">
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                            <label class="fw-bold mb-2">ឃ្លាអក្សររត់ (Marquee Text)</label>
+                            <input type="text" class="form-control form-control-lg" name="footer_marquee" value="{{ settings.get('footer_marquee') or 'សូមស្វាគមន៍មកកាន់គណៈកម្មាធិការបណ្តុះបណ្តាល និងបញ្ជូនពលករទៅបរទេស (MTOSB)។' }}">
+                        </div>
+                        
+                        <div class="row g-4 mb-3">
+                            <div class="col-md-4">
+                                <label class="fw-bold mb-1 text-secondary"><i class="fas fa-running me-1"></i> ល្បឿនអក្សររត់ (វិនាទី)</label>
+                                <input type="number" class="form-control" name="marquee_speed" value="{{ settings.get('marquee_speed') or '25' }}">
+                                <small class="text-muted" style="font-size: 0.8rem;">លេខតូច=លឿន, លេខធំ=យឺត (ឧ. 20)</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="fw-bold mb-1 text-secondary"><i class="fas fa-font me-1"></i> Font Family</label>
+                                {% set ft_font = settings.get('footer_font_family') or "'Moul', serif" %}
+                                <select class="form-select" name="footer_font_family">
+                                    <option value="'Moul', serif" {% if ft_font == "'Moul', serif" %}selected{% endif %}>Moul (មូល)</option>
+                                    <option value="'Siemreap', sans-serif" {% if ft_font == "'Siemreap', sans-serif" %}selected{% endif %}>Siemreap</option>
+                                    <option value="'Battambang', cursive" {% if ft_font == "'Battambang', cursive" %}selected{% endif %}>Battambang</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="fw-bold mb-1 text-secondary"><i class="fas fa-text-height me-1"></i> ទំហំអក្សរ (px)</label>
+                                <input type="number" class="form-control" name="footer_font_size" value="{{ settings.get('footer_font_size') or '24' }}">
+                            </div>
+                        </div>
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="fw-bold mb-1 text-secondary"><i class="fas fa-palette me-1"></i> Color (ពណ៌អក្សរ)</label>
+                                <input type="color" class="form-control form-control-color w-100" name="footer_color" value="{{ settings.get('footer_color') or '#ffffff' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="fw-bold mb-1 text-secondary"><i class="fas fa-fill-drip me-1"></i> Background (ពណ៌ផ្ទៃក្រោម)</label>
+                                <input type="color" class="form-control form-control-color w-100" name="footer_bg_color" value="{{ settings.get('footer_bg_color') or '#0f172a' }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light text-end p-3">
+                        <button type="submit" class="btn btn-primary px-4 fw-bold"><i class="fas fa-save me-2"></i>រក្សាទុកការកំណត់ Footer</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="tab-pane fade" id="slides">
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <form action="{{ url_for('queue.manage_queue_tv_settings') }}" method="POST" enctype="multipart/form-data" class="mb-4">
+                        <input type="hidden" name="action" value="upload_slide">
+                        <label class="fw-bold mb-2 text-primary"><i class="fas fa-cloud-upload-alt me-2"></i>បញ្ចូលរូបភាព ឬ វីដេអូថ្មី (Upload New Media)</label>
+                        <div class="input-group">
+                            <input type="file" class="form-control form-control-lg" name="slide_image" accept="image/*,video/mp4,video/webm" required>
+                            <button class="btn btn-success fw-bold px-4" type="submit"><i class="fas fa-upload me-2"></i>Upload</button>
+                        </div>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <h5 class="fw-bold mb-3"><i class="fas fa-photo-video me-2"></i>មេឌៀដែលកំពុងចាក់ផ្សាយ ({{ slide_images|length }} ឯកសារ)</h5>
+                    <div class="row g-3">
+                        {% for slide in slide_images %}
+                        <div class="col-md-4 col-lg-3">
+                            <div class="card h-100 border-0 shadow-sm bg-light overflow-hidden">
+                                <div style="height: 150px; background: #000; display: flex; align-items: center; justify-content: center; position: relative;">
+                                    {% if slide.lower().endswith('.mp4') or slide.lower().endswith('.webm') %}
+                                        <video src="{{ url_for('static', filename='uploads/tv_slides/' ~ slide) }}" style="max-width: 100%; max-height: 100%; object-fit: contain;"></video>
+                                        <span class="position-absolute top-0 start-0 m-2 badge bg-danger"><i class="fas fa-video me-1"></i> Video</span>
+                                    {% else %}
+                                        <img src="{{ url_for('static', filename='uploads/tv_slides/' ~ slide) }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                    {% endif %}
+                                </div>
+                                <div class="card-body p-2 text-center">
+                                    <p class="small text-truncate mb-2 text-muted" title="{{ slide }}">{{ slide }}</p>
+                                    <form action="{{ url_for('queue.manage_queue_tv_settings') }}" method="POST" onsubmit="return confirm('តើអ្នកពិតជាចង់លុបឯកសារនេះមែនទេ?');">
+                                        <input type="hidden" name="action" value="delete_slide">
+                                        <input type="hidden" name="filename" value="{{ slide }}">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100 fw-bold"><i class="fas fa-trash-alt me-1"></i> លុបចោល</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12 text-center py-5 text-muted">
+                            <i class="fas fa-folder-open fa-3x mb-3 opacity-25"></i>
+                            <h6>មិនទាន់មានរូបភាព ឬ វីដេអូនៅឡើយទេ</h6>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // មុខងារសម្រាប់ធ្វើឱ្យ Slider មានពណ៌រត់តាមពេលអូស (Dynamic Progress Fill)
+    function updateSliderUI(el) {
+        if(!el) return;
+        
+        let displayEl = document.getElementById('speedValueDisplay');
+        if(displayEl) {
+            displayEl.innerText = parseFloat(el.value).toFixed(2) + 'x';
+        }
+        
+        const min = parseFloat(el.min);
+        const max = parseFloat(el.max);
+        const val = parseFloat(el.value);
+        const percentage = ((val - min) / (max - min)) * 100;
+        
+        el.style.background = `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${percentage}%, #e2e8f0 ${percentage}%, #e2e8f0 100%)`;
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const slider = document.getElementById('voice_speed');
+        if(slider) {
+            updateSliderUI(slider);
+        }
+        
+        let activeTab = localStorage.getItem('activeTab_TV_Settings');
+        if (activeTab) {
+            let tabElement = document.querySelector(`a[href="${activeTab}"]`);
+            if (tabElement) {
+                new bootstrap.Tab(tabElement).show();
+            }
+        }
+        let tabLinks = document.querySelectorAll('a[data-bs-toggle="tab"]');
+        tabLinks.forEach(function(tab) {
+            tab.addEventListener('shown.bs.tab', function (e) {
+                localStorage.setItem('activeTab_TV_Settings', e.target.getAttribute('href'));
+            });
+        });
+    });
+</script>
+{% endblock %}

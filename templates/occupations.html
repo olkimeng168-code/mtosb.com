@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}គ្រប់គ្រងមុខរបរ | Admin Panel{% endblock %}
+{% block page_title %}បញ្ជីមុខរបរ (Occupations){% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-primary"><i class="fas fa-briefcase me-2"></i>គ្រប់គ្រងមុខរបរ</h3>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary shadow-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addJobModal">
+                <i class="fas fa-plus-circle me-1"></i> បង្កើតថ្មី
+            </button>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm border-0 rounded-3" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>{{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="10%" class="text-center">ល.រ</th>
+                            <th>មុខរបរ (ភាសាខ្មែរ)</th>
+                            <th>មុខរបរ (ភាសាអង់គ្លេស)</th>
+                            <th width="20%" class="text-center">សកម្មភាព</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in occupations %}
+                        <tr>
+                            <td class="text-center text-muted fw-bold">{{ loop.index }}</td>
+                            <td class="fw-bold text-dark">{{ job.job_name_kh }}</td>
+                            <td class="text-primary">{{ job.job_name_en or 'គ្មាន' }}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning text-dark me-1" data-bs-toggle="modal" data-bs-target="#editJobModal{{ job.id }}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                
+                                <form action="/admin/occupations/delete/{{ job.id }}" method="POST" class="d-inline" onsubmit="return confirm('តើអ្នកពិតជាចង់លុបមុខរបរ [{{ job.job_name_kh }}] មែនទេ?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash-alt"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+
+                        <div class="modal fade text-start" id="editJobModal{{ job.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content border-0 rounded-4">
+                                    <div class="modal-header bg-warning">
+                                        <h5 class="modal-title fw-bold text-dark"><i class="fas fa-edit me-2"></i>កែប្រែមុខរបរ</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form action="/admin/occupations/edit/{{ job.id }}" method="POST">
+                                        <div class="modal-body p-4">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold text-secondary">មុខរបរ (ខ្មែរ) <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control bg-light" name="job_name_kh" value="{{ job.job_name_kh }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold text-secondary">មុខរបរ (អង់គ្លេស)</label>
+                                                <input type="text" class="form-control bg-light text-primary" name="job_name_en" value="{{ job.job_name_en or '' }}">
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer bg-light border-0">
+                                            <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">បោះបង់</button>
+                                            <button type="submit" class="btn btn-warning fw-bold rounded-3"><i class="fas fa-save me-2"></i>រក្សាទុកការកែប្រែ</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-5">
+                                <i class="fas fa-folder-open mb-2" style="font-size: 2rem; opacity: 0.5;"></i><br>
+                                មិនទាន់មានទិន្នន័យនៅឡើយទេ
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addJobModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-plus-circle me-2"></i>បន្ថែមមុខរបរថ្មី</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/admin/occupations/add" method="POST">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">មុខរបរ (ខ្មែរ) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control bg-light" name="job_name_kh" required placeholder="ឧ. កសិករ">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">មុខរបរ (អង់គ្លេស)</label>
+                        <input type="text" class="form-control bg-light text-primary" name="job_name_en" placeholder="ឧ. Farmer">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">បោះបង់</button>
+                    <button type="submit" class="btn btn-primary rounded-3 fw-bold"><i class="fas fa-save me-2"></i>រក្សាទុក</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

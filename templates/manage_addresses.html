@@ -1,0 +1,416 @@
+{% extends "base.html" %}
+
+{% block title %}គ្រប់គ្រងអាសយដ្ឋាន (Addresses) | EPS{% endblock %}
+{% block page_title %}គ្រប់គ្រងទិន្នន័យភូមិសាស្ត្រ (Provinces/Districts/Communes/Villages){% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm rounded-3 border-0 border-start border-4 border-{{ category }}">
+                    <i class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} me-2"></i> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm border-start border-4 border-primary h-100">
+                <div class="card-body py-3">
+                    <h6 class="text-muted fw-bold mb-1"><i class="fas fa-city me-1 text-primary"></i> រាជធានី / ខេត្ត</h6>
+                    <h3 class="fw-bold text-primary mb-0">{{ stats.provinces }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm border-start border-4 border-success h-100">
+                <div class="card-body py-3">
+                    <h6 class="text-muted fw-bold mb-1"><i class="fas fa-map-marked-alt me-1 text-success"></i> ក្រុង / ស្រុក / ខណ្ឌ</h6>
+                    <h3 class="fw-bold text-success mb-0">{{ stats.districts }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm border-start border-4 border-warning h-100">
+                <div class="card-body py-3">
+                    <h6 class="text-muted fw-bold mb-1"><i class="fas fa-map-marker-alt me-1 text-warning"></i> ឃុំ / សង្កាត់</h6>
+                    <h3 class="fw-bold text-warning mb-0">{{ stats.communes }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm border-start border-4 border-danger h-100">
+                <div class="card-body py-3">
+                    <h6 class="text-muted fw-bold mb-1"><i class="fas fa-home me-1 text-danger"></i> ភូមិសរុប</h6>
+                    <h3 class="fw-bold text-danger mb-0">{{ stats.villages }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-white border-bottom pt-3 pb-0">
+            <ul class="nav nav-tabs border-bottom-0" id="addressTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold text-primary" id="import-tab" data-bs-toggle="tab" data-bs-target="#import" type="button" role="tab">
+                        <i class="fas fa-file-excel me-2"></i> ទាញបញ្ចូល (Import Excel)
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold text-secondary" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual" type="button" role="tab">
+                        <i class="fas fa-list-alt me-2"></i> បញ្ជីរាយនាមទិន្នន័យ (Data Explorer)
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="card-body p-4">
+            <div class="tab-content" id="addressTabContent">
+                
+                <div class="tab-pane fade show active" id="import" role="tabpanel">
+                    <div class="row align-items-center">
+                        <div class="col-lg-6 border-end-lg pe-lg-4 mb-4 mb-lg-0">
+                            <h5 class="fw-bold text-dark mb-3">របៀបទាញបញ្ចូលឯកសារ Excel</h5>
+                            <ul class="text-muted small lh-lg mb-0">
+                                <li>ឯកសារត្រូវតែជាប្រភេទ <code>.xlsx</code> (មាន ២៥ Sheets តាមខេត្ត)។</li>
+                                <li>ប្រព័ន្ធនឹងទាញយក ស្រុក ឃុំ ភូមិ និងភ្ជាប់ទំនាក់ទំនងវាដោយស្វ័យប្រវត្តិ។</li>
+                                <li>⚠️ <span class="text-danger fw-bold">ចំណាំ៖</span> ការ Import អាចចំណាយពេលពី <b>១០ ទៅ ៣០ វិនាទី</b>។</li>
+                            </ul>
+                        </div>
+                        <div class="col-lg-6 ps-lg-4">
+                            <form action="/admin/import_addresses_excel" method="POST" enctype="multipart/form-data" id="importForm">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-dark">ជ្រើសរើស File ភូមិសាស្រ្តកម្ពុជា (Excel) <span class="text-danger">*</span></label>
+                                    <input type="file" class="form-control form-control-lg bg-light" name="excel_file" accept=".xlsx, .xls" required>
+                                </div>
+                                <div class="form-check mb-4 bg-danger bg-opacity-10 border border-danger border-opacity-25 p-3 rounded">
+                                    <input class="form-check-input ms-1" type="checkbox" name="clear_data" value="yes" id="clearDataCheck" checked>
+                                    <label class="form-check-label fw-bold text-danger ms-2" for="clearDataCheck">
+                                        លុបទិន្នន័យចាស់ៗចោលទាំងអស់ មុននឹង Import ថ្មី (ណែនាំ)
+                                    </label>
+                                </div>
+                                <button type="submit" class="btn btn-success btn-lg fw-bold w-100" id="btnSubmitImport">
+                                    <i class="fas fa-cloud-upload-alt me-2"></i> ចាប់ផ្តើម Import ទិន្នន័យ
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="manual" role="tabpanel">
+                    
+                    <div class="row g-3 mb-4 bg-light p-3 rounded-3 border">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-primary">១. ជ្រើសរើសរាជធានី/ខេត្ត</label>
+                            <select id="sel_province" class="form-select border-primary" onchange="loadDistricts()">
+                                <option value="">-- បង្ហាញខេត្តទាំងអស់ --</option>
+                                {% for p in provinces %}
+                                    <option value="{{ p.id }}">{{ p.name_kh }} ({{ p.code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-success">២. ជ្រើសរើសក្រុង/ស្រុក/ខណ្ឌ</label>
+                            <select id="sel_district" class="form-select border-success" onchange="loadCommunes()" disabled>
+                                <option value="">-- រង់ចាំជ្រើសរើសខេត្ត --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-warning">៣. ជ្រើសរើសឃុំ/សង្កាត់</label>
+                            <select id="sel_commune" class="form-select border-warning" onchange="loadVillages()" disabled>
+                                <option value="">-- រង់ចាំជ្រើសរើសស្រុក --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0" id="table_title"><i class="fas fa-list me-2"></i> បញ្ជីទិន្នន័យ</h5>
+                        <button class="btn btn-sm btn-primary fw-bold shadow-sm" id="btnAddRecord" disabled onclick="alert('មុខងារបន្ថែមថ្មីកំពុងរៀបចំ!')">
+                            <i class="fas fa-plus me-1"></i> បន្ថែមថ្មី
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th width="5%" class="text-center">#</th>
+                                    <th width="15%">លេខកូដ (Code)</th>
+                                    <th width="15%">ប្រភេទ (Type)</th>
+                                    <th width="25%">ឈ្មោះ (ខ្មែរ)</th>
+                                    <th width="25%">ឈ្មោះ (ឡាតាំង)</th>
+                                    <th width="15%" class="text-center">សកម្មភាព</th>
+                                </tr>
+                            </thead>
+                            <tbody id="address_table_body">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-5">
+                                        <i class="fas fa-spinner fa-spin fa-2x"></i> កំពុងទាញយកទិន្នន័យ...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addressEditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-primary text-white border-0 rounded-top-4">
+                <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2"></i> កែប្រែទិន្នន័យអាសយដ្ឋាន</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <form id="editAddressForm">
+                    <input type="hidden" id="edit_id">
+                    <input type="hidden" id="edit_level">
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted small">លេខកូដ (Code) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control font-monospace border-primary" id="edit_code" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted small">ប្រភេទ (Type) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="edit_type" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-muted small">ឈ្មោះ (ភាសាខ្មែរ) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control text-primary fw-bold fs-5" id="edit_name_kh" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-muted small">ឈ្មោះ (ឡាតាំង) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="edit_name_en" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 bg-white rounded-bottom-4">
+                <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">បោះបង់</button>
+                <button type="button" class="btn btn-primary fw-bold px-4" id="btnSaveEdit" onclick="saveAddressEdit()">
+                    <i class="fas fa-save me-2"></i> រក្សាទុកការកែប្រែ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script id="provinces-data" type="application/json">
+    {{ provinces | tojson | safe }}
+</script>
+
+<script>
+    // -----------------------------------------------------------------
+    // ១. មុខងារសម្រាប់ Tab ទី១ (Import Excel Loading)
+    // -----------------------------------------------------------------
+    document.getElementById('importForm').addEventListener('submit', function(e) {
+        if (this.checkValidity()) {
+            var btn = document.getElementById('btnSubmitImport');
+            setTimeout(function() {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> កំពុងទាញបញ្ចូល... សូមកុំបិទទំព័រនេះ!';
+                btn.classList.add('disabled');
+            }, 10);
+        }
+    });
+
+    // -----------------------------------------------------------------
+    // ២. មុខងារសម្រាប់ Tab ទី២ (AJAX Address Explorer)
+    // -----------------------------------------------------------------
+    
+    // ចាប់យកទិន្នន័យខេត្តពី Script Tag ខាងលើមកបំប្លែងជា Object តាមស្តង់ដារ JavaScript
+    const provincesData = JSON.parse(document.getElementById('provinces-data').textContent);
+
+    // មុខងារហៅ API
+    async function fetchAPI(url, dropdownId, placeholder) {
+        let dropdown = document.getElementById(dropdownId);
+        dropdown.innerHTML = `<option value="">-- កំពុងទាញយក... --</option>`;
+        dropdown.disabled = true;
+
+        try {
+            let response = await fetch(url);
+            let data = await response.json();
+            
+            dropdown.innerHTML = `<option value="">-- ${placeholder} --</option>`;
+            data.forEach(item => {
+                dropdown.innerHTML += `<option value="${item.id}">${item.name_kh} (${item.code})</option>`;
+            });
+            dropdown.disabled = false;
+            return data;
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            dropdown.innerHTML = `<option value="">-- បរាជ័យក្នុងការទាញយក --</option>`;
+            return [];
+        }
+    }
+
+    // មុខងារគូសតារាង
+    function renderTable(data, levelName, dbLevel) {
+        document.getElementById('table_title').innerHTML = `<i class="fas fa-list text-primary me-2"></i> បញ្ជី${levelName} <span class="badge bg-secondary ms-2">${data.length}</span>`;
+        let tbody = document.getElementById('address_table_body');
+        tbody.innerHTML = '';
+
+        if(data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">មិនមានទិន្នន័យទេ!</td></tr>`;
+            return;
+        }
+
+        data.forEach((item, index) => {
+            let itemStr = encodeURIComponent(JSON.stringify(item));
+            tbody.innerHTML += `
+                <tr>
+                    <td class="text-center">${index + 1}</td>
+                    <td><span class="badge bg-light text-dark border font-monospace fs-6">${item.code}</span></td>
+                    <td><span class="badge bg-info text-dark">${item.type || '-'}</span></td>
+                    <td class="fw-bold text-primary">${item.name_kh}</td>
+                    <td>${item.name_en}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary shadow-sm" onclick="openEditModal('${dbLevel}', '${itemStr}')" title="កែប្រែ"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger shadow-sm" onclick="alert('មុខងារលុបកំពុងអភិវឌ្ឍ!')" title="លុប"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    // បង្ហាញខេត្តពេលចូលទំព័រដំបូង
+    function loadProvinces() {
+        document.getElementById('sel_district').innerHTML = `<option value="">-- រង់ចាំជ្រើសរើសខេត្ត --</option>`;
+        document.getElementById('sel_district').disabled = true;
+        document.getElementById('sel_commune').innerHTML = `<option value="">-- រង់ចាំជ្រើសរើសស្រុក --</option>`;
+        document.getElementById('sel_commune').disabled = true;
+
+        renderTable(provincesData, 'រាជធានី/ខេត្ត', 'province');
+        
+        document.getElementById('btnAddRecord').disabled = false;
+        document.getElementById('btnAddRecord').innerHTML = `<i class="fas fa-plus me-1"></i> បន្ថែមខេត្តថ្មី`;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadProvinces();
+    });
+
+    async function loadDistricts() {
+        let prov_id = document.getElementById('sel_province').value;
+        let distSelect = document.getElementById('sel_district');
+        let commSelect = document.getElementById('sel_commune');
+        
+        commSelect.innerHTML = `<option value="">-- រង់ចាំជ្រើសរើសស្រុក --</option>`;
+        commSelect.disabled = true;
+        document.getElementById('btnAddRecord').disabled = true;
+
+        if(!prov_id) return loadProvinces(); // បើអត់រើសខេត្ត ឱ្យបង្ហាញខេត្តវិញ
+
+        let districts = await fetchAPI(`/api/get_districts/${prov_id}`, 'sel_district', 'ជ្រើសរើសក្រុង/ស្រុក/ខណ្ឌ');
+        renderTable(districts, 'ក្រុង/ស្រុក/ខណ្ឌ ក្នុងខេត្តនេះ', 'district');
+        
+        document.getElementById('btnAddRecord').disabled = false;
+        document.getElementById('btnAddRecord').innerHTML = `<i class="fas fa-plus me-1"></i> បន្ថែមស្រុកថ្មី`;
+    }
+
+    async function loadCommunes() {
+        let dist_id = document.getElementById('sel_district').value;
+        if(!dist_id) return loadDistricts();
+
+        let communes = await fetchAPI(`/api/get_communes/${dist_id}`, 'sel_commune', 'ជ្រើសរើសឃុំ/សង្កាត់');
+        renderTable(communes, 'ឃុំ/សង្កាត់ ក្នុងស្រុកនេះ', 'commune');
+        
+        document.getElementById('btnAddRecord').innerHTML = `<i class="fas fa-plus me-1"></i> បន្ថែមឃុំថ្មី`;
+    }
+
+    async function loadVillages() {
+        let comm_id = document.getElementById('sel_commune').value;
+        if(!comm_id) return loadCommunes();
+
+        try {
+            let response = await fetch(`/api/get_villages/${comm_id}`);
+            let villages = await response.json();
+            renderTable(villages, 'ភូមិ ក្នុងឃុំនេះ', 'village');
+            document.getElementById('btnAddRecord').innerHTML = `<i class="fas fa-plus me-1"></i> បន្ថែមភូមិថ្មី`;
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    // -----------------------------------------------------------------
+    // ៣. មុខងារបញ្ជាប្រអប់ Modal (Edit System)
+    // -----------------------------------------------------------------
+    let editModalInstance = null;
+
+    function openEditModal(level, itemStr) {
+        let item = JSON.parse(decodeURIComponent(itemStr));
+        
+        document.getElementById('edit_level').value = level;
+        document.getElementById('edit_id').value = item.id;
+        document.getElementById('edit_code').value = item.code;
+        document.getElementById('edit_type').value = item.type || '';
+        document.getElementById('edit_name_kh').value = item.name_kh;
+        document.getElementById('edit_name_en').value = item.name_en;
+        
+        if (!editModalInstance) {
+            editModalInstance = new bootstrap.Modal(document.getElementById('addressEditModal'));
+        }
+        editModalInstance.show();
+    }
+
+    async function saveAddressEdit() {
+        let form = document.getElementById('editAddressForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        let btn = document.getElementById('btnSaveEdit');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> កំពុងរក្សាទុក...';
+        btn.disabled = true;
+
+        let level = document.getElementById('edit_level').value;
+        let data = {
+            level: level,
+            id: document.getElementById('edit_id').value,
+            code: document.getElementById('edit_code').value,
+            type: document.getElementById('edit_type').value,
+            name_kh: document.getElementById('edit_name_kh').value,
+            name_en: document.getElementById('edit_name_en').value
+        };
+
+        try {
+            let res = await fetch('/admin/update_address', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            let result = await res.json();
+            
+            if(result.status === 'success') {
+                editModalInstance.hide();
+                alert('✓ ' + result.message);
+                
+                // បើកែខេត្ត យើងធ្វើការ Refresh ទំព័រតែម្តងដើម្បីឱ្យវា Update Dropdown ខាងលើផងដែរ
+                if(level === 'province') {
+                    window.location.reload(); 
+                }
+                else if(level === 'district') loadDistricts();
+                else if(level === 'commune') loadCommunes();
+                else if(level === 'village') loadVillages();
+                
+            } else {
+                alert('⚠️ បញ្ហា៖ ' + result.message);
+            }
+        } catch (e) {
+            alert('❌ មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ Server!');
+        } finally {
+            btn.innerHTML = '<i class="fas fa-save me-2"></i> រក្សាទុកការកែប្រែ';
+            btn.disabled = false;
+        }
+    }
+</script>
+{% endblock %}

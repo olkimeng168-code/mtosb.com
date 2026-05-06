@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EPS Smart Exam System{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+    @font-face { font-family: 'Khmer OS Siemreap'; src: local('Khmer OS Siemreap'); }
+    body { font-family: 'Khmer OS Siemreap', sans-serif; background-color: #f4f7fa; color: #333a40; overflow-x: hidden; }
+    
+    /* ========================================================= */
+    /* 1. Sidebar Styles                                         */
+    /* ========================================================= */
+    #sidebar {
+        min-width: 260px; max-width: 260px; height: 100vh;
+        background-color: #0f172a; color: #fff; transition: all 0.3s;
+        position: fixed; z-index: 1000; box-shadow: 4px 0 15px rgba(0,0,0,0.05);
+        display: flex; flex-direction: column; 
+    }
+    #sidebar.collapsed { margin-left: -260px; }
+    
+    .sidebar-header { 
+        padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); 
+        text-align: center; flex-shrink: 0; background: #0b1121;
+    }
+    .sidebar-logo { 
+        width: 45px; height: 45px; background: linear-gradient(135deg, #ffc107, #ff9800); 
+        border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; 
+        font-size: 1.5rem; color: #0f172a; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(255, 193, 7, 0.3);
+    }
+    
+    .sidebar-menu-wrapper {
+        flex-grow: 1; overflow-y: auto; padding: 15px 0;
+    }
+    .sidebar-menu-wrapper::-webkit-scrollbar { width: 4px; }
+    .sidebar-menu-wrapper::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+    
+    .sidebar-menu { list-style: none; margin: 0; padding: 0; }
+    .menu-header { 
+        font-size: 0.7rem; color: #64748b; text-transform: uppercase; 
+        font-weight: 700; letter-spacing: 1px; padding: 10px 25px 5px; margin-top: 5px;
+    }
+    
+    .sidebar-menu li a {
+        padding: 12px 25px; display: flex; align-items: center; justify-content: space-between;
+        color: #cbd5e1; text-decoration: none; font-size: 0.95rem; 
+        transition: all 0.2s; border-left: 3px solid transparent;
+    }
+    .sidebar-menu li a:hover { background-color: rgba(255,255,255,0.03); color: #fff; }
+    .sidebar-menu li a .menu-icon { width: 25px; font-size: 1.1rem; text-align: center; margin-right: 12px; color: #94a3b8; transition: 0.2s; }
+    .sidebar-menu li a:hover .menu-icon { color: #ffc107; }
+    
+    .sidebar-menu li.active > a { 
+        background-color: rgba(255, 193, 7, 0.08); color: #ffc107; 
+        border-left-color: #ffc107; font-weight: 600; 
+    }
+    .sidebar-menu li.active > a .menu-icon { color: #ffc107; }
+
+    /* 💡 កែសម្រួល Submenu (ប្តូរត្រេ "-" ទៅជាចំណុចស្អាតៗ) */
+    .submenu { background: #0b1121; padding: 5px 0; }
+    .submenu a { padding: 10px 25px 10px 60px !important; font-size: 0.9rem !important; border-left: none !important; position: relative; }
+    .submenu a:before { 
+        content: '\f111'; /* លេខកូដចំណុចមូល FontAwesome */
+        font-family: 'Font Awesome 6 Free'; 
+        font-weight: 900; 
+        font-size: 5px; /* ទំហំចំណុច */
+        position: absolute; 
+        left: 42px; 
+        top: 50%; /* តម្រឹមឱ្យនៅចំកណ្តាលជួរ */
+        transform: translateY(-50%); /* ការពារមិនឱ្យលោតពេលមាន Animation */
+        color: #475569; 
+        transition: 0.2s; 
+    }
+    .submenu li.active a { color: #ffc107; background: transparent; font-weight: 600; }
+    .submenu li.active a:before { color: #ffc107; font-size: 6px; } /* ពេល Active ឱ្យចំណុចភ្លឺ និងធំបន្តិច */
+    
+    .toggle-icon { font-size: 0.8rem; transition: transform 0.3s ease; }
+    .collapsed-toggle[aria-expanded="true"] .toggle-icon { transform: rotate(180deg); color: #fff; }
+
+    .sidebar-footer { 
+        padding: 15px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); 
+        color: #64748b; font-size: 0.8rem; background: #0b1121; flex-shrink: 0;
+    }
+
+    /* ========================================================= */
+    /* 2. Topbar & Main Content Styles                           */
+    /* ========================================================= */
+    #content-wrapper { width: 100%; padding-left: 260px; transition: all 0.3s; display: flex; flex-direction: column; min-height: 100vh; }
+    #content-wrapper.expanded { padding-left: 0; }
+
+    .topbar { background: #fff; padding: 15px 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 999; }
+    .sidebar-toggler { background: none; border: none; font-size: 1.4rem; color: #64748b; cursor: pointer; transition: 0.2s; }
+    .sidebar-toggler:hover { color: #02305e; }
+
+    /* ========================================================= */
+    /* 3. Header Dropdown Profile                                */
+    /* ========================================================= */
+    .hide-caret::after { display: none !important; }
+    .dropdown-toggle { transition: background-color 0.2s; padding: 5px 10px; border-radius: 50rem; }
+    .dropdown-toggle:hover { background-color: rgba(0,0,0,0.03); }
+    
+    /* ========================================================= */
+    /* 4. Responsive Rules                                       */
+    /* ========================================================= */
+    @media (max-width: 991px) {
+        #sidebar { margin-left: -260px; }
+        #sidebar.show { margin-left: 0; }
+        #content-wrapper { padding-left: 0; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 998; }
+        .overlay.show { display: block; }
+    }
+
+    /* Style សម្រាប់ Notification Icon */
+    .notification-icon-wrapper { transition: all 0.2s ease; cursor: pointer; }
+    .transition-icon { transition: all 0.2s ease; }
+    .dropdown:hover .notification-icon-wrapper { background-color: #e0f2fe !important; border-color: #bae6fd !important; }
+    .dropdown:hover .notification-icon-wrapper .transition-icon { color: #0284c7 !important; transform: scale(1.1); }
+
+    /* Custom Scrollbar សម្រាប់ផ្ទាំង Notification */
+    .notification-scroll-area::-webkit-scrollbar { width: 5px; }
+    .notification-scroll-area::-webkit-scrollbar-track { background: #f1f5f9; }
+    .notification-scroll-area::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+    .notification-scroll-area::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    {% set path = request.path %}
+
+    <div class="d-flex">
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <a href="/dashboard" class="text-decoration-none d-block">
+                    <div class="sidebar-logo"><i class="fas fa-graduation-cap"></i></div>
+                    <h5 class="mb-0 fw-bold text-white tracking-wide" style="letter-spacing: 1px;">EPS SYSTEM</h5>
+                </a>
+            </div>
+
+            <div class="sidebar-menu-wrapper">
+                <ul class="sidebar-menu">
+                    <ul class="sidebar-menu">
+                    {% for header in dynamic_menu %}
+                        <li class="menu-header">{{ header.module_name_kh }}</li>
+                        
+                        {% for child in header.children %}
+                            {% if child.children|length > 0 %}
+                                
+                                {% set is_active_parent = False %}
+                                {% for subchild in child.children %}
+                                    {% if subchild.route_url in path %} {% set is_active_parent = True %} {% endif %}
+                                {% endfor %}
+                                
+                                <li class="nav-item {% if is_active_parent %}active{% endif %}">
+                                    <a href="#menu_{{ child.id }}" class="collapsed-toggle" data-bs-toggle="collapse" role="button" aria-expanded="{{ 'true' if is_active_parent else 'false' }}">
+                                        <div><i class="{{ child.icon_class }} menu-icon"></i> <span>{{ child.module_name_kh }}</span></div>
+                                        <i class="fas fa-chevron-down toggle-icon"></i>
+                                    </a>
+                                    <div class="collapse {% if is_active_parent %}show{% endif %}" id="menu_{{ child.id }}">
+                                        <ul class="submenu list-unstyled">
+                                            {% for subchild in child.children %}
+                                                <li class="{% if subchild.route_url in path %}active{% endif %}">
+                                                    <a href="{{ subchild.route_url }}">{{ subchild.module_name_kh }}</a>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </li>
+                                
+                            {% else %}
+                                
+                                <li class="{% if child.route_url in path %}active{% endif %}">
+                                    <a href="{{ child.route_url }}">
+                                        <div><i class="{{ child.icon_class }} menu-icon"></i> <span>{{ child.module_name_kh }}</span></div>
+                                    </a>
+                                </li>
+                                
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+
+                    <li class="menu-header">តំណភ្ជាប់សាធារណៈ</li>
+                    <li class="{% if '/candidate_login' in path %}active{% endif %}">
+                        <a href="/candidate_login" target="_blank">
+                            <div><i class="fas fa-external-link-alt menu-icon text-warning"></i> <span>បេក្ខជនចូលគណនី</span></div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-footer">
+                <span class="fw-bold"><i class="fas fa-code-branch me-1"></i> Version 2.0</span>
+            </div>
+        </nav>
+        
+        <div class="overlay" id="mobile-overlay"></div>
+
+        <div id="content-wrapper">
+            <header class="topbar">
+                <div class="d-flex align-items-center">
+                    <button class="sidebar-toggler me-3" id="toggleSidebar"><i class="fas fa-bars"></i></button>
+                    <h5 class="mb-0 fw-bold text-dark d-none d-sm-block">{% block page_title %}ផ្ទាំងគ្រប់គ្រង{% endblock %}</h5>
+                </div>
+                
+                <div class="d-flex align-items-center">
+                    <div class="dropdown me-3">
+                        <a href="#" class="d-flex align-items-center text-decoration-none text-dark position-relative hide-caret" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="notification-icon-wrapper bg-light rounded-circle d-flex align-items-center justify-content-center border" style="width: 40px; height: 40px;">
+                                <i class="fas fa-bell text-secondary fs-5 transition-icon"></i>
+                            </div>
+                            
+                            <div id="notification-badge-container">
+                                {% if unread_count and unread_count > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-2 border-white shadow-sm" style="font-size: 0.65rem; margin-left: -5px; margin-top: 5px;">
+                                    {{ unread_count if unread_count < 100 else '99+' }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </a>
+
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-3" aria-labelledby="notificationDropdown" style="width: 320px; padding: 0; border-radius: 12px;">
+                            <li class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light" style="border-radius: 12px 12px 0 0;">
+                                <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-bell text-primary me-2"></i> ការជូនដំណឹង</h6>
+                                <form action="/read_all_notifications" method="POST" class="m-0">
+                                    <button type="submit" class="btn btn-link p-0 text-primary text-decoration-none fw-bold shadow-none" style="font-size: 0.8rem;">អានទាំងអស់</button>
+                                </form>
+                            </li>
+                            <li>
+                                <div id="notification-list" class="notification-scroll-area" style="max-height: 300px; overflow-y: auto;">
+                                    {% if unread_notifications %}
+                                        {% for n in unread_notifications %}
+                                            {% set color = 'primary' if n.type == 'info' else ('success' if n.type == 'success' else ('warning' if n.type == 'warning' else 'danger')) %}
+                                            {% set icon = 'info-circle' if n.type == 'info' else ('check-circle' if n.type == 'success' else ('exclamation-triangle' if n.type == 'warning' else 'times-circle')) %}
+                                            <a class="dropdown-item p-3 border-bottom bg-{{ color }} bg-opacity-10 text-wrap" href="#">
+                                                <div class="d-flex align-items-start gap-3">
+                                                    <div class="bg-{{ color }} text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" style="width: 35px; height: 35px;">
+                                                        <i class="fas fa-{{ icon }} fs-6"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="mb-1 text-dark fw-bold" style="font-size: 0.85rem; line-height: 1.4;">{{ n.message }}</p>
+                                                        <p class="mb-0 text-{{ color }} small fw-bold" style="font-size: 0.7rem;"><i class="far fa-clock me-1"></i> {{ n.time_str }}</p>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="p-4 text-center">
+                                            <div class="text-muted mb-2"><i class="fas fa-bell-slash fs-3 opacity-25"></i></div>
+                                            <small class="text-muted fw-bold">មិនមានការជូនដំណឹងថ្មីទេ</small>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </li>
+                            <li class="p-2 text-center border-top bg-light" style="border-radius: 0 0 12px 12px;">
+                                <a href="#" class="text-decoration-none text-secondary fw-bold" style="font-size: 0.8rem;">មើលប្រវត្តិសារទាំងអស់ <i class="fas fa-arrow-right ms-1"></i></a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="dropdown">
+                        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle hide-caret" data-bs-toggle="dropdown">
+                            <div class="text-end me-3 d-none d-md-block">
+                                <p class="mb-0 fw-bold text-primary" style="font-size: 0.85rem; line-height: 1.2;">{{ session['full_name'] or 'User' }}</p>
+                                <p class="mb-0 text-muted small" style="font-size: 0.7rem;">{{ session['role'] or 'Admin' }}</p>
+                            </div>
+                            <div class="profile-nav-wrapper">
+                                {% if session.get('profile_image') %}
+                                    <img src="{{ url_for('static', filename='uploads/profiles/' ~ session['profile_image']) }}" 
+                                        alt="Profile" class="rounded-circle border border-2 border-white shadow-sm" 
+                                        width="42" height="42" style="object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" 
+                                        style="width: 42px; height: 42px; font-size: 1.1rem; border: 2px solid #fff;">
+                                        {{ (session['full_name'] or 'U')[:1]|upper }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </a>
+                        
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-3 rounded-3">
+                            <li class="px-3 py-2 d-md-none border-bottom mb-1">
+                                <p class="mb-0 fw-bold text-primary small">{{ session['full_name'] }}</p>
+                                <p class="mb-0 text-muted" style="font-size: 0.65rem;">{{ session['role'] }}</p>
+                            </li>
+                            <li><a class="dropdown-item py-2 fw-bold text-secondary" href="/profile"><i class="fas fa-user-circle me-2 text-primary"></i> ព័ត៌មានគណនី</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item py-2 text-danger fw-bold" href="/logout"><i class="fas fa-sign-out-alt me-2"></i> ចាកចេញ</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <main class="content-area p-4" style="flex-grow: 1;">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm border-0 border-start border-4 border-{{ category }} rounded-3" role="alert">
+                                <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-times-circle{% else %}fa-info-circle{% endif %} me-2 fs-5 align-middle"></i>
+                                <span class="fw-bold">{{ message }}</span>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('toggleSidebar').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content-wrapper');
+            const overlay = document.getElementById('mobile-overlay');
+            
+            if (window.innerWidth <= 991) {
+                sidebar.classList.toggle('show');
+                overlay.classList.toggle('show');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                content.classList.toggle('expanded');
+            }
+        });
+
+        document.getElementById('mobile-overlay').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.remove('show');
+            this.classList.remove('show');
+        });
+
+        function fetchRealTimeNotifications() {
+            fetch('/api/notifications')
+                .then(response => response.json())
+                .then(data => {
+                    if(data.status === 'success') {
+                        updateNotificationUI(data.unread_count, data.notifications);
+                    }
+                })
+                .catch(error => console.error('Error fetching notifications:', error));
+        }
+
+        function updateNotificationUI(count, notifs) {
+            const badgeContainer = document.getElementById('notification-badge-container');
+            const listContainer = document.getElementById('notification-list');
+
+            if(count > 0) {
+                let displayCount = count < 100 ? count : '99+';
+                badgeContainer.innerHTML = `<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-2 border-white shadow-sm" style="font-size: 0.65rem; margin-left: -5px; margin-top: 5px;">${displayCount}</span>`;
+            } else {
+                badgeContainer.innerHTML = '';
+            }
+
+            if(notifs.length > 0) {
+                let htmlContent = '';
+                notifs.forEach(n => {
+                    htmlContent += `
+                        <a class="dropdown-item p-3 border-bottom bg-${n.color} bg-opacity-10 text-wrap" href="#">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="bg-${n.color} text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" style="width: 35px; height: 35px;">
+                                    <i class="fas fa-${n.icon} fs-6"></i>
+                                </div>
+                                <div>
+                                    <p class="mb-1 text-dark fw-bold" style="font-size: 0.85rem; line-height: 1.4;">${n.message}</p>
+                                    <p class="mb-0 text-${n.color} small fw-bold" style="font-size: 0.7rem;"><i class="far fa-clock me-1"></i> ${n.time_str}</p>
+                                </div>
+                            </div>
+                        </a>
+                    `;
+                });
+                listContainer.innerHTML = htmlContent;
+            } else {
+                listContainer.innerHTML = `
+                    <div class="p-4 text-center">
+                        <div class="text-muted mb-2"><i class="fas fa-bell-slash fs-3 opacity-25"></i></div>
+                        <small class="text-muted fw-bold">មិនមានការជូនដំណឹងថ្មីទេ</small>
+                    </div>
+                `;
+            }
+        }
+
+        setInterval(fetchRealTimeNotifications, 15000);
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

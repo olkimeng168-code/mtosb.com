@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}ទាញបញ្ចូលទិន្នន័យ (Import UBT) | EPS System{% endblock %}
+{% block page_title %}បញ្ចូលទិន្នន័យបេក្ខជន UBT{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0 mt-3">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white pt-4 pb-3 border-bottom-0 text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-file-excel text-success opacity-75" style="font-size: 4rem;"></i>
+                    </div>
+                    <h4 class="fw-bold text-primary mb-1">ទាញបញ្ចូលទិន្នន័យបេក្ខជន</h4>
+                    <p class="text-muted small">សូមជ្រើសរើសឯកសារ Excel ទាំង២ផ្នែក និងជ្រើសរើសវគ្គប្រឡងឱ្យបានត្រឹមត្រូវ</p>
+                </div>
+                
+                <div class="card-body p-4 p-md-5 pt-2 bg-white">
+                    <form action="/import_data" method="POST" enctype="multipart/form-data">
+                        
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <label class="form-label fw-bold text-dark mb-2"><i class="fas fa-file-alt text-primary me-2"></i>File ទី១ (ព័ត៌មានទូទៅ) <span class="text-danger">*</span></label>
+                                    <input type="file" class="form-control bg-white" name="file_part1" accept=".xls,.xlsx,.csv" required>
+                                    <small class="text-muted mt-2 d-block" style="font-size: 12px;">មានលេខកូដបេក្ខជន, ឈ្មោះ, ភេទ...</small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <label class="form-label fw-bold text-dark mb-2"><i class="fas fa-id-card text-info me-2"></i>File ទី២ (លេខ ID/Passport) <span class="text-danger">*</span></label>
+                                    <input type="file" class="form-control bg-white" name="file_part2" accept=".xls,.xlsx,.csv" required>
+                                    <small class="text-muted mt-2 d-block" style="font-size: 12px;">មានលេខកូដបេក្ខជន និង Passport No</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-5 p-4 bg-primary bg-opacity-10 rounded-3 border border-primary border-opacity-25">
+                            <label class="form-label fw-bold text-primary mb-2"><i class="fas fa-calendar-alt me-2"></i>ជ្រើសរើសវគ្គប្រឡង (Session) <span class="text-danger">*</span></label>
+                            <select class="form-select form-select-lg shadow-sm fw-bold text-dark border-primary" name="session_code" required>
+                                <option value="">-- សូមជ្រើសរើសវគ្គប្រឡង --</option>
+                                {% for s in sessions %}
+                                <option value="{{ s.session_code }}">{{ s.session_code }} - {{ s.title_kh or s.session_type_kh }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="d-flex align-items-start mt-3 text-secondary">
+                                <i class="fas fa-info-circle text-primary mt-1 me-2"></i>
+                                <small style="font-size: 13px;">ប្រព័ន្ធនឹងយកលេខវគ្គនេះ ទៅបូកជាមួយ ៥ ខ្ទង់ចុងក្រោយនៃលេខរៀងក្នុង Excel ដើម្បីបង្កើតជាលេខកូដប្រឡងផ្លូវការដោយស្វ័យប្រវត្តិ។</small>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg fw-bold w-100 rounded-pill shadow-sm">
+                            <i class="fas fa-cogs me-2"></i> ចាប់ផ្តើមទាញបញ្ចូលទិន្នន័យ
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}គ្រប់គ្រងធនាគារ | Admin Panel{% endblock %}
+{% block page_title %}បញ្ជីធនាគារ (Banks){% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-primary"><i class="fas fa-university me-2"></i>គ្រប់គ្រងធនាគារ</h3>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary shadow-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addBankModal">
+                <i class="fas fa-plus-circle me-1"></i> បង្កើតថ្មី
+            </button>
+            <button class="btn btn-success shadow-sm fw-bold" data-bs-toggle="modal" data-bs-target="#importBankModal">
+                <i class="fas fa-file-excel me-1"></i> Import
+            </button>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm border-0 rounded-3" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>{{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="5%" class="text-center">ល.រ</th>
+                            <th>ឈ្មោះធនាគារពេញ (Full Name)</th>
+                            <th>ឈ្មោះកាត់ (Short Name)</th>
+                            <th>Swift Code</th>
+                            <th width="15%" class="text-center">សកម្មភាព</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bank in banks %}
+                        <tr>
+                            <td class="text-center text-muted fw-bold">{{ loop.index }}</td>
+                            <td class="fw-bold text-dark">{{ bank.bank_full_name }}</td>
+                            <td><span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">{{ bank.bank_short_name }}</span></td>
+                            <td class="font-monospace text-success fw-bold">{{ bank.swift_code or 'គ្មាន' }}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning text-dark me-1" data-bs-toggle="modal" data-bs-target="#editBankModal{{ bank.id }}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                
+                                <form action="/admin/banks/delete/{{ bank.id }}" method="POST" class="d-inline" onsubmit="return confirm('តើអ្នកពិតជាចង់លុបធនាគារ {{ bank.bank_short_name }} មែនទេ?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash-alt"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+
+                        <div class="modal fade text-start" id="editBankModal{{ bank.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content border-0 rounded-4">
+                                    <div class="modal-header bg-warning">
+                                        <h5 class="modal-title fw-bold text-dark"><i class="fas fa-edit me-2"></i>កែប្រែធនាគារ</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form action="/admin/banks/edit/{{ bank.id }}" method="POST">
+                                        <div class="modal-body p-4">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold text-secondary">ឈ្មោះធនាគារពេញ <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control bg-light" name="bank_full_name" value="{{ bank.bank_full_name }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold text-secondary">ឈ្មោះកាត់ <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control bg-light" name="bank_short_name" value="{{ bank.bank_short_name }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold text-secondary">Swift Code</label>
+                                                <input type="text" class="form-control font-monospace text-uppercase bg-light text-success fw-bold" name="swift_code" value="{{ bank.swift_code or '' }}">
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer bg-light border-0">
+                                            <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">បោះបង់</button>
+                                            <button type="submit" class="btn btn-warning fw-bold rounded-3"><i class="fas fa-save me-2"></i>រក្សាទុកការកែប្រែ</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-5">
+                                <i class="fas fa-folder-open mb-2" style="font-size: 2rem; opacity: 0.5;"></i><br>
+                                មិនទាន់មានទិន្នន័យធនាគារនៅឡើយទេ
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addBankModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-plus-circle me-2"></i>បង្កើតធនាគារថ្មី</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/admin/banks/add" method="POST">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">ឈ្មោះធនាគារពេញ <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control bg-light" name="bank_full_name" required placeholder="ឧ. ACLEDA BANK PLC">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">ឈ្មោះកាត់ <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control bg-light" name="bank_short_name" required placeholder="ឧ. ACLEDA">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">Swift Code</label>
+                        <input type="text" class="form-control font-monospace text-uppercase bg-light text-success fw-bold" name="swift_code" placeholder="ឧ. ACLBKHPPXXX">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">បោះបង់</button>
+                    <button type="submit" class="btn btn-primary rounded-3 fw-bold"><i class="fas fa-save me-2"></i>រក្សាទុក</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="importBankModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-file-excel me-2"></i>នាំចូលទិន្នន័យ (Import)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/admin/banks/import" method="POST" enctype="multipart/form-data">
+                <div class="modal-body p-4 text-center">
+                    <i class="fas fa-file-excel text-success mb-3" style="font-size: 3rem;"></i>
+                    <p class="text-muted mb-4">សូមជ្រើសរើសឯកសារ <b>.csv</b> ឬ <b>.xlsx</b> ដែលមាន Column ឈ្មោះ <br><code class="fs-6 text-primary">Name</code> និង <code class="fs-6 text-primary">SWIFT Code</code></p>
+                    <input type="file" class="form-control bg-light mb-3" name="file" accept=".csv, .xlsx, .xls" required>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">បោះបង់</button>
+                    <button type="submit" class="btn btn-success fw-bold rounded-3"><i class="fas fa-cloud-upload-alt me-2"></i>បញ្ជាក់ការនាំចូល</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

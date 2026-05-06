@@ -1,0 +1,1272 @@
+{% extends "base.html" %}
+
+{% block title %}គ្រប់គ្រងការដាក់ពាក្យ - EPS{% endblock %}
+{% block page_title %}បញ្ជីបេក្ខជនដាក់ពាក្យស្វែងរកការងារ{% endblock %}
+
+{% block head %}
+<style>
+    body { background-color: #f4f7f6; font-family: 'Khmer OS Siemreap', sans-serif; }
+    
+    .card-custom { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); background: #fff; overflow: hidden; }
+    .form-select, .form-control { border-radius: 8px; border: 1px solid #ced4da; padding: 0.6rem 1rem; font-size: 0.95rem; }
+    .form-select:focus, .form-control:focus { box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15); border-color: #86b7fe; }
+    
+    .modern-table-container { padding: 0 15px; }
+    .modern-table { border-collapse: separate; border-spacing: 0 10px; width: 100%; min-width: 1100px; }
+    .modern-table thead th { 
+        background-color: #1a437a !important; 
+        color: #ffffff !important; 
+        font-family: 'Khmer OS Siemreap', sans-serif;
+        font-weight: 600; 
+        font-size: 1.05rem; 
+        letter-spacing: 0.3px; 
+        border: none !important; 
+        padding: 16px 15px !important; 
+        vertical-align: middle;
+        white-space: nowrap; 
+    }
+    
+    .modern-table thead th:first-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+    .modern-table thead th:last-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+    
+    .modern-table thead th input[type="checkbox"] {
+        margin-top: 0 !important;
+        transform: scale(1.1); 
+    }
+    
+    .modern-table tbody tr { background-color: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.03); transition: all 0.2s ease; }
+    .modern-table tbody tr:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.08); z-index: 10; position: relative;}
+    
+    .modern-table tbody td { padding: 18px 15px; border: none; border-top: 1px solid #f8fafc; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
+    .modern-table tbody td:first-child { border-left: 1px solid #f8fafc; border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+    .modern-table tbody td:last-child { border-right: 1px solid #f8fafc; border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+    
+    .btn-icon { width: 35px; height: 35px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; transition: all 0.2s ease; border: none; }
+    .btn-icon-primary { background-color: #e0f2fe; color: #0284c7; }
+    .btn-icon-primary:hover { background-color: #0284c7; color: #ffffff; transform: translateY(-2px); }
+    .btn-icon-success { background-color: #dcfce7; color: #16a34a; }
+    .btn-icon-success:hover { background-color: #16a34a; color: #ffffff; transform: translateY(-2px); }
+    .btn-icon-danger { background-color: #fee2e2; color: #e11d48; }
+    .btn-icon-danger:hover { background-color: #e11d48; color: #ffffff; transform: translateY(-2px); }
+    .btn-icon-warning { background-color: #fef3c7; color: #d97706; }
+    .btn-icon-warning:hover { background-color: #d97706; color: #ffffff; transform: translateY(-2px); }
+    
+    .status-badge { padding: 6px 14px; border-radius: 30px; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap;}
+    .status-pending { background-color: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+    .status-approved { background-color: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+    .status-rejected { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+    /* Modal Styling */
+    .settings-modal-content { border-radius: 12px; border: none; background-color: #f8fafc;}
+    .settings-modal-header { background-color: #ffffff; border-bottom: 1px solid #e2e8f0; border-radius: 12px 12px 0 0; padding: 15px 20px; }
+    .custom-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+    .custom-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+    input:checked + .slider { background-color: #3b82f6; }
+    input:checked + .slider:before { transform: translateX(20px); }
+    .master-switch { width: 54px; height: 30px; }
+    .master-switch .slider:before { height: 22px; width: 22px; left: 4px; bottom: 4px; }
+    .master-switch input:checked + .slider:before { transform: translateX(24px); }
+    .master-switch input:checked + .slider { background-color: #10b981; }
+    .time-input-group { margin-bottom: 25px; }
+    .time-label { font-size: 0.85rem; color: #475569; margin-bottom: 6px; display: block; font-weight: 600; }
+    .time-input { display: flex; align-items: center; background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition: border-color 0.2s;}
+    .time-input input { border: none; outline: none; background: transparent; width: 100%; font-family: monospace; font-size: 1rem; color: #1e293b; font-weight: bold;}
+    .setting-block { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 18px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden; transition: all 0.3s; }
+    .setting-header { background-color: #f8fafc; padding: 12px 18px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; }
+    .setting-header-title { font-weight: 700; color: #1e293b; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; }
+    .setting-body { padding: 18px; transition: opacity 0.3s ease; }
+    .granular-item { display: flex; align-items: center; padding: 6px 0; cursor: pointer; transition: opacity 0.2s; }
+    .granular-checkbox { width: 1.15rem; height: 1.15rem; cursor: pointer; accent-color: #0d6efd; margin-top: 0; }
+    .granular-label { font-size: 0.9rem; color: #334155; margin-left: 8px; user-select: none; font-weight: 500;}
+    .candidate-photo { 
+        width: 40px; 
+        height: 50px; 
+        object-fit: cover; 
+        border-radius: 4px; 
+        border: 1px solid #dee2e6; 
+        cursor: pointer; 
+        transition: transform 0.2s ease; 
+        background: #fff; 
+    }
+    .btn-custom-dropdown {
+        font-family: 'Khmer OS Siemreap', sans-serif; 
+        font-size: 1rem; 
+        border: 1px solid #dc3545; 
+        border-radius: 8px; 
+        padding: 0.6rem 1rem; 
+        color: #1e293b;
+        background-color: #f8fafc; 
+        transition: all 0.2s;
+        text-align: left; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center;
+        width: 100%;
+    }
+    .btn-custom-dropdown:hover, .btn-custom-dropdown:focus, .btn-custom-dropdown[aria-expanded="true"] { 
+        border-color: #dc3545; 
+        box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.15); 
+        background-color: #ffffff;
+    }
+    
+    .dropdown-menu-custom {
+        border: 1px solid #e2e8f0; 
+        border-radius: 12px; 
+        box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        padding: 0.5rem 0; 
+        overflow-y: auto; 
+        max-height: 300px; 
+        width: 100%;
+    }
+    
+    .dropdown-item-custom {
+        font-family: 'Khmer OS Siemreap', sans-serif; 
+        font-size: 0.95rem; 
+        padding: 0.7rem 1.2rem; 
+        line-height: 1.8; 
+        color: #334155; 
+        border-bottom: 1px solid #f8fafc;
+        white-space: normal; 
+        transition: background 0.2s;
+    }
+    .dropdown-item-custom:last-child { border-bottom: none; }
+    .dropdown-item-custom:hover { background-color: #fef2f2; color: #dc3545; } 
+    .pro-modal-content {
+        border-radius: 12px;
+        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+    }
+    
+    .pro-icon-box {
+        width: 45px;
+        height: 45px;
+        border-radius: 10px;
+        background-color: #fef2f2;
+        color: #dc2626;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 15px;
+        border: 1px solid #fee2e2;
+    }
+    
+    .pro-reason-block {
+        background-color: #f8fafc;
+        border-left: 4px solid #ef4444; 
+        border-radius: 0 8px 8px 0;
+        padding: 18px 20px;
+        text-align: left;
+    }
+    
+    .btn-close-pro {
+        background-color: #ffffff;
+        color: #475569;
+        border-radius: 6px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 600;
+        border: 1px solid #cbd5e1;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-close-pro:hover {
+        background-color: #f1f5f9;
+        color: #0f172a;
+        border-color: #94a3b8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div class="d-flex flex-column">
+            <h4 class="mb-1 fw-bold text-dark"><i class="fas fa-folder-open text-primary me-2"></i>គ្រប់គ្រងពាក្យសុំស្វែងរកការងារ</h4>
+            <div class="text-secondary" style="font-size: 0.95rem;">ពិនិត្យ យល់ព្រម និងគ្រប់គ្រងទិន្នន័យបេក្ខជនដែលបានចុះឈ្មោះ</div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-info text-white fw-bold shadow-sm" onclick="generateApplicationQRCode()">
+                <i class="fas fa-qrcode me-1"></i> QR Code បំពេញព័ត៌មាន
+            </button>
+            <button type="button" class="btn btn-outline-success fw-bold shadow-sm d-flex align-items-center px-4 rounded-3" data-bs-toggle="modal" data-bs-target="#exportModal">
+                <i class="fas fa-file-excel me-2"></i> <span>ទាញយករបាយការណ៍</span>
+            </button>
+            <button type="button" class="btn btn-primary fw-bold shadow-sm d-flex align-items-center px-4 rounded-3" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                <i class="fas fa-sliders-h me-2"></i> <span>ការកំណត់ប្រព័ន្ធ</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-white" style="background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 12px;">
+                <div class="card-body d-flex align-items-center justify-content-between p-4">
+                    <div><h6 class="mb-1 opacity-75 fw-bold">ពាក្យសុំសរុប (ដែលបានរើស)</h6><h2 class="mb-0 fw-bold">{{ total_records }}</h2></div>
+                    <div class="bg-white bg-opacity-25 rounded-circle p-3"><i class="fas fa-users fa-2x"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-white" style="background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 12px;">
+                <div class="card-body d-flex align-items-center justify-content-between p-4">
+                    <div><h6 class="mb-1 opacity-75 fw-bold">កំពុងរង់ចាំ (Pending)</h6><h2 class="mb-0 fw-bold">{{ total_pending }}</h2></div>
+                    <div class="bg-white bg-opacity-25 rounded-circle p-3"><i class="fas fa-hourglass-half fa-2x"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-white" style="background: linear-gradient(135deg, #10b981, #059669); border-radius: 12px;">
+                <div class="card-body d-flex align-items-center justify-content-between p-4">
+                    <div><h6 class="mb-1 opacity-75 fw-bold">អនុម័តរួច (Approved)</h6><h2 class="mb-0 fw-bold">{{ total_approved }}</h2></div>
+                    <div class="bg-white bg-opacity-25 rounded-circle p-3"><i class="fas fa-check-circle fa-2x"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+        <div class="card-body p-4">
+            <form method="GET" action="/admin/manage_applications" class="row g-3 align-items-end" id="filterForm">
+                
+                <div class="col-md-3">
+                    <label class="form-label fw-bold text-secondary small text-uppercase">កាលបរិច្ឆេទ</label>
+                    <input type="date" name="apply_date" class="form-control" value="{{ selected_date }}" onchange="document.getElementById('filterForm').submit();">
+                </div>
+                
+                <div class="col-md-3">
+                    <label class="form-label fw-bold text-secondary small text-uppercase">ស្ថានភាពពាក្យសុំ</label>
+                    <select name="status" class="form-select" onchange="document.getElementById('filterForm').submit();">
+                        <option value="">-- ទាំងអស់ --</option>
+                        
+                        {% for st in app_statuses %}
+                            <option value="{{ st.id }}" {% if selected_status|string == st.id|string %}selected{% endif %}>
+                                {{ st.status_name_kh }} ({{ st.status_name_en }})
+                            </option>
+                        {% endfor %}
+                        
+                    </select>
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-secondary small text-uppercase">ស្វែងរកបេក្ខជន</label>
+                    <div class="input-group shadow-sm" style="border-radius: 8px; overflow: hidden;">
+                        <input type="text" name="search_query" class="form-control border-end-0" placeholder="វាយលេខកូដ ឈ្មោះ ឬលេខទូរស័ព្ទ..." value="{{ search_query }}">
+                        <button type="submit" class="btn btn-primary px-4 fw-bold"><i class="fas fa-search me-1"></i> ស្វែងរក</button>
+                        <a href="/admin/manage_applications" class="btn btn-light border text-secondary px-3" title="លុបតម្រង (Reset)"><i class="fas fa-sync-alt"></i></a>
+                    </div>
+                </div>
+                
+            </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-5" style="border-radius: 12px; background: transparent; box-shadow: none !important;">
+        
+        <div class="bg-white rounded-top p-3 d-flex justify-content-between align-items-center gap-2 border shadow-sm flex-wrap">
+            <div class="text-secondary small fw-bold ms-2" id="selectionCounter">មិនទាន់មានការជ្រើសរើសទេ</div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="button" class="btn btn-warning fw-bold shadow-sm px-4 rounded-3 text-dark" id="btnBulkUndo" onclick="bulkUpdate('Pending')" disabled>
+                    <i class="fas fa-undo me-1"></i> ត្រឡប់ទៅរង់ចាំ
+                </button>
+                <button type="button" class="btn btn-danger fw-bold shadow-sm px-4 rounded-3" id="btnBulkReject" onclick="bulkUpdate('Rejected')" disabled>
+                    <i class="fas fa-times-circle me-1"></i> បដិសេធ
+                </button>
+                <button type="button" class="btn btn-success fw-bold shadow-sm px-4 rounded-3" id="btnBulkApprove" onclick="bulkUpdate('Approved')" disabled>
+                    <i class="fas fa-check-double me-1"></i> អនុម័ត
+                </button>
+            </div>
+        </div>
+
+        <div class="modern-table-container table-responsive pb-4" style="background: #f4f7f6;">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th class="text-center align-middle" style="width: 60px;">
+                            <input type="checkbox" id="selectAllMaster" onclick="toggleAllCheckboxes(this)" style="width: 20px; height: 20px; cursor: pointer; accent-color: #0d6efd; margin-top: 5px;">
+                        </th>
+                        <th class="text-center">ល.រ</th>
+                        <th class="text-center">រូបថត</th> 
+                        <th class="text-start">លេខកូដ (APP NO)</th>
+                        <th class="text-start">ឈ្មោះបេក្ខជន</th>
+                        <th class="text-center">ភេទ</th>
+                        <th class="text-start">អត្តសញ្ញាណប័ណ្ណ</th>
+                        <th class="text-start">លេខទូរស័ព្ទ</th>
+                        <th class="text-center">វត្តមានស្កែន</th>
+                        <th class="text-center">ថ្ងៃដាក់ពាក្យ</th>
+                        <th class="text-center">ស្ថានភាព</th>
+                        <th class="text-center">សកម្មភាព</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td class="text-center align-middle">
+                            <input type="checkbox" class="row-checkbox" value="{{ app.application_no }}" onclick="syncMasterCheckbox()" style="width: 20px; height: 20px; cursor: pointer; accent-color: #0d6efd; margin-top: 5px;">
+                        </td>
+                        
+                        <td class="text-center text-secondary fw-bold">{{ loop.index + ((page - 1) * 20) }}</td>
+                        
+                        <td class="text-center">
+                            {% set photo_src = '/static/images/default_avatar.png' %}
+                            {% if app.latest_scan_photo %}
+                                {% set photo_src = '/static/latest_scans/' ~ app.latest_scan_photo %}
+                            {% elif app.original_photo_path %}
+                                {% set photo_src = '/static/uploads/reference_photos/' ~ app.original_photo_path %}
+                            {% endif %}
+                            
+                            <img src="{{ photo_src }}" 
+                                 class="candidate-photo shadow-sm" 
+                                 alt="Photo"
+                                 onclick="showPhotoPreview('{{ photo_src }}', '{{ app.name_en }}')"
+                                 onerror="this.src='/static/images/default_avatar.png'"
+                                 onmouseover="this.style.transform='scale(1.15)'"
+                                 onmouseout="this.style.transform='scale(1)'"
+                                 title="ចុចដើម្បីមើលរូបធំ">
+                        </td>
+                        
+                        <td class="text-start text-primary fw-bold font-monospace">{{ app.application_no }}</td>
+                        
+                        <td class="text-start">
+                            <div class="fw-bold text-dark">{{ app.last_name_kh }} {{ app.first_name_kh }}</div>
+                            <div class="small text-muted fw-semibold text-uppercase">{{ app.name_en }}</div>
+                        </td>
+                        
+                        <td class="text-center">
+                            <span class="badge bg-light text-secondary border px-2 py-1">{{ app.gender }}</span>
+                        </td>
+                        
+                        <td class="text-start text-dark fw-semibold font-monospace"><i class="fas fa-id-card text-black-50 me-2"></i>{{ app.id_card_no }}</td>
+                        
+                        <td class="text-start text-dark fw-semibold font-monospace"><i class="fas fa-phone-alt text-black-50 me-2"></i>{{ app.phone_number }}</td>
+                        
+                        <td class="text-center">
+                            {% if app.job_app_present == 1 %}
+                                <i class="fas fa-check-circle text-success fs-5"></i>
+                            {% else %}
+                                <i class="fas fa-times-circle text-danger fs-5 opacity-25"></i>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center text-secondary small fw-semibold">{{ app.created_at.strftime('%Y-%m-%d') if app.created_at else '-' }}</td>
+                        
+                        <td class="text-center">
+                            {% if app.status_id == 3 %}
+                                <span class="badge bg-danger text-white px-3 py-2 rounded-pill shadow-sm" 
+                                      {% if app.remark %} 
+                                      data-reason="{{ app.remark }}" 
+                                      onclick="showRejectReason(this)" 
+                                      style="cursor: pointer; transition: transform 0.2s;" 
+                                      onmouseover="this.style.transform='scale(1.05)'" 
+                                      onmouseout="this.style.transform='scale(1)'" 
+                                      title="ចុចដើម្បីមើលមូលហេតុ" 
+                                      {% endif %}>
+                                    <i class="fas fa-times-circle me-1"></i> បដិសេធ
+                                    {% if app.remark %}
+                                        <span class="ms-1 border-start border-white border-opacity-25 ps-2"><i class="fas fa-eye"></i></span>
+                                    {% endif %}
+                                </span>
+
+                            {% elif app.status_id == 2 %}
+                                <span class="badge bg-success text-white px-3 py-2 rounded-pill shadow-sm">
+                                    <i class="fas fa-check-circle me-1"></i> អនុម័ត
+                                </span>
+
+                            {% else %}
+                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill shadow-sm">
+                                    <i class="fas fa-hourglass-half me-1"></i> រង់ចាំ
+                                </span>
+                            {% endif %}
+                        </td>
+                        
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1">
+                                <a href="/admin/view_application/{{ app.application_no }}" class="btn-icon btn-icon-primary" title="មើលលម្អិត"><i class="fas fa-eye"></i></a>
+                                
+                                {% if app.status_id == 1 or not app.status_id %}
+                                    <button class="btn-icon btn-icon-success" onclick="quickUpdateStatus('{{ app.application_no }}', 'Approved')" title="អនុម័ត"><i class="fas fa-check"></i></button>
+                                    <button class="btn-icon btn-icon-danger" onclick="quickUpdateStatus('{{ app.application_no }}', 'Rejected')" title="បដិសេធ"><i class="fas fa-times"></i></button>
+                                {% else %}
+                                    <button class="btn-icon btn-icon-warning" onclick="quickUpdateStatus('{{ app.application_no }}', 'Pending')" title="កំណត់ត្រឡប់ទៅរង់ចាំវិញ (Undo)"><i class="fas fa-undo"></i></button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="12" class="text-center py-5 text-muted bg-white rounded-3 border-0"> <div class="d-flex flex-column align-items-center justify-content-center my-4">
+                                <i class="fas fa-box-open fa-4x mb-3" style="color: #cbd5e1;"></i>
+                                <h5 class="fw-bold text-secondary">មិនមានទិន្នន័យឡើយ</h5>
+                                <p class="small mb-0 text-black-50">សូមសាកល្បងផ្លាស់ប្តូរលក្ខខណ្ឌស្វែងរក</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="bg-white p-3 border rounded-bottom shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <span class="text-muted small fw-bold">កំពុងបង្ហាញទំព័រ {{ page }} នៃ {{ total_pages }}</span>
+            <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_manage_applications', page=page-1, apply_date=selected_date, status=selected_status, search_query=search_query) }}"><i class="fas fa-chevron-left me-1"></i> មុន</a>
+                    </li>
+                    <li class="page-item disabled"><span class="page-link bg-light px-4 fw-bold">ទំព័រ {{ page | default('1') }}</span></li>
+                    <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_manage_applications', page=page+1, apply_date=selected_date, status=selected_status, search_query=search_query) }}">បន្ទាប់ <i class="fas fa-chevron-right ms-1"></i></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+        <div class="modal-content settings-modal-content shadow-lg">
+            
+            <div class="modal-header settings-modal-header py-3">
+                <h5 class="modal-title fw-bold text-dark"><i class="fas fa-cog text-primary me-2"></i>ការគ្រប់គ្រងវគ្គដាក់ពាក្យ និងទម្រង់</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body p-4 pb-5 bg-light">
+                <form id="systemSettingsForm">
+                    
+                    <div class="card border-0 shadow-sm mb-4" style="background-color: #ecfdf5; border-left: 4px solid #10b981 !important;">
+                        <div class="card-body d-flex justify-content-between align-items-center py-3">
+                            <div>
+                                <h6 class="fw-bold text-success mb-1"><i class="fas fa-power-off me-2"></i>ស្ថានភាពប្រព័ន្ធ (Master Switch)</h6>
+                                <div class="small text-muted">បើក ដើម្បីអនុញ្ញាតឱ្យបេក្ខជនចូលបំពេញពាក្យសុំបាន។ បើបិទ គឺបិទទាំងស្រុង។</div>
+                            </div>
+                            <label class="custom-switch master-switch">
+                                <input type="checkbox" name="is_system_open" {% if settings.is_system_open == 1 %}checked{% endif %}>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 time-input-group">
+                        <div class="col-md-4">
+                            <label class="time-label">ចាប់ផ្តើមពីថ្ងៃទី</label>
+                            <div class="time-input" style="border-left: 3px solid #3b82f6;">
+                                <input type="date" name="app_start_date" class="form-control border-0" value="{{ settings.app_start_date }}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="time-label">ម៉ោងចាប់ផ្តើម (AM)</label>
+                            <div class="time-input">
+                                <input type="time" name="am_start_time" class="form-control border-0" value="{{ settings.am_start_time | default('08:00', true) }}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="time-label">ម៉ោងចាប់ផ្តើម (PM)</label>
+                            <div class="time-input">
+                                <input type="time" name="pm_start_time" class="form-control border-0" value="{{ settings.pm_start_time | default('13:00', true) }}">
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="time-label">បញ្ចប់ត្រឹមថ្ងៃទី</label>
+                            <div class="time-input" style="border-left: 3px solid #ef4444;">
+                                <input type="date" name="app_end_date" class="form-control border-0" value="{{ settings.app_end_date }}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="time-label">ម៉ោងបញ្ចប់ (AM)</label>
+                            <div class="time-input">
+                                <input type="time" name="am_end_time" class="form-control border-0" value="{{ settings.am_end_time | default('11:00', true) }}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="time-label">ម៉ោងបញ្ចប់ (PM)</label>
+                            <div class="time-input">
+                                <input type="time" name="pm_end_time" class="form-control border-0" value="{{ settings.pm_end_time | default('16:00', true) }}">
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="my-4 border-secondary opacity-10">
+                    <h6 class="fw-bold text-dark mb-3"><i class="fas fa-list-ul text-primary me-2"></i>គ្រប់គ្រងប្រអប់ទិន្នន័យនីមួយៗ (Granular Control)</h6>
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="setting-block">
+                                <div class="setting-header">
+                                    <div class="setting-header-title"><i class="fas fa-user-circle text-secondary"></i> ព័ត៌មានផ្ទាល់ខ្លួនបេក្ខជន</div>
+                                    <label class="custom-switch block-master-toggle"><input type="checkbox" name="show_personal_info" {% if settings.show_personal_info == 1 %}checked{% endif %}><span class="slider"></span></label>
+                                </div>
+                                <div class="setting-body">
+                                    <div class="row g-2">
+                                        <div class="col-12 text-muted small mb-2"><i class="fas fa-lock me-1 text-warning"></i> ទិន្នន័យចាំបាច់មិនអាចបិទបានទេ</div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" class="granular-checkbox" checked disabled><span class="granular-label">ប្រភេទការងារ</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" class="granular-checkbox" checked disabled><span class="granular-label">ជំនាញការងារ</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" class="granular-checkbox" checked disabled><span class="granular-label">ថ្ងៃខែឆ្នាំកំណើត</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" class="granular-checkbox" checked disabled><span class="granular-label">លេខអត្តសញ្ញាណប័ណ្ណ</span></label></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="setting-block">
+                                <div class="setting-header">
+                                    <div class="setting-header-title"><i class="fas fa-users text-secondary"></i> ព័ត៌មានឪពុកម្តាយ</div>
+                                    <label class="custom-switch block-master-toggle"><input type="checkbox" name="show_parents_info" {% if settings.show_parents_info == 1 %}checked{% endif %}><span class="slider"></span></label>
+                                </div>
+                                <div class="setting-body">
+                                    <div class="row g-2">
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_f_lname" class="granular-checkbox" {% if settings.show_f_lname == 1 %}checked{% endif %}><span class="granular-label">ត្រកូលឪពុក (ខ្មែរ)</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_f_fname" class="granular-checkbox" {% if settings.show_f_fname == 1 %}checked{% endif %}><span class="granular-label">ឈ្មោះឪពុក (ខ្មែរ)</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_f_job" class="granular-checkbox" {% if settings.show_f_job == 1 %}checked{% endif %}><span class="granular-label">មុខរបរឪពុក</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_f_status" class="granular-checkbox" {% if settings.show_f_status == 1 %}checked{% endif %}><span class="granular-label">ស្ថានភាពឪពុក</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_f_phone" class="granular-checkbox" {% if settings.show_f_phone == 1 %}checked{% endif %}><span class="granular-label">លេខទូរស័ព្ទឪពុក</span></label></div>
+                                        
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_m_lname" class="granular-checkbox" {% if settings.show_m_lname == 1 %}checked{% endif %}><span class="granular-label">ត្រកូលម្តាយ (ខ្មែរ)</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_m_fname" class="granular-checkbox" {% if settings.show_m_fname == 1 %}checked{% endif %}><span class="granular-label">ឈ្មោះម្តាយ (ខ្មែរ)</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_m_job" class="granular-checkbox" {% if settings.show_m_job == 1 %}checked{% endif %}><span class="granular-label">មុខរបរម្តាយ</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_m_status" class="granular-checkbox" {% if settings.show_m_status == 1 %}checked{% endif %}><span class="granular-label">ស្ថានភាពម្តាយ</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_m_phone" class="granular-checkbox" {% if settings.show_m_phone == 1 %}checked{% endif %}><span class="granular-label">លេខទូរស័ព្ទម្តាយ</span></label></div>
+                                        
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_p_province" class="granular-checkbox" {% if settings.show_p_province == 1 %}checked{% endif %}><span class="granular-label">ខេត្ត / រាជធានី</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_p_district" class="granular-checkbox" {% if settings.show_p_district == 1 %}checked{% endif %}><span class="granular-label">ស្រុក / ខណ្ឌ</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_p_commune" class="granular-checkbox" {% if settings.show_p_commune == 1 %}checked{% endif %}><span class="granular-label">ឃុំ / សង្កាត់</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_p_village" class="granular-checkbox" {% if settings.show_p_village == 1 %}checked{% endif %}><span class="granular-label">ភូមិ</span></label></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="setting-block">
+                                <div class="setting-header">
+                                    <div class="setting-header-title"><i class="fas fa-heart text-secondary"></i> ព័ត៌មានប្តី ឬ ប្រពន្ធ</div>
+                                    <label class="custom-switch block-master-toggle"><input type="checkbox" name="show_spouse_info" {% if settings.show_spouse_info == 1 %}checked{% endif %}><span class="slider"></span></label>
+                                </div>
+                                <div class="setting-body">
+                                    <div class="row g-2">
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_s_lname" class="granular-checkbox" {% if settings.show_s_lname == 1 %}checked{% endif %}><span class="granular-label">ត្រកូល (អង់គ្លេស)</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_s_fname" class="granular-checkbox" {% if settings.show_s_fname == 1 %}checked{% endif %}><span class="granular-label">នាមខ្លួន (អង់គ្លេស)</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_s_job" class="granular-checkbox" {% if settings.show_s_job == 1 %}checked{% endif %}><span class="granular-label">មុខរបរ</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_s_phone" class="granular-checkbox" {% if settings.show_s_phone == 1 %}checked{% endif %}><span class="granular-label">លេខទូរស័ព្ទ</span></label></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="setting-block">
+                                <div class="setting-header">
+                                    <div class="setting-header-title"><i class="fas fa-school text-secondary"></i> ការអប់រំសាលាភាសាខ្មែរ</div>
+                                    <label class="custom-switch block-master-toggle"><input type="checkbox" name="show_khmer_school" {% if settings.show_khmer_school == 1 %}checked{% endif %}><span class="slider"></span></label>
+                                </div>
+                                <div class="setting-body">
+                                    <div class="row g-2">
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_k_school_name" class="granular-checkbox" {% if settings.show_k_school_name == 1 %}checked{% endif %}><span class="granular-label">សាលាឈ្មោះ (អង់គ្លេស)</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_k_school_prov" class="granular-checkbox" {% if settings.show_k_school_prov == 1 %}checked{% endif %}><span class="granular-label">ទីតាំងសាលា (ខេត្ត)</span></label></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="setting-block">
+                                <div class="setting-header">
+                                    <div class="setting-header-title"><i class="fas fa-language text-secondary"></i> ការអប់រំសាលាភាសាកូរ៉េ</div>
+                                    <label class="custom-switch block-master-toggle"><input type="checkbox" name="show_korean_school" {% if settings.show_korean_school == 1 %}checked{% endif %}><span class="slider"></span></label>
+                                </div>
+                                <div class="setting-body">
+                                    <div class="row g-2">
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_ko_school_name" class="granular-checkbox" {% if settings.show_ko_school_name == 1 %}checked{% endif %}><span class="granular-label">សាលារៀនកូរ៉េឈ្មោះ</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_ko_school_prov" class="granular-checkbox" {% if settings.show_ko_school_prov == 1 %}checked{% endif %}><span class="granular-label">ទីតាំងសាលាកូរ៉េ (ខេត្ត)</span></label></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="setting-block">
+                                <div class="setting-header">
+                                    <div class="setting-header-title"><i class="fas fa-id-card text-secondary"></i> ព័ត៌មានលិខិតឆ្លងដែន</div>
+                                    <label class="custom-switch block-master-toggle">
+                                        <input type="checkbox" name="show_passport_info" {% if settings.show_passport_info == 1 %}checked{% endif %}>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div class="setting-body">
+                                    <div class="row g-2">
+                                        <div class="col-6 d-flex align-items-center">
+                                            <input type="checkbox" name="show_pass_no" id="pass1" class="form-check-input granular-checkbox me-2" {% if settings.show_pass_no == 1 %}checked{% endif %}>
+                                            <label for="pass1" class="form-check-label mb-0" style="cursor: pointer;">លេខលិខិតឆ្លងដែន</label>
+                                        </div>
+                                        <div class="col-6 d-flex align-items-center">
+                                            <input type="checkbox" name="show_pass_doc" id="pass5" class="form-check-input granular-checkbox me-2" {% if settings.show_pass_doc == 1 %}checked{% endif %}>
+                                            <label for="pass5" class="form-check-label mb-0" style="cursor: pointer;">ឯកសារលិខិតឆ្លងដែន</label>
+                                        </div>
+                                        <div class="col-4 mt-2 d-flex align-items-center">
+                                            <input type="checkbox" name="show_pass_issue_year" id="pass2" class="form-check-input granular-checkbox me-2" {% if settings.show_pass_issue_year == 1 %}checked{% endif %}>
+                                            <label for="pass2" class="form-check-label mb-0" style="cursor: pointer;">ផ្តល់នៅឆ្នាំ</label>
+                                        </div>
+                                        <div class="col-4 mt-2 d-flex align-items-center">
+                                            <input type="checkbox" name="show_pass_issue_month" id="pass3" class="form-check-input granular-checkbox me-2" {% if settings.show_pass_issue_month == 1 %}checked{% endif %}>
+                                            <label for="pass3" class="form-check-label mb-0" style="cursor: pointer;">ផ្តល់នៅខែ</label>
+                                        </div>
+                                        <div class="col-4 mt-2 d-flex align-items-center">
+                                            <input type="checkbox" name="show_pass_issue_day" id="pass4" class="form-check-input granular-checkbox me-2" {% if settings.show_pass_issue_day == 1 %}checked{% endif %}>
+                                            <label for="pass4" class="form-check-label mb-0" style="cursor: pointer;">ផ្តល់នៅថ្ងៃ</label>
+                                        </div>
+                                    </div>
+                                </div>  
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="setting-block">
+                                <div class="setting-header">
+                                    <div class="setting-header-title"><i class="fas fa-university text-secondary"></i> គណនេយ្យធនាគារ</div>
+                                    <label class="custom-switch block-master-toggle"><input type="checkbox" name="show_bank_info" {% if settings.show_bank_info == 1 %}checked{% endif %}><span class="slider"></span></label>
+                                </div>
+                                <div class="setting-body">
+                                    <div class="row g-2">
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_bank_name" class="granular-checkbox me-2" {% if settings.show_bank_name == 1 %}checked{% endif %}><span class="granular-label">ឈ្មោះធនាគារ</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_bank_account" class="granular-checkbox me-2" {% if settings.show_bank_account == 1 %}checked{% endif %}><span class="granular-label">លេខគណនីធនាគារ</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_bank_book" class="granular-checkbox me-2" {% if settings.show_bank_book == 1 %}checked{% endif %}><span class="granular-label">ឯកសារសៀវភៅធនាគារ</span></label></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="setting-block">
+                                <div class="setting-header">
+                                    <div class="setting-header-title"><i class="fas fa-plane text-secondary"></i> បទពិសោធន៍នៅកូរ៉េ</div>
+                                    <label class="custom-switch block-master-toggle"><input type="checkbox" name="show_korea_experience" {% if settings.show_korea_experience == 1 %}checked{% endif %}><span class="slider"></span></label>
+                                </div>
+                                <div class="setting-body">
+                                    <div class="row g-2">
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_exp_korea" class="granular-checkbox" {% if settings.show_exp_korea == 1 %}checked{% endif %}><span class="granular-label">ធ្លាប់ទៅធ្វើការនៅកូរ៉េ?</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_exp_alien_card" class="granular-checkbox" {% if settings.show_exp_alien_card == 1 %}checked{% endif %}><span class="granular-label">លេខប័ណ្ណជនបរទេស</span></label></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="setting-block">
+                                <div class="setting-header">
+                                    <div class="setting-header-title"><i class="fas fa-user-shield text-secondary"></i> ព័ត៌មានអ្នកធានា</div>
+                                    <label class="custom-switch block-master-toggle"><input type="checkbox" name="show_guarantor" {% if settings.show_guarantor == 1 %}checked{% endif %}><span class="slider"></span></label>
+                                </div>
+                                <div class="setting-body">
+                                    <div class="row g-2">
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_g_lname" class="granular-checkbox" {% if settings.show_g_lname == 1 %}checked{% endif %}><span class="granular-label">ត្រកូលអ្នកធានា</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_g_fname" class="granular-checkbox" {% if settings.show_g_fname == 1 %}checked{% endif %}><span class="granular-label">ឈ្មោះអ្នកធានា</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_g_relation" class="granular-checkbox" {% if settings.show_g_relation == 1 %}checked{% endif %}><span class="granular-label">ត្រូវជា</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_g_phone" class="granular-checkbox" {% if settings.show_g_phone == 1 %}checked{% endif %}><span class="granular-label">លេខទូរស័ព្ទ</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_g_prov" class="granular-checkbox" {% if settings.show_g_prov == 1 %}checked{% endif %}><span class="granular-label">ទីតាំង (ខេត្ត)</span></label></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="setting-block">
+                                <div class="setting-header">
+                                    <div class="setting-header-title"><i class="fas fa-share-alt text-secondary"></i> បណ្តាញសង្គម</div>
+                                    <label class="custom-switch block-master-toggle"><input type="checkbox" name="show_social_media" {% if settings.show_social_media == 1 %}checked{% endif %}><span class="slider"></span></label>
+                                </div>
+                                <div class="setting-body">
+                                    <div class="row g-2">
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_fb_link" class="granular-checkbox" {% if settings.show_fb_link == 1 %}checked{% endif %}><span class="granular-label">តំណភ្ជាប់ Facebook</span></label></div>
+                                        <div class="col-6"><label class="granular-item"><input type="checkbox" name="show_tk_link" class="granular-checkbox" {% if settings.show_tk_link == 1 %}checked{% endif %}><span class="granular-label">តំណភ្ជាប់ TikTok</span></label></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer bg-white border-top py-3 px-4 d-flex justify-content-between rounded-bottom-3">
+                <button type="button" class="btn btn-light border px-4 fw-bold text-secondary" data-bs-dismiss="modal">បោះបង់</button>
+                <button type="button" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="saveSystemSettings()"><i class="fas fa-save me-1"></i> រក្សាទុកការផ្លាស់ប្តូរ</button>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="exportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg">
+            <form action="/download_application_report" method="POST">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-file-excel me-2"></i>ទាញយករបាយការណ៍ (Excel)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark"><i class="fas fa-heading me-1 text-primary"></i> កំណត់ចំណងជើងរបាយការណ៍</label>
+                        <input type="text" name="custom_title" class="form-control" value="របាយការណ៍បេក្ខជនបានដាក់ពាក្យស្វែងរកការងារ វគ្គទី ២៣" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark"><i class="fas fa-file-alt me-1 text-primary"></i> ជ្រើសរើសទម្រង់របាយការណ៍</label>
+                        <select class="form-select border-primary bg-light" name="report_format" required>
+                            <option value="report1">ទម្រង់ទី១៖ របាយការណ៍បេក្ខជនបានដាក់ពាក្យស្វែងរកការងារ(ឪពុកម្តាយ)</option>
+                            <option value="report2">ទម្រង់ទី២៖ សម្រាប់បញ្ចូលប្រព័ន្ធ EPS-TOPIK</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark"><i class="fas fa-calendar-alt me-1 text-primary"></i> កំណត់កាលបរិច្ឆេទ</label>
+                        <select class="form-select" name="export_type" id="export_type" onchange="toggleExportDateRange()">
+                            <option value="today">ទិន្នន័យសម្រាប់តែថ្ងៃនេះ</option>
+                            <option value="all">ទិន្នន័យទាំងអស់</option>
+                            <option value="custom">កំណត់ចន្លោះថ្ងៃ (From - To)</option>
+                        </select>
+                    </div>
+                    <div class="row g-2 d-none bg-light p-3 rounded border" id="exportDateRangeDiv">
+                        <div class="col-6"><label class="form-label small fw-bold text-secondary">ចាប់ពីថ្ងៃ</label><input type="date" name="start_date" class="form-control form-control-sm"></div>
+                        <div class="col-6"><label class="form-label small fw-bold text-secondary">ដល់ថ្ងៃ</label><input type="date" name="end_date" class="form-control form-control-sm"></div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-light py-3 px-4">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">បោះបង់</button>
+                    <button type="submit" class="btn btn-success px-5 fw-bold"><i class="fas fa-download me-1"></i> ទាញយកឥឡូវនេះ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="qrApplicationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center border-0 shadow-lg rounded-4" style="font-family: 'Khmer OS Siemreap', 'Battambang', sans-serif;">
+            <div class="modal-header border-0" style="background-color: #0b2e59; color: #ffffff;">
+                <div class="d-flex align-items-center w-100 justify-content-center position-relative">
+                    <h5 class="modal-title fw-bold m-0" style="font-size: 1.1rem;">
+                        <i class="fas fa-qrcode text-warning me-2"></i> តំណភ្ជាប់សម្រាប់បេក្ខជនបំពេញព័ត៌មាន
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white position-absolute end-0" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+
+            <div class="modal-body p-4 p-md-5 bg-light">
+                <p class="text-muted fw-bold mb-4" style="color: #0b2e59 !important;">សូមបេក្ខជនស្កេន QR ខាងក្រោមដើម្បីចូលគណនី</p>
+                <div class="d-flex justify-content-center align-items-center mb-4">
+                    <div style="border: 1px solid #0b2e59; padding: 6px; border-radius: 6px; background-color: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                        <div style="border: 3px solid #0b2e59; padding: 25px; border-radius: 8px; background-color: #ffffff;">
+                            <div id="qrcodeAppBox" class="d-flex justify-content-center"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-2"><span class="text-muted small fw-bold">តំណភ្ជាប់ (Link):</span></div>
+                <div class="d-inline-block px-3 py-2 rounded-3 shadow-sm border" style="background-color: #ffffff; border-color: #c2d1e0 !important;">
+                    <a href="#" id="qrAppLinkText" target="_blank" class="fw-bold text-decoration-none text-break" style="font-size: 0.95rem; color: #0b2e59; font-family: Arial, sans-serif;">
+                        <i class="fas fa-link text-muted me-1"></i> <span></span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="modal-footer d-flex flex-column align-items-stretch bg-white border-top-0 pt-0 pb-4 px-4 px-md-5">
+                <div class="d-flex justify-content-center gap-2 mb-3 w-100 flex-wrap">
+                    <button type="button" class="btn btn-light border fw-bold rounded-pill px-4 text-secondary shadow-sm" data-bs-dismiss="modal" style="transition: all 0.2s;">បិទ</button>
+                    <button type="button" id="btnDownloadAppPdf" class="btn btn-danger fw-bold rounded-pill px-4 shadow-sm" onclick="downloadAppQRCodePDF()" style="transition: all 0.2s;"><i class="fas fa-file-pdf me-1"></i> ទាញយក PDF</button>
+                    <button type="button" class="btn btn-primary fw-bold rounded-pill px-4 shadow-sm" onclick="printAppQRCode()" style="background-color: #0b2e59; border-color: #0b2e59; transition: all 0.2s;"><i class="fas fa-print me-1"></i> Print</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="photoPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg bg-transparent">
+            <div class="modal-header border-0 pb-0 justify-content-end">
+                <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center pt-0">
+                <img id="previewImage" src="" class="img-fluid rounded-4 shadow-lg" style="max-height: 350px; width: auto; object-fit: cover; border: 4px solid #ffffff;">
+                <h5 id="previewName" class="text-white mt-3 fw-bold font-monospace text-uppercase" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);"></h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="reasonModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content pro-modal-content bg-white">
+            <div class="modal-body p-0"> <div class="d-flex align-items-center p-4 border-bottom bg-white">
+                    <div class="pro-icon-box flex-shrink-0 shadow-sm">
+                        <i class="fas fa-file-signature"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-dark mb-1" style="font-family: 'Khmer OS Siemreap', sans-serif;">ព័ត៌មានបដិសេធ</h5>
+                        <p class="text-muted small mb-0">ការបញ្ជាក់មូលហេតុពីមន្ត្រីជំនាញ</p>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-white">
+                    <div class="pro-reason-block">
+                        <div class="text-uppercase text-danger small fw-bold mb-2">
+                            <i class="fas fa-exclamation-circle me-1"></i> មូលហេតុលម្អិតខ្វះឯកសារ៖
+                        </div>
+                        <p id="rejectReasonText" class="text-dark fw-bold mb-0" style="font-size: 1.05rem; line-height: 1.7; word-wrap: break-word;"></p>
+                    </div>
+                </div>
+                
+                <div class="p-3 bg-light border-top text-end">
+                    <button type="button" class="btn btn-close-pro" data-bs-dismiss="modal">បិទផ្ទាំងនេះ</button>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="adminRejectReasonModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-danger text-white border-0 py-3">
+                <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle me-2"></i> បញ្ជាក់មូលហេតុបដិសេធ</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark">សូមជ្រើសរើសប្រភេទមូលហេតុ៖ <span class="text-danger">*</span></label>
+                    
+                    <div class="dropdown">
+                        <button class="btn btn-custom-dropdown dropdown-toggle" type="button" id="dropdownReasonButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span id="selectedReasonText">-- ជ្រើសរើសមូលហេតុស្តង់ដារ --</span>
+                        </button>
+                        
+                        <ul class="dropdown-menu dropdown-menu-custom" aria-labelledby="dropdownReasonButton">
+                            <li><a class="dropdown-item dropdown-item-custom" href="#" onclick="selectReason('', '-- ជ្រើសរើសមូលហេតុស្តង់ដារ --'); return false;">-- ជ្រើសរើសមូលហេតុស្តង់ដារ --</a></li>
+                            
+                            {% for reason in reject_reasons %}
+                                <li>
+                                    <a class="dropdown-item dropdown-item-custom" href="#" onclick="selectReason('{{ reason.reason_kh }}', '{{ reason.reason_kh }}'); return false;">
+                                        {{ reason.reason_kh }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                            
+                            <li><hr class="dropdown-divider m-0"></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="#" onclick="selectReason('ផ្សេងៗ', 'ផ្សេងៗ (សូមបញ្ជាក់ខាងក្រោម)'); return false;">ផ្សេងៗ (សូមបញ្ជាក់ខាងក្រោម)</a></li>
+                        </ul>
+                    </div>
+                    
+                    <input type="hidden" id="rejectReasonType" value="">
+                </div>
+                
+                <div id="rejectTextContainer">
+                    <label id="remarkLabel" class="form-label fw-bold text-secondary small">ចំណាំបន្ថែម (ជាជម្រើស)៖</label>
+                    <textarea id="adminRejectRemark" class="form-control" rows="3" placeholder="វាយបញ្ចូលការពន្យល់លម្អិត (បើមាន)..."></textarea>
+                </div>
+                
+                <input type="hidden" id="rejectTargetAppNo"> </div>
+            <div class="modal-footer bg-light border-0 py-3">
+                <button type="button" class="btn btn-secondary px-4 fw-bold rounded-pill" data-bs-dismiss="modal">បោះបង់</button>
+                <button type="button" class="btn btn-danger px-4 fw-bold rounded-pill shadow-sm" onclick="confirmAdminReject()"><i class="fas fa-times-circle me-1"></i> យល់ព្រមបដិសេធ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    function selectReason(value, displayText) {
+        document.getElementById('selectedReasonText').innerText = displayText;
+        document.getElementById('rejectReasonType').value = value;
+        toggleRejectTextArea();
+    }
+    
+    function showPhotoPreview(imgSrc, candidateName) {
+        document.getElementById('previewImage').src = imgSrc;
+        document.getElementById('previewName').innerText = candidateName;
+        var modal = new bootstrap.Modal(document.getElementById('photoPreviewModal'));
+        modal.show();
+    }
+    
+    function showRejectReason(element) {
+        var reason = element.getAttribute('data-reason');
+        document.getElementById('rejectReasonText').innerText = reason ? reason : 'មិនមានការបញ្ជាក់មូលហេតុឡើយ។';
+        var modal = new bootstrap.Modal(document.getElementById('reasonModal'));
+        modal.show();
+    }
+
+    function generateApplicationQRCode() {
+        let baseUrl = window.location.origin; 
+        let targetUrl = baseUrl + '/candidate_login'; 
+
+        let linkElement = document.getElementById('qrAppLinkText');
+        if(linkElement) {
+            linkElement.href = targetUrl;
+            let spanElement = linkElement.querySelector('span');
+            if(spanElement) spanElement.innerText = targetUrl;
+            else linkElement.innerText = targetUrl;
+        }
+
+        let qrBox = document.getElementById('qrcodeAppBox');
+        qrBox.innerHTML = ""; 
+        
+        new QRCode(qrBox, {
+            text: targetUrl,
+            width: 180,      
+            height: 180,     
+            colorDark : "#0b2e59", 
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H 
+        });
+
+        let qrModal = new bootstrap.Modal(document.getElementById('qrApplicationModal'));
+        qrModal.show();
+    }
+
+    function printAppQRCode() {
+        let qrBox = document.getElementById('qrcodeAppBox');
+        let qrImage = qrBox.querySelector('img');
+        let qrContent = "";
+        
+        if(qrImage && qrImage.src) {
+            qrContent = `<img src="${qrImage.src}" style="width: 250px; height: 250px; display: block; margin: 0 auto;">`;
+        } else {
+            let canvas = qrBox.querySelector('canvas');
+            if(canvas) qrContent = `<img src="${canvas.toDataURL()}" style="width: 250px; height: 250px; display: block; margin: 0 auto;">`;
+        }
+
+        let targetUrl = document.getElementById('qrAppLinkText').innerText;
+        let printWindow = window.open('', '', 'height=800,width=800');
+        
+        let html = `
+        <!DOCTYPE html>
+        <html lang="km">
+        <head>
+            <meta charset="UTF-8">
+            <title>Print Login QR Code</title>
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Moul&display=swap" rel="stylesheet">
+            <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+            <style>
+                @page { size: A4 portrait; margin: 0; }
+                body { font-family: 'Battambang', sans-serif; background: #fff; margin: 0; padding: 0; color: #333; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .page-container { width: 210mm; height: 297mm; padding: 30mm 20mm; box-sizing: border-box; margin: 0 auto; text-align: center; }
+                .header-title { font-family: 'Moul', cursive; font-size: 30px; color: #0b2e59; margin: 0 0 25px 0; line-height: 1.5; }
+                .header-sub { font-family: 'Battambang', sans-serif; font-size: 24px; font-weight: bold; margin: 0; color: #333; }
+                .top-line { border-top: 2px solid #0b2e59; margin: 25px 50px 40px 50px; }
+                .main-title { font-family: 'Moul', cursive; font-size: 20px; color: #0b2e59; margin: 0 0 15px 0; }
+                .main-sub { font-size: 16px; color: #555; margin: 0 0 40px 0; font-weight: bold; }
+                .qr-box-outer { display: inline-block; padding: 5px; border: 1px solid #0b2e59; border-radius: 8px; margin-bottom: 30px; }
+                .qr-box-inner { border: 3px solid #0b2e59; padding: 20px; border-radius: 6px; }
+                .url-display { font-family: Arial, sans-serif; font-size: 18px; color: #0b2e59; font-weight: bold; background: #f0f4f8; padding: 12px 30px; border-radius: 30px; border: 1px dashed #c2d1e0; display: inline-block; }
+                .bottom-line { border-top: 2px solid #0b2e59; margin: 60px 50px 20px 50px; }
+                .footer-text { font-size: 13px; line-height: 1.8; color: #555; }
+                .phone { color: #d32f2f; font-weight: bold; }
+            </style>
+        </head>
+        <body>
+            <div class="page-container">
+                <div class="header-title">ក្រសួងការងារ និងបណ្តុះបណ្តាលវិជ្ជាជីវៈ</div>
+                <div class="header-sub">គណៈកម្មាធិការបណ្តុះបណ្តាល និងបញ្ជូនពលករទៅបរទេស</div>
+                <div class="top-line"></div>
+                <div class="main-title">ស្កេនដើម្បីចូលគណនី និងបំពេញព័ត៌មាន</div>
+                <div class="main-sub">សូមបេក្ខជនស្កេន QR កូដខាងក្រោម ដើម្បីចូលទៅកាន់ប្រព័ន្ធ</div>
+                <div class="qr-box-outer">
+                    <div class="qr-box-inner">
+                        ${qrContent}
+                    </div>
+                </div>
+                <br>
+                <div class="url-display">
+                    <i class="fas fa-link me-2 text-muted"></i> ${targetUrl}
+                </div>
+                <div class="bottom-line"></div>
+                <div class="footer-text">
+                    សម្រាប់ព័ត៌មានបន្ថែម សូមទំនាក់ទំនងមកគណៈកម្មាធិការបណ្តុះបណ្តាល និងបញ្ជូនពលករទៅបរទេស<br>
+                    តាមរយៈទូរស័ព្ទ <span class="phone"><i class="fas fa-phone-alt me-1"></i> ០១២ ៤៦៦ ២២២ / ០១៦ ៤៦៦ ២២២</span> នៅរៀងរាល់ម៉ោងធ្វើការ។
+                </div>
+            </div>
+            <script>
+                window.onload = function() {
+                    if (document.fonts) {
+                        document.fonts.ready.then(function() { setTimeout(function() { window.print(); }, 300); });
+                    } else { setTimeout(function() { window.print(); }, 1000); }
+                };
+            <\/script>
+        </body>
+        </html>
+        `;
+
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.focus();
+    }
+
+    function downloadAppQRCodePDF() {
+        let btn = document.getElementById('btnDownloadAppPdf');
+        let originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> កំពុងរៀបចំ...';
+        btn.disabled = true;
+
+        let qrBox = document.getElementById('qrcodeAppBox');
+        let canvas = qrBox.querySelector('canvas');
+        let img = qrBox.querySelector('img');
+        let qrDataUrl = "";
+
+        if (canvas) {
+            qrDataUrl = canvas.toDataURL("image/png");
+        } else if (img && img.src) {
+            qrDataUrl = img.src;
+        }
+
+        let targetUrl = document.getElementById('qrAppLinkText').innerText;
+        let element = document.createElement('div');
+        element.style.width = '210mm';
+        element.style.padding = '30mm 20mm';
+        element.style.backgroundColor = '#ffffff';
+        element.style.textAlign = 'center';
+        
+        element.innerHTML = `
+            <div style="font-family: 'Khmer OS Muol Light', 'Moul', serif; font-size: 30px; line-height: 1.5; color: #0b2e59; margin-bottom: 25px;">ក្រសួងការងារ និងបណ្តុះបណ្តាលវិជ្ជាជីវៈ</div>
+            <div style="font-family: 'Khmer OS Siemreap', 'Battambang', sans-serif; font-size: 24px; font-weight: bold; color: #333; margin-bottom: 25px;">គណៈកម្មាធិការបណ្តុះបណ្តាល និងបញ្ជូនពលករទៅបរទេស</div>
+            
+            <div style="border-top: 2px solid #0b2e59; margin: 0 50px 40px 50px;"></div>
+            
+            <div style="font-family: 'Khmer OS Muol Light', 'Moul', serif; font-size: 20px; color: #0b2e59; margin-bottom: 15px;">ស្កេនដើម្បីចូលគណនី និងបំពេញព័ត៌មាន</div>
+            <div style="font-family: 'Khmer OS Siemreap', 'Battambang', sans-serif; font-size: 16px; color: #555; font-weight: bold; margin-bottom: 40px;">សូមបេក្ខជនស្កេន QR កូដខាងក្រោម ដើម្បីចូលទៅកាន់ប្រព័ន្ធ</div>
+            
+            <div style="display: inline-block; padding: 5px; border: 1px solid #0b2e59; border-radius: 8px; margin-bottom: 30px;">
+                <div style="border: 3px solid #0b2e59; padding: 20px; border-radius: 6px;">
+                    <img src="${qrDataUrl}" style="width: 250px; height: 250px; display: block;">
+                </div>
+            </div>
+            <br>
+            <div style="font-family: Arial, sans-serif; font-size: 18px; color: #0b2e59; font-weight: bold; background: #f0f4f8; padding: 12px 30px; border-radius: 30px; border: 1px dashed #c2d1e0; display: inline-block;">
+                ${targetUrl}
+            </div>
+            
+            <div style="border-top: 2px solid #0b2e59; margin: 60px 50px 20px 50px;"></div>
+            
+            <div style="font-family: 'Khmer OS Siemreap', 'Battambang', sans-serif; font-size: 13px; line-height: 1.8; color: #555;">
+                សម្រាប់ព័ត៌មានបន្ថែម សូមទំនាក់ទំនងមកគណៈកម្មាធិការបណ្តុះបណ្តាល និងបញ្ជូនពលករទៅបរទេស<br>
+                តាមរយៈទូរស័ព្ទ <span style="color: #d32f2f; font-weight: bold;">០១២ ៤៦៦ ២២២ / ០១៦ ៤៦៦ ២២២</span> នៅរៀងរាល់ម៉ោងធ្វើការ។
+            </div>
+        `;
+
+        let opt = {
+            margin: 0,
+            filename: 'QR_Code_Application_Login.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(element).save().then(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }).catch(err => {
+            console.error(err);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+
+    function toggleExportDateRange() {
+        let type = document.getElementById('export_type').value;
+        let dateDiv = document.getElementById('exportDateRangeDiv');
+        if(type === 'custom') dateDiv.classList.remove('d-none');
+        else dateDiv.classList.add('d-none');
+    }
+
+    function toggleAllCheckboxes(source) {
+        let checkboxes = document.querySelectorAll('.row-checkbox');
+        checkboxes.forEach(cb => {
+            if (!cb.disabled) {
+                cb.checked = source.checked;
+            }
+        });
+        syncMasterCheckbox(); 
+    }
+    
+    function syncMasterCheckbox() {
+        let total = document.querySelectorAll('.row-checkbox').length;
+        let checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+        let checkedCount = checkedBoxes.length;
+        let master = document.getElementById('selectAllMaster');
+        let counterText = document.getElementById('selectionCounter');
+        
+        if (master) master.checked = (total > 0 && total === checkedCount);
+        
+        if (counterText) {
+            if (checkedCount > 0) counterText.innerHTML = `<span class="text-primary"><i class="fas fa-check-square me-1"></i> បានជ្រើសរើស <b>${checkedCount}</b> នាក់</span>`;
+            else counterText.innerHTML = `មិនទាន់មានការជ្រើសរើសទេ`;
+        }
+        
+        let btnApprove = document.getElementById('btnBulkApprove');
+        let btnReject = document.getElementById('btnBulkReject');
+        let btnUndo = document.getElementById('btnBulkUndo');
+        
+        if (btnApprove && btnReject && btnUndo) {
+            btnApprove.disabled = (checkedCount === 0);
+            btnReject.disabled = (checkedCount === 0);
+            btnUndo.disabled = (checkedCount === 0); // 🌟 បើកប៊ូតុង Undo ពេលមានអ្នកត្រូវបានជ្រើសរើស
+        }
+    }
+
+    // 🌟 កែសម្រួល៖ បន្ថែមមុខងារ "Pending" សម្រាប់ Undo
+    async function quickUpdateStatus(appNo, newStatus) {
+        if(newStatus === 'Rejected') {
+            document.getElementById('rejectTargetAppNo').value = appNo; 
+            document.getElementById('adminRejectRemark').value = '';
+            document.getElementById('rejectReasonType').value = '';
+            document.getElementById('selectedReasonText').innerText = '-- ជ្រើសរើសមូលហេតុស្តង់ដារ --';
+            toggleRejectTextArea(); 
+            new bootstrap.Modal(document.getElementById('adminRejectReasonModal')).show();
+            return;
+        }
+        
+        if(newStatus === 'Pending') {
+            if(confirm(`តើអ្នកពិតជាចង់កំណត់បេក្ខជនលេខ ${appNo} ឱ្យត្រឡប់ទៅស្ថានភាព "រង់ចាំ (Pending)" វិញមែនទេ?`)) {
+                executeStatusUpdate([appNo], newStatus, '');
+            }
+            return;
+        }
+        
+        if(confirm(`តើអ្នកពិតជាចង់ អនុម័ត (Approve) បេក្ខជនលេខ ${appNo} មែនទេ?`)) {
+            executeStatusUpdate([appNo], newStatus, '');
+        }
+    }
+
+    async function bulkUpdate(newStatus) {
+        let selected = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+        if(selected.length === 0) {
+            alert("សូមជ្រើសរើសបេក្ខជនយ៉ាងហោចណាស់ម្នាក់!"); return;
+        }
+        if(newStatus === 'Rejected') {
+            document.getElementById('rejectTargetAppNo').value = 'BULK'; 
+            document.getElementById('adminRejectRemark').value = '';
+            new bootstrap.Modal(document.getElementById('adminRejectReasonModal')).show();
+            return;
+        }
+        
+        if(newStatus === 'Pending') {
+            if(confirm(`តើអ្នកពិតជាចង់កំណត់បេក្ខជនទាំង ${selected.length} នាក់នេះ ឱ្យត្រឡប់ទៅស្ថានភាព "រង់ចាំ (Pending)" វិញមែនទេ?`)) {
+                executeStatusUpdate(selected, newStatus, '');
+            }
+            return;
+        }
+
+        if(confirm(`តើអ្នកពិតជាចង់ អនុម័ត (Approve) បេក្ខជនទាំង ${selected.length} នាក់នេះមែនទេ?`)) {
+            executeStatusUpdate(selected, newStatus, '');
+        }
+    }
+
+    function toggleRejectTextArea() {
+        let type = document.getElementById('rejectReasonType').value;
+        let remarkLabel = document.getElementById('remarkLabel');
+        let textInput = document.getElementById('adminRejectRemark');
+        if(type === 'ផ្សេងៗ') {
+            remarkLabel.innerHTML = 'សូមបញ្ជាក់មូលហេតុលម្អិត៖ <span class="text-danger">*</span>';
+            textInput.placeholder = "វាយបញ្ចូលមូលហេតុនៅទីនេះ...";
+        } else {
+            remarkLabel.innerHTML = 'ចំណាំបន្ថែម (ជាជម្រើស)៖';
+            textInput.placeholder = "វាយបញ្ចូលការពន្យល់លម្អិត (បើមាន)...";
+        }
+    }
+
+    function confirmAdminReject() {
+        let target = document.getElementById('rejectTargetAppNo').value;
+        let reasonType = document.getElementById('rejectReasonType').value;
+        let remarkDetails = document.getElementById('adminRejectRemark').value.trim();
+        
+        if(!reasonType) {
+            alert("សូមជ្រើសរើសប្រភេទមូលហេតុនៃការបដិសេធ!");
+            document.getElementById('rejectReasonType').focus(); return;
+        }
+        if(reasonType === 'ផ្សេងៗ' && !remarkDetails) {
+            alert("សូមវាយបញ្ចូលការបញ្ជាក់បន្ថែម សម្រាប់មូលហេតុ 'ផ្សេងៗ'!");
+            document.getElementById('adminRejectRemark').focus(); return;
+        }
+
+        let finalRemark = reasonType;
+        if (remarkDetails) finalRemark = reasonType === 'ផ្សេងៗ' ? remarkDetails : `${reasonType} ( ${remarkDetails} )`;
+
+        let selectedAppNos = target === 'BULK' ? Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value) : [target];
+            
+        bootstrap.Modal.getInstance(document.getElementById('adminRejectReasonModal')).hide();
+        executeStatusUpdate(selectedAppNos, 'Rejected', finalRemark);
+    }
+
+    async function executeStatusUpdate(appNos, status, remarkText) {
+        try {
+            let res = await fetch('/admin/bulk_update_status', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ application_nos: appNos, status: status, remark: remarkText })
+            });
+            let result = await res.json();
+            if(result.status === 'success') { location.reload(); } 
+            else { alert('មានបញ្ហា៖ ' + result.message); }
+        } catch(e) { alert('មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ប្រព័ន្ធ!'); }
+    }
+
+    function saveSystemSettings() {
+        let form = document.getElementById('systemSettingsForm');
+        let dataObj = {};
+        
+        let inputs = form.querySelectorAll('input[type="time"], input[type="date"]');
+        inputs.forEach(inp => { dataObj[inp.name] = inp.value; });
+        
+        let checkboxes = form.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(chk => { if (chk.name) dataObj[chk.name] = chk.checked ? 1 : 0; });
+
+        fetch('/admin/update_settings_ajax', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dataObj)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                document.querySelector('#settingsModal .btn-close').click();
+                const alertHtml = `<div class="alert alert-success rounded-4 shadow-sm mb-4 fw-bold border-0 position-fixed top-0 end-0 m-3" style="z-index: 1060;"><i class="fas fa-check-circle me-2"></i>រក្សាទុកការកំណត់បានជោគជ័យ!</div>`;
+                document.body.insertAdjacentHTML('beforeend', alertHtml);
+                setTimeout(() => { document.querySelector('.alert-success').remove(); }, 3000);
+            } else { alert("⚠️ បរាជ័យ៖ " + data.message); }
+        }).catch(err => { alert("មានបញ្ហាក្នុងការភ្ជាប់ទៅប្រព័ន្ធ!"); });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        let masterToggles = document.querySelectorAll('.setting-header .block-master-toggle input');
+        
+        masterToggles.forEach(toggle => {
+            let blockBody = toggle.closest('.setting-block').querySelector('.setting-body');
+            let granularChecks = blockBody.querySelectorAll('.granular-checkbox');
+
+            if (blockBody) {
+                blockBody.style.opacity = toggle.checked ? '1' : '0.4';
+                blockBody.style.pointerEvents = toggle.checked ? 'auto' : 'none';
+            }
+
+            toggle.addEventListener('change', function() {
+                if (blockBody) {
+                    blockBody.style.opacity = this.checked ? '1' : '0.4';
+                    blockBody.style.pointerEvents = this.checked ? 'auto' : 'none';
+                }
+                
+                if (!this.checked) granularChecks.forEach(chk => { if(!chk.disabled) chk.checked = false; });
+                else granularChecks.forEach(chk => { if(!chk.disabled) chk.checked = true; });
+            });
+        });
+    });
+</script>
+{% endblock %}

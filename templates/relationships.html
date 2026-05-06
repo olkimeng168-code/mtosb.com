@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}គ្រប់គ្រងទំនាក់ទំនង | Admin Panel{% endblock %}
+{% block page_title %}បញ្ជីទំនាក់ទំនង (Relationships){% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-primary"><i class="fas fa-handshake me-2"></i>គ្រប់គ្រងទំនាក់ទំនង</h3>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary shadow-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addRelationModal">
+                <i class="fas fa-plus-circle me-1"></i> បង្កើតថ្មី
+            </button>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm border-0 rounded-3" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>{{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="10%" class="text-center">ល.រ</th>
+                            <th>ទំនាក់ទំនង (ភាសាខ្មែរ)</th>
+                            <th>ទំនាក់ទំនង (ភាសាអង់គ្លេស)</th>
+                            <th width="20%" class="text-center">សកម្មភាព</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rel in relationships %}
+                        <tr>
+                            <td class="text-center text-muted fw-bold">{{ loop.index }}</td>
+                            <td class="fw-bold text-dark">{{ rel.relation_name_kh }}</td>
+                            <td class="text-primary">{{ rel.relation_name_en or 'គ្មាន' }}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning text-dark me-1" data-bs-toggle="modal" data-bs-target="#editRelationModal{{ rel.id }}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                
+                                <form action="/admin/relationships/delete/{{ rel.id }}" method="POST" class="d-inline" onsubmit="return confirm('តើអ្នកពិតជាចង់លុបទំនាក់ទំនង [{{ rel.relation_name_kh }}] មែនទេ?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash-alt"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+
+                        <div class="modal fade text-start" id="editRelationModal{{ rel.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content border-0 rounded-4">
+                                    <div class="modal-header bg-warning">
+                                        <h5 class="modal-title fw-bold text-dark"><i class="fas fa-edit me-2"></i>កែប្រែទំនាក់ទំនង</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form action="/admin/relationships/edit/{{ rel.id }}" method="POST">
+                                        <div class="modal-body p-4">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold text-secondary">ទំនាក់ទំនង (ខ្មែរ) <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control bg-light" name="relation_name_kh" value="{{ rel.relation_name_kh }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold text-secondary">ទំនាក់ទំនង (អង់គ្លេស)</label>
+                                                <input type="text" class="form-control bg-light text-primary" name="relation_name_en" value="{{ rel.relation_name_en or '' }}">
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer bg-light border-0">
+                                            <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">បោះបង់</button>
+                                            <button type="submit" class="btn btn-warning fw-bold rounded-3"><i class="fas fa-save me-2"></i>រក្សាទុកការកែប្រែ</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-5">
+                                <i class="fas fa-folder-open mb-2" style="font-size: 2rem; opacity: 0.5;"></i><br>
+                                មិនទាន់មានទិន្នន័យនៅឡើយទេ
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addRelationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-plus-circle me-2"></i>បន្ថែមទំនាក់ទំនងថ្មី</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/admin/relationships/add" method="POST">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">ទំនាក់ទំនង (ខ្មែរ) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control bg-light" name="relation_name_kh" required placeholder="ឧ. ឪពុក">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">ទំនាក់ទំនង (អង់គ្លេស)</label>
+                        <input type="text" class="form-control bg-light text-primary" name="relation_name_en" placeholder="ឧ. Father">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">បោះបង់</button>
+                    <button type="submit" class="btn btn-primary rounded-3 fw-bold"><i class="fas fa-save me-2"></i>រក្សាទុក</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

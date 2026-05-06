@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ម៉ាស៊ីនយកលេខរង់ចាំ | MTOSB</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Khmer+OS+Battambang:wght@400;700&family=Khmer+OS+Muol+Light&display=swap');
+        
+        body { font-family: 'Khmer OS Battambang', sans-serif; background-color: #f0f4f8; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        
+        /* ផ្នែកបង្ហាញលើអេក្រង់ Kiosk */
+        .kiosk-container { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 2rem; }
+        .welcome-title { font-family: 'Khmer OS Muol Light', cursive; color: #1e293b; font-size: 3rem; margin-bottom: 1rem; line-height: 1.5; }
+        .instruction-text { font-size: 1.5rem; color: #64748b; margin-bottom: 4rem; }
+        
+        .btn-get-ticket {
+            background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; border-radius: 100px;
+            padding: 2rem 5rem; font-size: 2.5rem; font-weight: bold; color: white;
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.4); transition: all 0.2s; cursor: pointer;
+        }
+        .btn-get-ticket:active { transform: scale(0.95); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3); }
+
+        /* ផ្ទាំង Modal បង្ហាញសំបុត្រ */
+        .modal-content { border-radius: 24px; border: none; text-align: center; padding: 2rem; }
+        .ticket-box { border: 3px dashed #cbd5e1; border-radius: 16px; padding: 2rem; margin: 1.5rem 0; background: #f8fafc; }
+        .ticket-number-display { font-size: 5rem; font-weight: 900; color: #0f172a; margin: 0; line-height: 1; }
+        
+        /* 💡 ការកំណត់សម្រាប់តែពេលចុច Print ប៉ុណ្ណោះ (លាក់អ្វីៗផ្សេងទាំងអស់ បង្ហាញតែសំបុត្រ) */
+        @media print {
+            body * { visibility: hidden; }
+            .print-area, .print-area * { visibility: visible; }
+            .print-area { position: absolute; left: 0; top: 0; width: 100%; text-align: center; }
+            .modal { position: absolute; left: 0; top: 0; margin: 0; padding: 0; min-height: 550px; visibility: visible;}
+            .no-print { display: none !important; }
+            .ticket-box { border: 2px solid #000; } /* ដូរពណ៌បន្ទាត់ឱ្យច្បាស់ពេលព្រីនសខ្មៅ */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="kiosk-container no-print">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" style="height: 120px; margin-bottom: 2rem;" onerror="this.style.display='none'">
+        <h1 class="welcome-title">សូមស្វាគមន៍មកកាន់<br>គណៈកម្មាធិការបណ្តុះបណ្តាល និងបញ្ជូនពលករទៅបរទេស</h1><br>
+        <p class="instruction-text">សូមចុចប៊ូតុងខាងក្រោមដើម្បីទទួលបានលេខរង់ចាំ</p>
+        
+        <button class="btn-get-ticket" id="btnGetTicket" onclick="generateTicket()">
+            <i class="fas fa-hand-pointer me-3"></i> ចុចយកលេខរង់ចាំ
+        </button>
+    </div>
+
+    <div class="modal fade" id="ticketModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content print-area">
+                <h4 class="fw-bold mb-0">MTOSB - EPS SYSTEM</h4>
+                <p class="text-muted mb-0"><small>សំបុត្ររង់ចាំ (Queue Ticket)</small></p>
+                
+                <div class="ticket-box">
+                    <p class="mb-2 fw-bold" style="font-size: 1.2rem;">លេខរបស់អ្នកគឺ / Your Number:</p>
+                    <h1 class="ticket-number-display" id="modalTicketNumber">A-000</h1>
+                </div>
+                
+                <p class="mb-1"><i class="far fa-clock me-1"></i> <span id="modalTicketTime">...</span></p>
+                <p class="text-danger fw-bold mt-3 mb-0" style="font-size: 1.1rem;">សូមរង់ចាំការហៅលេខតាមរយៈកញ្ចក់ទូរទស្សន៍។</p>
+                <p class="text-muted"><small>Please wait for your number to be called.</small></p>
+                
+                <div class="mt-4 no-print d-flex justify-content-center gap-3">
+                    <button type="button" class="btn btn-secondary btn-lg px-4" onclick="closeAndReset()"><i class="fas fa-times me-2"></i> បិទ (Close)</button>
+                    <button type="button" class="btn btn-primary btn-lg px-4" onclick="printTicket()"><i class="fas fa-print me-2"></i> បោះពុម្ព (Print)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const btnGetTicket = document.getElementById('btnGetTicket');
+        const ticketModal = new bootstrap.Modal(document.getElementById('ticketModal'));
+
+        function generateTicket() {
+            // ប្តូរស្ថានភាពប៊ូតុងកុំឱ្យគេចុចផ្ទួនៗ
+            btnGetTicket.disabled = true;
+            btnGetTicket.innerHTML = '<i class="fas fa-spinner fa-spin me-3"></i> កំពុងដំណើរការ...';
+
+            fetch('/api/generate_ticket', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    // បញ្ចូលទិន្នន័យទៅក្នុង Modal
+                    document.getElementById('modalTicketNumber').innerText = data.ticket.queue_number;
+                    document.getElementById('modalTicketTime').innerText = data.ticket.time_str;
+                    
+                    // បង្ហាញ Modal
+                    ticketModal.show();
+
+                    // 💡 បើបងចង់ឱ្យវាលោតផ្ទាំង Print អូតូ ពេលចុចយកលេខភ្លាម សូមដោះ Comment កូដខាងក្រោម៖
+                    // setTimeout(() => { window.print(); }, 500); 
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ប្រព័ន្ធ!");
+            })
+            .finally(() => {
+                // ប្រគល់ប៊ូតុងដើមមកវិញ
+                btnGetTicket.disabled = false;
+                btnGetTicket.innerHTML = '<i class="fas fa-hand-pointer me-3"></i> ចុចយកលេខរង់ចាំ';
+            });
+        }
+
+        function printTicket() {
+            window.print(); // ប្រើមុខងារ Print របស់ Browser
+        }
+
+        function closeAndReset() {
+            ticketModal.hide();
+        }
+
+        // អូតូបិទ Modal ក្រោយ ៧ វិនាទី បើគេភ្លេចចុចបិទ ដើម្បីទុកឱ្យអ្នកក្រោយចុចបន្ត
+        document.getElementById('ticketModal').addEventListener('shown.bs.modal', function () {
+            setTimeout(() => {
+                ticketModal.hide();
+            }, 7000);
+        });
+    </script>
+</body>
+</html>

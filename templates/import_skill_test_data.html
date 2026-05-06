@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}ទាញបញ្ចូលបញ្ជីតេស្តជំនាញ | EPS System{% endblock %}
+{% block page_title %}បញ្ចូលបញ្ជីឈ្មោះអ្នកតេស្តជំនាញ (Skill Test){% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0 mt-3">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-success text-white py-4 border-0 text-center">
+                    <div class="mb-2">
+                        <i class="fas fa-tools fa-3x text-white opacity-75"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold">បញ្ចូលបញ្ជីឈ្មោះអ្នកតេស្តជំនាញ (2nd Round)</h5>
+                </div>
+                
+                <div class="card-body p-4 p-md-5 bg-white text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-cloud-upload-alt text-success opacity-25" style="font-size: 5rem;"></i>
+                    </div>
+                    <p class="text-muted mb-4 fs-6">
+                        សូមជ្រើសរើសឯកសារ <span class="badge bg-light text-dark border">.xlsx</span> ឬ <span class="badge bg-light text-dark border">.csv</span> ដែលមានផ្ទុកកាលវិភាគ បន្ទប់ និងលេខតុ សម្រាប់ថ្ងៃប្រឡងតេស្តជំនាញ។
+                    </p>
+                    
+                    <form action="/import_skill_test_data" method="POST" enctype="multipart/form-data">
+                        <div class="mb-4 text-start bg-light p-4 rounded-3 border">
+                            <label class="form-label fw-bold text-dark mb-2">ជ្រើសរើសឯកសារ Excel / CSV <span class="text-danger">*</span></label>
+                            <input class="form-control form-control-lg border-success shadow-sm bg-white" type="file" name="file" accept=".xlsx, .xls, .csv" required>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg w-100 fw-bold shadow-sm rounded-pill">
+                            <i class="fas fa-upload me-2"></i> ចាប់ផ្តើម Upload ទិន្នន័យ
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

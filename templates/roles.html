@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}គ្រប់គ្រងតួនាទី | EPS System{% endblock %}
+{% block page_title %}គ្រប់គ្រងតួនាទី (Roles){% endblock %}
+
+{% block head %}
+<style>
+    .card-custom { border: none; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+    .card-header-custom { background-color: #ffffff; border-bottom: 1px solid #f0f2f5; padding: 1.2rem 1.5rem; border-radius: 12px 12px 0 0 !important; }
+    .table-custom thead th { background-color: #f8f9fa; color: #6c757d; font-weight: 600; font-size: 0.85rem; border-bottom: 2px solid #e9ecef; padding: 1rem; text-transform: uppercase; letter-spacing: 0.5px;}
+    .table-custom tbody td { padding: 1rem; vertical-align: middle; border-bottom: 1px solid #f0f2f5; font-size: 0.9rem;}
+    .table-custom tbody tr:hover { background-color: #f8fafd; }
+    .badge-soft { padding: 0.55rem 0.9rem; font-size: 0.85em; font-weight: 600; letter-spacing: 0.5px; }
+    .btn-action { border-radius: 6px; font-size: 0.85rem; padding: 0.4rem 0.7rem; font-weight: 500; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 5px;}
+    .btn-action:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .modal-header-clean { background-color: #ffffff; border-bottom: 1px solid #f0f2f5; padding: 1.5rem 1.5rem 1rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0 mb-5">
+    
+    <div class="mb-4">
+        <a href="/users" class="btn btn-light border bg-white shadow-sm fw-bold text-dark rounded-pill px-4 py-2">
+            <i class="fas fa-arrow-left me-2 text-primary"></i> ត្រឡប់ទៅគ្រប់គ្រងគណនី
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-3 col-lg-4">
+            <div class="card card-custom sticky-top" style="top: 20px;">
+                <div class="card-header card-header-custom">
+                    <h5 class="text-primary fw-bold mb-0"><i class="fas fa-plus-circle me-2"></i> បង្កើតតួនាទីថ្មី</h5>
+                </div>
+                <div class="card-body p-4 bg-white">
+                    <form action="/roles" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-dark">ឈ្មោះតួនាទី (Role Name) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="name" placeholder="ឧ. Report Viewer" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-dark">ការពិពណ៌នា (Description)</label>
+                            <textarea class="form-control" name="description" rows="4" placeholder="ឧ. មានសិទ្ធិមើលតែរបាយការណ៍ប៉ុណ្ណោះ"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold py-2 rounded-pill shadow-sm">
+                            <i class="fas fa-save me-1"></i> រក្សាទុកតួនាទី
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-9 col-lg-8">
+            <div class="card card-custom">
+                <div class="card-header card-header-custom d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-shield-alt text-warning me-2"></i> បញ្ជីតួនាទីក្នុងប្រព័ន្ធ</h5>
+                    <a href="/role_permissions" class="btn btn-outline-primary fw-bold rounded-pill px-4 shadow-sm btn-sm">
+                        <i class="fas fa-user-lock me-1"></i> កំណត់សិទ្ធិ (Permissions)
+                    </a>
+                </div>
+                <div class="card-body p-0 bg-white">
+                    <div class="table-responsive">
+                        <table class="table table-custom align-middle">
+                            <thead>
+                                <tr>
+                                    <th class="text-center text-nowrap" style="width: 80px;">ល.រ</th>
+                                    <th class="text-nowrap" style="width: 25%;">ឈ្មោះតួនាទី</th>
+                                    <th>ការពិពណ៌នា</th>
+                                    <th class="text-center text-nowrap" style="width: 150px;">សកម្មភាព (Actions)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in roles %}
+                                <tr>
+                                    <td class="text-center text-muted fw-bold">{{ loop.index }}</td>
+                                    <td>
+                                        <span class="badge badge-soft bg-info text-dark rounded-pill shadow-sm">
+                                            <i class="fas fa-user-tag me-1"></i> {{ r.name }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted">{{ r.description or 'មិនមានការពិពណ៌នា' }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <button class="btn btn-warning text-dark btn-action fw-bold" data-bs-toggle="modal" data-bs-target="#editRoleModal{{ r.role_id }}" title="កែប្រែ">
+                                                <i class="fas fa-edit me-1"></i> កែ
+                                            </button>
+                                            
+                                            <form action="/delete_role/{{ r.role_id }}" method="POST" class="m-0" onsubmit="return confirm('តើអ្នកពិតជាចង់លុបតួនាទី [{{ r.name }}] នេះមែនទេ? ទិន្នន័យមិនអាចទាញមកវិញបានទេ។');">
+                                                <button type="submit" class="btn btn-danger btn-action" title="លុបតួនាទី">
+                                                    <i class="fas fa-trash-alt me-1"></i> លុប
+                                                </button>
+                                            </form>
+                                        </div>
+
+                                        <div class="modal fade text-start" id="editRoleModal{{ r.role_id }}" tabindex="-1">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content shadow-lg border-0">
+                                                    <form action="/edit_role/{{ r.role_id }}" method="POST">
+                                                        <div class="modal-header-clean d-flex justify-content-between align-items-center">
+                                                            <h5 class="modal-title fw-bold text-dark mb-0"><i class="fas fa-edit text-warning me-2"></i> កែប្រែព័ត៌មានតួនាទី</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body p-4 bg-white">
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-bold text-dark small">ឈ្មោះតួនាទី: *</label>
+                                                                <input type="text" class="form-control" name="name" value="{{ r.name }}" required>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-bold text-dark small">ការពិពណ៌នា:</label>
+                                                                <textarea class="form-control" name="description" rows="4">{{ r.description }}</textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer border-top-0 pb-4 px-4 bg-white">
+                                                            <button type="button" class="btn btn-light border px-4 rounded-pill fw-bold" data-bs-dismiss="modal">បោះបង់</button>
+                                                            <button type="submit" class="btn btn-success px-5 rounded-pill fw-bold shadow-sm"><i class="fas fa-save me-1"></i> រក្សាទុក</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5">
+                                        <div class="d-inline-flex justify-content-center align-items-center bg-light rounded-circle mb-3" style="width: 80px; height: 80px;">
+                                            <i class="fas fa-shield-alt fa-2x text-muted opacity-50"></i>
+                                        </div>
+                                        <h6 class="fw-bold text-secondary">មិនទាន់មានទិន្នន័យតួនាទីទេ</h6>
+                                        <p class="small text-muted mb-0">សូមប្រើប្រាស់ទម្រង់ខាងឆ្វេង ដើម្បីបង្កើតតួនាទីថ្មី។</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

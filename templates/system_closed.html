@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ប្រព័ន្ធបិទ | EPS System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @font-face { font-family: 'Khmer OS Siemreap'; src: local('Khmer OS Siemreap'); }
+        body { background-color: #f1f5f9; font-family: 'Khmer OS Siemreap', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .closed-card { background: white; border-radius: 16px; padding: 40px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 500px; }
+        .icon-box { font-size: 6rem; color: #ef4444; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="closed-card">
+        <i class="fas fa-lock icon-box"></i>
+        <h3 class="fw-bold text-dark mb-3">ប្រព័ន្ធផ្អាកដំណើរការ</h3>
+        <p class="text-secondary fs-5">{{ message }}</p>
+        <a href="/candidate/logout" class="btn btn-primary rounded-pill px-4 py-2 mt-3 fw-bold">ត្រលប់ទៅទំព័រដើម</a>
+    </div>
+</body>
+</html>

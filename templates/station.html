@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>បញ្ជរស្កេនវត្តមាន - EPS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Moul&family=Siemreap&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-blue: #02305e;
+            --cyan-accent: #00f2fe;
+            --bg-color: #f4f7fb;
+            --card-shadow: 0 10px 30px rgba(2, 48, 94, 0.08);
+            --warning-orange: #f59e0b; /* ពណ៌ទឹកក្រូចសម្រាប់ Retry */
+        }
+
+        body { 
+            font-family: 'Siemreap', sans-serif; background-color: var(--bg-color); 
+            color: #333a40; margin: 0; padding: 0; min-height: 100vh; display: flex; flex-direction: column;
+        }
+
+        /* ---------------- Navbar ---------------- */
+        .navbar-custom { 
+            background-color: var(--primary-blue); padding: 12px 20px; 
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100;
+        }
+
+        .station-selector { 
+            background-color: rgba(255,255,255,0.1); color: #ffffff; border: 1px solid rgba(255,255,255,0.3); 
+            border-radius: 12px; padding: 8px 15px; font-weight: bold; outline: none; font-size: 0.95rem; cursor: pointer; transition: 0.3s;
+        }
+        .station-selector:focus { background-color: #fff; color: var(--primary-blue); }
+        .station-selector option { background-color: #ffffff; color: var(--primary-blue); }
+
+        /* ---------------- Layout (Desktop & Mobile) ---------------- */
+        .main-container {
+            flex-grow: 1; padding: 20px; display: grid; grid-template-columns: 1.2fr 1fr; 
+            gap: 20px; max-width: 1300px; width: 100%; margin: 0 auto; align-items: stretch;
+        }
+
+        @media (max-width: 992px) {
+            .main-container { grid-template-columns: 1fr; padding: 15px; }
+            .mobile-hide { display: none !important; }
+        }
+
+        .clean-card {
+            background: #ffffff; border-radius: 20px; box-shadow: var(--card-shadow); 
+            border: 1px solid #e2e8f0; padding: 20px; display: flex; flex-direction: column;
+            position: relative; overflow: hidden;
+        }
+
+        /* ---------------- Left Panel: Camera ---------------- */
+        .camera-outer-wrapper {
+            position: relative; width: 100%; aspect-ratio: 3/4; max-height: 65vh;
+            background-color: #0f172a; border-radius: 20px; overflow: hidden; 
+            display: flex; justify-content: center; align-items: center;
+            padding: 4px; box-shadow: inset 0 10px 30px rgba(0,0,0,0.5);
+            transition: box-shadow 0.3s;
+        }
+
+        .tech-ring {
+            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: conic-gradient(from 0deg, transparent 70%, var(--cyan-accent) 100%);
+            animation: spin 1.2s linear infinite; z-index: 0; display: none;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .camera-mask {
+            position: relative; width: 100%; height: 100%; border-radius: 16px; 
+            overflow: hidden; z-index: 1; background: #000;
+        }
+
+        #webcam { width: 100%; height: 100%; object-fit: cover; display: none; }
+
+        .cam-status-pill {
+            position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.6); color: #fff;
+            padding: 6px 15px; border-radius: 30px; font-size: 0.8rem; font-weight: bold; z-index: 15;
+            backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* ⚡️ ស៊ុមការ៉េ (QR Guide) ⚡️ */
+        .qr-square-guide {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 250px; height: 250px; border: 4px solid rgba(255, 255, 255, 0.8);
+            border-radius: 24px; z-index: 10; display: none; transition: all 0.3s;
+            box-shadow: 0 0 0 4000px rgba(0,0,0,0.4);
+        }
+        .qr-square-guide.active {
+            border-color: #10b981; box-shadow: 0 0 0 4000px rgba(0,0,0,0.5), inset 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+
+        /* ⚡️ ស៊ុមពងក្រពើ (Face Guide) ⚡️ */
+        .face-oval-guide {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 55%; height: 75%; border: 4px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 50%; z-index: 10; display: none; transition: all 0.3s;
+        }
+        .face-oval-guide.active {
+            border-color: var(--cyan-accent); animation: pulseOval 0.8s infinite alternate ease-in-out;
+        }
+        /* ពណ៌រង្វង់ពេល Retry */
+        .face-oval-guide.warning { border-color: var(--warning-orange); animation: pulseOvalWarning 0.8s infinite alternate ease-in-out; }
+
+        @keyframes pulseOval {
+            0% { transform: translate(-50%, -50%) scale(0.98); opacity: 0.6; }
+            100% { transform: translate(-50%, -50%) scale(1.03); opacity: 1; box-shadow: inset 0 0 25px rgba(0, 242, 254, 0.3); }
+        }
+        @keyframes pulseOvalWarning {
+            0% { transform: translate(-50%, -50%) scale(0.98); opacity: 0.6; }
+            100% { transform: translate(-50%, -50%) scale(1.03); opacity: 1; box-shadow: inset 0 0 25px rgba(245, 158, 11, 0.3); }
+        }
+
+        .laser-scanner {
+            position: absolute; left: 0; width: 100%; height: 80px;
+            background: linear-gradient(to bottom, rgba(0, 242, 254, 0) 0%, rgba(0, 242, 254, 0.4) 100%);
+            border-bottom: 3px solid var(--cyan-accent); 
+            animation: sweepLaser 1s ease-in-out infinite alternate; z-index: 12; display: none;
+        }
+        .laser-scanner.warning { background: linear-gradient(to bottom, rgba(245, 158, 11, 0) 0%, rgba(245, 158, 11, 0.4) 100%); border-bottom-color: var(--warning-orange); }
+        
+        @keyframes sweepLaser { 0% { top: -10%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+
+        .success-overlay {
+            position: absolute; inset: 0; background: rgba(255, 255, 255, 0.9); z-index: 20; 
+            display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; pointer-events: none;
+        }
+        .success-overlay.active { opacity: 1; pointer-events: all;}
+        .success-icon-cam { font-size: 8rem; color: #10b981; transform: scale(0.3); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .success-overlay.active .success-icon-cam { transform: scale(1); }
+
+        .cam-bottom-bar {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; 
+            margin-top: 15px; text-align: center; font-weight: bold; color: var(--primary-blue);
+        }
+
+        /* ---------------- ប្រអប់វាយលេខកូដបម្រុង សម្រាប់ Mobile ---------------- */
+        .mobile-fallback-wrapper { margin-top: 12px; transition: all 0.3s; }
+        .mobile-input-group { display: flex; gap: 8px; background: #ffffff; border: 2px dashed #cbd5e1; padding: 8px; border-radius: 14px; }
+        .mobile-input-group:focus-within { border-color: var(--cyan-accent); }
+        
+        /* ---------------- Right Panel: Control & Input ---------------- */
+        .right-panel-header { text-align: center; margin-bottom: 20px; }
+        .right-panel-header h4 { color: var(--primary-blue); font-family: 'Moul', serif; font-size: 1.2rem; margin-bottom: 5px;}
+        
+        .right-panel-content { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+
+        .barcode-graphic { font-size: 6rem; color: #e2e8f0; margin-bottom: 20px; }
+        .input-card-area { width: 100%; max-width: 350px; }
+        
+        .custom-input-group { border: 2px dashed #94a3b8; border-radius: 16px; padding: 10px; background: #ffffff; transition: all 0.3s; }
+        .custom-input-group:focus-within { border-color: var(--cyan-accent); box-shadow: 0 4px 20px rgba(0, 242, 254, 0.15); }
+
+        .form-control-ubt {
+            border-radius: 12px; padding: 12px; border: 1px solid #e2e8f0; font-family: 'Courier New', Courier, monospace; 
+            font-size: 1.15rem; font-weight: 900; text-align: center; width: 100%; margin-bottom: 10px; outline: none; letter-spacing: 1px;
+        }
+        .form-control-ubt:focus { border-color: var(--cyan-accent); background: #f8fafc; }
+
+        .btn-cyan {
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: white; border: none; border-radius: 12px;
+            padding: 12px; width: 100%; font-weight: bold; font-size: 1.05rem; transition: all 0.3s; display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        .btn-cyan:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0, 242, 254, 0.3); color: white;}
+        .btn-cyan:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .fade-slide-up { animation: fadeSlideUp 0.3s ease-out forwards; }
+        @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ---------------- Result View ---------------- */
+        #resultView { display: none; width: 100%; text-align: center; }
+        .result-photo { width: 150px; height: 190px; object-fit: cover; border-radius: 16px; border: 4px solid white; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-bottom: 15px; background: #f8fafc; }
+        .result-icon { font-size: 6rem; margin-bottom: 15px; }
+        .result-name { font-size: 1.6rem; font-weight: 900; color: #0f172a; margin-bottom: 5px; text-transform: uppercase; }
+        .result-id { font-size: 1.1rem; color: #0083B0; font-weight: bold; background: #eff6ff; padding: 5px 15px; border-radius: 30px; border: 1px solid #bfdbfe; display: inline-block; margin-bottom: 15px;}
+        .result-msg-box { padding: 12px; border-radius: 12px; font-weight: bold; font-size: 1rem; display: inline-block;}
+        .msg-success { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+        .msg-error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+        
+        .border-error-pulse { border-color: #ef4444 !important; box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.2) !important; }
+        .border-warning-pulse { border-color: var(--warning-orange) !important; box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.2) !important; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar-custom">
+    <a class="btn btn-outline-light btn-sm fw-bold rounded-pill px-3" href="/dashboard"><i class="fas fa-arrow-left me-1"></i> ថយក្រោយ</a>
+    <select id="station-selector" class="station-selector" onchange="onStationChange()">
+        <option value="">-- ជ្រើសរើសបញ្ជរ --</option>
+        <option value="skill_test">⚡️ ប្រឡងតេស្តជំនាញ</option>
+        <option value="health_reg">🏥 ចុះឈ្មោះពិនិត្យសុខភាព</option>
+        <option value="health_check">🩺 ពិនិត្យសុខភាព</option>
+        <option value="job_app">📁 ការដាក់ពាក្យ</option>
+        <option value="contract">📝 ចុះកិច្ចសន្យា</option>
+        <option value="departure">✈️ ចេញដំណើរ</option>
+    </select>
+</nav>
+
+<div class="main-container">
+    
+    <div class="clean-card">
+        <div class="camera-outer-wrapper" id="cameraOuter">
+            <div class="tech-ring" id="techRing"></div>
+
+            <div class="camera-mask" id="cameraMask">
+                <div class="cam-status-pill" id="camStatus"><i class="fas fa-video-slash me-1"></i> បិទ</div>
+                
+                <div class="qr-square-guide" id="qrGuide"></div>
+                <div class="face-oval-guide" id="faceGuide"></div>
+                <div class="laser-scanner" id="laserScanner"></div>
+                
+                <div class="text-center text-muted position-absolute top-50 start-50 translate-middle w-100" id="cameraPlaceholder">
+                    <i class="fas fa-user-lock fa-4x mb-3"></i>
+                    <h5 class="fw-bold mt-2">ប្រព័ន្ធមិនទាន់បើកដំណើរការទេ</h5>
+                </div>
+
+                <video id="webcam" autoplay playsinline muted></video>
+                <canvas id="canvas" style="display: none;"></canvas>
+
+                <div class="success-overlay" id="successOverlay">
+                    <i class="fas fa-check-circle success-icon-cam"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="cam-bottom-bar" id="camBottomBar">
+            <i class="fas fa-info-circle me-1"></i> សូមជ្រើសរើសបញ្ជរនៅខាងលើ
+        </div>
+
+        <div class="mobile-fallback-wrapper d-lg-none" id="mobileFallbackWrapper" style="display: none;">
+            <div class="mobile-input-group">
+                <input type="text" id="mobile-app-no" class="form-control-ubt mb-0 py-2" style="font-size: 1rem;" placeholder="បញ្ចូលលេខដោយដៃ បើស្កេនមិនជាប់..." maxlength="16" onkeypress="if(event.key==='Enter') triggerMobileManualScan()">
+                <button class="btn-cyan w-auto px-4 mb-0" onclick="triggerMobileManualScan()">
+                    <i class="fas fa-arrow-right"></i> ទៅមុខ
+                </button>
+            </div>
+        </div>
+        
+        <button class="btn btn-primary w-100 py-3 mt-3 rounded-4 fw-bold fs-5 shadow-sm d-lg-none" id="btnStartScanMobile" onclick="startCamera()" disabled>
+            <i class="fas fa-power-off me-2"></i> បើកប្រព័ន្ធស្កេន
+        </button>
+    </div>
+
+    <div class="clean-card mobile-hide" id="rightPanelCard">
+        <div class="right-panel-header">
+            <h4 id="station-title">បញ្ជរស្កេនរួម</h4>
+            <div class="text-muted small fw-bold">UNIVERSAL SCANNING STATION</div>
+        </div>
+        
+        <div class="right-panel-content">
+            <button class="btn btn-primary w-100 py-3 rounded-4 fw-bold fs-5 shadow-sm d-none d-lg-block" id="btnStartScanDesktop" onclick="startCamera()" disabled>
+                <i class="fas fa-power-off me-2"></i> បើកប្រព័ន្ធស្កេន
+            </button>
+
+            <div id="inputView" class="fade-slide-up" style="display: none; width: 100%;">
+                <i class="fas fa-qrcode barcode-graphic"></i>
+                <div class="input-card-area mx-auto">
+                    <span class="input-label">ស្កេន QR / Barcode បេក្ខជន</span>
+                    <div class="custom-input-group">
+                        <input type="text" id="app-no" class="form-control-ubt" placeholder="00220..." maxlength="16" onkeypress="handleEnter(event)">
+                        <button class="btn-cyan" onclick="triggerDesktopFaceVerify()" id="btnVerify">
+                            <i class="fas fa-camera"></i> ផ្ទៀងផ្ទាត់មុខ ១:១
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="resultView" class="fade-slide-up" style="display: none;">
+                <i class="fas fa-times-circle result-icon text-danger" id="resultIcon" style="display: none;"></i>
+                <img src="" class="result-photo" id="candidatePhoto" style="display: none;">
+                <h2 class="result-name" id="resultName">ឈ្មោះបេក្ខជន</h2>
+                <div class="result-id" id="resultId">00220...</div><br>
+                <div class="result-msg-box success" id="resultMessage">អនុញ្ញាតឱ្យចូល</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const getIsMobile = () => window.matchMedia("(max-width: 992px)").matches;
+
+    const video = document.getElementById('webcam');
+    const canvas = document.getElementById('canvas');
+    const camStatus = document.getElementById('camStatus');
+    const cameraMask = document.getElementById('cameraMask');
+    const techRing = document.getElementById('techRing');
+    
+    const qrGuide = document.getElementById('qrGuide');
+    const faceGuide = document.getElementById('faceGuide');
+    const laserScanner = document.getElementById('laserScanner');
+    
+    const successOverlay = document.getElementById('successOverlay');
+    const cameraPlaceholder = document.getElementById('cameraPlaceholder');
+    const camBottomBar = document.getElementById('camBottomBar');
+    
+    const btnStartScanDesktop = document.getElementById('btnStartScanDesktop');
+    const btnStartScanMobile = document.getElementById('btnStartScanMobile');
+    const rightPanelCard = document.getElementById('rightPanelCard');
+    
+    const inputView = document.getElementById('inputView');
+    const appNoInput = document.getElementById('app-no'); 
+    const btnVerify = document.getElementById('btnVerify');
+    
+    const mobileFallbackWrapper = document.getElementById('mobileFallbackWrapper');
+    const mobileAppNoInput = document.getElementById('mobile-app-no');
+    
+    const resultView = document.getElementById('resultView');
+    const resultIcon = document.getElementById('resultIcon');
+    const candidatePhoto = document.getElementById('candidatePhoto');
+    const resultName = document.getElementById('resultName');
+    const resultId = document.getElementById('resultId');
+    const resultMessage = document.getElementById('resultMessage');
+    
+    let isSystemBusy = true; 
+    let isScanningQR = false;
+    let resetTimer = null;
+    let stream = null;
+    
+    // 💡 អថេររាប់ចំនួនដងនៃការថតមុខ (អតិបរមា ៣ ដង)
+    let faceScanAttempts = 0; 
+    const MAX_ATTEMPTS = 3;
+    
+    const successSound = new Audio('/static/sounds/ThanksYou.mp3');
+    const errorSound = new Audio('/static/sounds/Again.mp3'); 
+    
+    let isAudioUnlocked = false;
+    function unlockAudio() {
+        if (isAudioUnlocked) return;
+        successSound.muted = true; errorSound.muted = true;
+        Promise.all([successSound.play().catch(()=>{}), errorSound.play().catch(()=>{})]).then(() => {
+            successSound.pause(); successSound.currentTime = 0; successSound.muted = false;
+            errorSound.pause(); errorSound.currentTime = 0; errorSound.muted = false;
+            isAudioUnlocked = true;
+        });
+        document.removeEventListener('click', unlockAudio); document.removeEventListener('touchstart', unlockAudio);
+    }
+    document.addEventListener('click', unlockAudio); document.addEventListener('touchstart', unlockAudio);
+
+    function onStationChange() {
+        const selector = document.getElementById('station-selector');
+        if (selector.value === "") {
+            document.getElementById('station-title').innerText = "បញ្ជរស្កេនរួម";
+            btnStartScanDesktop.disabled = true; btnStartScanMobile.disabled = true;
+            camBottomBar.innerHTML = '<i class="fas fa-info-circle me-1"></i> សូមជ្រើសរើសបញ្ជរនៅខាងលើ';
+            stopCamera();
+        } else {
+            const stationLabel = selector.options[selector.selectedIndex].text.replace(/^[^\wក-អ]+/, '').trim(); 
+            document.getElementById('station-title').innerText = stationLabel;
+            btnStartScanDesktop.disabled = false; btnStartScanMobile.disabled = false;
+            camBottomBar.innerHTML = '<i class="fas fa-play-circle me-1"></i> ត្រៀមរួចរាល់។ សូមចុចបើកប្រព័ន្ធ';
+        }
+    }
+
+    async function startCamera() {
+        successSound.volume = 0; errorSound.volume = 0;
+        try {
+            successSound.play().then(() => { successSound.pause(); successSound.currentTime = 0; successSound.volume = 1; }).catch(()=>{});
+            errorSound.play().then(() => { errorSound.pause(); errorSound.currentTime = 0; errorSound.volume = 1; }).catch(()=>{});
+        } catch (e) {}
+
+        btnStartScanDesktop.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> កំពុងបើក...';
+        btnStartScanMobile.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> កំពុងបើក...';
+        btnStartScanDesktop.disabled = true; btnStartScanMobile.disabled = true;
+
+        try {
+            await navigator.mediaDevices.getUserMedia({ video: true }); 
+            const isMobileMode = getIsMobile();
+            const videoConstraints = isMobileMode ? { facingMode: "environment", width: { ideal: 1280 } } : { width: { ideal: 1280 } };
+            
+            stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
+            video.srcObject = stream;
+            video.style.transform = isMobileMode ? 'none' : 'scaleX(-1)';
+            
+            cameraPlaceholder.style.display = 'none';
+            video.style.display = 'block';
+            camStatus.innerHTML = '<i class="fas fa-video text-success me-1"></i> ដំណើរការ';
+            
+            btnStartScanDesktop.style.display = 'none'; btnStartScanMobile.style.display = 'none';
+
+            if (isMobileMode) {
+                rightPanelCard.style.display = 'none'; 
+                startMobileQRScanMode(); 
+            } else {
+                rightPanelCard.style.display = 'flex'; 
+                faceGuide.style.display = 'block'; 
+                qrGuide.style.display = 'none';
+                resetUIReadyDesktop();
+            }
+
+        } catch (err) { 
+            camBottomBar.innerHTML = '<i class="fas fa-exclamation-triangle me-1 text-danger"></i> មិនអាចបើកកាមេរ៉ាបានទេ!';
+            btnStartScanDesktop.innerHTML = '<i class="fas fa-power-off me-2"></i> សាកល្បងម្តងទៀត';
+            btnStartScanMobile.innerHTML = '<i class="fas fa-power-off me-2"></i> សាកល្បងម្តងទៀត';
+            btnStartScanDesktop.disabled = false; btnStartScanMobile.disabled = false;
+        }
+    }
+
+    function stopCamera() {
+        if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
+        video.style.display = 'none';
+        faceGuide.style.display = 'none'; qrGuide.style.display = 'none'; 
+        faceGuide.classList.remove('active', 'warning'); qrGuide.classList.remove('active');
+        techRing.style.display = 'none'; laserScanner.style.display = 'none'; cameraPlaceholder.style.display = 'block';
+        camStatus.innerHTML = '<i class="fas fa-video-slash me-1"></i> បិទ';
+        
+        btnStartScanDesktop.style.display = 'block'; btnStartScanMobile.style.display = 'block';
+        btnStartScanDesktop.innerHTML = '<i class="fas fa-power-off me-2"></i> បើកប្រព័ន្ធស្កេន';
+        btnStartScanMobile.innerHTML = '<i class="fas fa-power-off me-2"></i> បើកប្រព័ន្ធស្កេន';
+        
+        inputView.style.display = 'none'; resultView.style.display = 'none';
+        rightPanelCard.style.display = 'flex'; mobileFallbackWrapper.style.display = 'none'; 
+        
+        isSystemBusy = true; isScanningQR = false; faceScanAttempts = 0; clearTimeout(resetTimer);
+    }
+
+    function getCurrentStationType() { return document.getElementById('station-selector').value; }
+    function handleEnter(event) { if (event.key === 'Enter') { event.preventDefault(); triggerDesktopFaceVerify(); } }
+
+    // ==========================================
+    // 📱 Mobile Flow
+    // ==========================================
+    function startMobileQRScanMode() {
+        isScanningQR = true; isSystemBusy = false; faceScanAttempts = 0; // Reset count
+        
+        successOverlay.classList.remove('active');
+        cameraMask.classList.remove('border-error-pulse', 'border-warning-pulse');
+        laserScanner.classList.remove('warning');
+        
+        if (getIsMobile()) rightPanelCard.style.display = 'none';
+        
+        faceGuide.style.display = 'none'; faceGuide.classList.remove('active', 'warning');
+        qrGuide.style.display = 'block'; qrGuide.classList.remove('active');
+        
+        mobileFallbackWrapper.style.display = 'block';
+        mobileAppNoInput.value = ''; mobileAppNoInput.disabled = false;
+        
+        camBottomBar.innerHTML = '<i class="fas fa-qrcode text-primary me-1"></i> សូមតម្រង់កាមេរ៉ាស្កេន QR របស់បេក្ខជន';
+        requestAnimationFrame(tickQRScan);
+    }
+
+    function tickQRScan() {
+        if (!isScanningQR || video.readyState !== video.HAVE_ENOUGH_DATA) {
+            if(isScanningQR) requestAnimationFrame(tickQRScan); return;
+        }
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        
+        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+
+        if (code && code.data.trim().length >= 8) {
+            proceedToMobileFaceScan(code.data.trim());
+        } else {
+            requestAnimationFrame(tickQRScan);
+        }
+    }
+
+    function triggerMobileManualScan() {
+        const manualCode = mobileAppNoInput.value.trim();
+        if (manualCode.length < 8) { mobileAppNoInput.focus(); return; }
+        proceedToMobileFaceScan(manualCode);
+    }
+
+    function proceedToMobileFaceScan(extractedCode) {
+        isScanningQR = false; mobileFallbackWrapper.style.display = 'none'; 
+        qrGuide.classList.add('active'); 
+        
+        setTimeout(() => {
+            qrGuide.style.display = 'none';
+            faceGuide.style.display = 'block'; faceGuide.classList.add('active');
+            camBottomBar.innerHTML = `<i class="fas fa-user-circle text-primary me-1"></i> លេខ៖ <span class="text-dark">${extractedCode}</span> - កំពុងថតមុខ...`;
+            
+            setTimeout(() => { executeFaceVerification(extractedCode); }, 1500);
+        }, 600); 
+    }
+
+    // ==========================================
+    // 💻 Desktop Flow
+    // ==========================================
+    function triggerDesktopFaceVerify() {
+        const appNo = appNoInput.value.trim();
+        if (appNo.length < 8) { appNoInput.focus(); return; }
+        if (isSystemBusy) return;
+        faceScanAttempts = 0; // Reset count ពេលបាញ់កូដថ្មី
+        executeFaceVerification(appNo);
+    }
+
+    // ==========================================
+    // 🚀 API Call & Retry Logic (មានប្រព័ន្ធហាមឃាត់ Cache)
+    // ==========================================
+    async function executeFaceVerification(appNo) {
+        clearTimeout(resetTimer); 
+        isSystemBusy = true; appNoInput.disabled = true; btnVerify.disabled = true;
+        faceScanAttempts++; // តម្លើងចំនួនដងនៃការស្កេន
+        
+        // 💡 ដូរពណ៌ UX បើជាការ Retry
+        if (faceScanAttempts > 1) {
+            camBottomBar.innerHTML = `<i class="fas fa-sync fa-spin text-warning me-1"></i> ព្យាយាមលើកទី ${faceScanAttempts}/3: សូមកែសម្រួលផ្ទៃមុខ...`;
+            faceGuide.classList.remove('active'); faceGuide.classList.add('warning');
+            laserScanner.classList.add('warning');
+            cameraMask.classList.add('border-warning-pulse');
+        } else {
+            camBottomBar.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> កំពុងផ្ទៀងផ្ទាត់មុខបេក្ខជន ${appNo}...`;
+            faceGuide.classList.remove('warning'); faceGuide.classList.add('active');
+            laserScanner.classList.remove('warning');
+            cameraMask.classList.remove('border-warning-pulse');
+        }
+        
+        if(!getIsMobile()) btnVerify.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        techRing.style.display = 'block'; laserScanner.style.display = 'block'; 
+
+        const targetWidth = 640; const scale = targetWidth / video.videoWidth; const targetHeight = video.videoHeight * scale;
+        canvas.width = targetWidth; canvas.height = targetHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, targetWidth, targetHeight);
+
+        try {
+            const minimumDelay = new Promise(resolve => setTimeout(resolve, 800));
+            
+            // 💡 [ចំណុចបន្ថែមថ្មី] បន្ថែម Headers ការពារ Cache កុំឱ្យវាយកទិន្នន័យចាស់មកបង្ហាញ
+            const apiCall = fetch('/api/identify_biometrics', {
+                method: 'POST', 
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                },
+                cache: 'no-store',
+                body: JSON.stringify({ image: canvas.toDataURL('image/jpeg', 0.6), station_type: getCurrentStationType(), application_no: appNo })
+            }).then(res => res.json());
+
+            const [data] = await Promise.all([apiCall, minimumDelay]);
+
+            if (data.status === 'success' && data.match) {
+                // ជោគជ័យ
+                techRing.style.display = 'none'; faceGuide.classList.remove('active', 'warning'); laserScanner.style.display = 'none';
+                cameraMask.classList.remove('border-warning-pulse');
+                
+                successSound.currentTime = 0; successSound.play().catch(e=>{});
+                // 💡 [ចំណុចបន្ថែមថ្មី] បន្ថែម Timestamp ទៅចុងរូបភាព ដើម្បីបង្ខំឱ្យ Browser ទាញយករូបថ្មីជានិច្ច
+                showSuccessState(data.candidate, `អនុញ្ញាតឱ្យចូល (${data.percent}%)`);
+                appNoInput.value = '';
+                
+                resetTimer = setTimeout(() => { getIsMobile() ? startMobileQRScanMode() : resetUIReadyDesktop(); }, 2000); 
+            
+            } else {
+                // 🔴 បរាជ័យ: ត្រួតពិនិត្យថាគ្រប់ ៣ដងឬនៅ?
+                if (faceScanAttempts < MAX_ATTEMPTS) {
+                    // បន្តព្យាយាមថតម្តងទៀត (Auto Retry) បន្ទាប់ពីសម្រាក ១ វិនាទី
+                    errorSound.currentTime = 0; errorSound.play().catch(e=>{});
+                    setTimeout(() => { executeFaceVerification(appNo); }, 1500);
+                } else {
+                    // 🔴 គ្រប់ ៣ដងហើយ នៅតែមិនស្គាល់ -> បោះបង់!
+                    techRing.style.display = 'none'; faceGuide.classList.remove('active', 'warning'); laserScanner.style.display = 'none';
+                    cameraMask.classList.remove('border-warning-pulse');
+                    
+                    errorSound.currentTime = 0; errorSound.play().catch(e=>{});
+                    showErrorState("បដិសេធ!", data.message || "មុខមិនត្រឹមត្រូវ ៣ដង! សូមស្កេន QR ឡើងវិញ", appNo);
+                    
+                    appNoInput.select();
+                    resetTimer = setTimeout(() => { getIsMobile() ? startMobileQRScanMode() : resetUIReadyDesktop(); }, 3500);
+                }
+            }
+        } catch(e) { 
+            // 🔴 ដាច់អ៊ីនធឺណិត ក៏បោះបង់ដែរ
+            techRing.style.display = 'none'; faceGuide.classList.remove('active', 'warning'); laserScanner.style.display = 'none';
+            cameraMask.classList.remove('border-warning-pulse');
+            showErrorState("បរាជ័យ!", "ដាច់ការតភ្ជាប់អ៊ីនធឺណិត", appNo);
+            resetTimer = setTimeout(() => { getIsMobile() ? startMobileQRScanMode() : resetUIReadyDesktop(); }, 3000);
+        }
+    }
+
+    function showSuccessState(candidate, message) {
+        cameraMask.classList.remove('border-error-pulse');
+        camBottomBar.innerHTML = `<i class="fas fa-check-circle text-success me-1"></i> ការផ្ទៀងផ្ទាត់ជោគជ័យ`;
+        successOverlay.classList.add('active');
+
+        rightPanelCard.style.display = 'flex'; 
+        inputView.style.display = 'none';
+        
+        resultView.style.animation = 'none'; resultView.offsetHeight; 
+        resultView.style.animation = 'fadeSlideUp 0.3s ease-out forwards';
+        resultView.style.display = 'block';
+        
+        resultIcon.style.display = 'none';
+        candidatePhoto.style.display = 'inline-block';
+        
+        // 💡 [ចំណុចបន្ថែមថ្មី] បង្ខំកុំឱ្យ Browser យករូបចាស់មកបង្ហាញ
+        candidatePhoto.src = candidate.photo_url + '?t=' + new Date().getTime();
+        
+        resultName.innerText = candidate.name_en || '-'; resultId.innerText = candidate.application_no || '-';
+        resultMessage.innerText = message; resultMessage.className = "result-msg-box msg-success";
+    }
+
+    function showErrorState(title, message, appNo) {
+        cameraMask.classList.add('border-error-pulse');
+        camBottomBar.innerHTML = `<i class="fas fa-times-circle text-danger me-1"></i> មិនអនុញ្ញាត`;
+        
+        rightPanelCard.style.display = 'flex'; 
+        inputView.style.display = 'none';
+        
+        resultView.style.animation = 'none'; resultView.offsetHeight; 
+        resultView.style.animation = 'fadeSlideUp 0.3s ease-out forwards';
+        resultView.style.display = 'block';
+        
+        candidatePhoto.style.display = 'none'; resultIcon.style.display = 'inline-block';
+        
+        resultName.innerText = title; resultId.innerText = appNo || "---";
+        resultMessage.innerText = message; resultMessage.className = "result-msg-box msg-error";
+    }
+    
+    function resetUIReadyDesktop() {
+        faceScanAttempts = 0; // Reset
+        cameraMask.classList.remove('border-error-pulse', 'border-warning-pulse'); successOverlay.classList.remove('active'); 
+        laserScanner.classList.remove('warning'); faceGuide.classList.remove('warning');
+        
+        resultView.style.display = 'none'; mobileFallbackWrapper.style.display = 'none';
+        
+        inputView.style.animation = 'none'; inputView.offsetHeight;
+        inputView.style.animation = 'fadeSlideUp 0.3s ease-out forwards';
+        inputView.style.display = 'block';
+        
+        appNoInput.disabled = false; btnVerify.disabled = false;
+        btnVerify.innerHTML = '<i class="fas fa-camera"></i> ផ្ទៀងផ្ទាត់មុខ ១:១';
+        isSystemBusy = false;
+        
+        camBottomBar.innerHTML = '<i class="fas fa-qrcode text-primary me-1"></i> សូមបាញ់ QR/Barcode ឬវាយលេខ UBT';
+        setTimeout(() => { appNoInput.focus(); }, 100);
+    }
+
+</script>
+</body>
+</html>

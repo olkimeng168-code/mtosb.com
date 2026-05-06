@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}គ្រប់គ្រងមូលហេតុបដិសេធ | EPS System{% endblock %}
+{% block page_title %}គ្រប់គ្រងទិន្នន័យយោង (មូលហេតុបដិសេធ){% endblock %}
+
+{% block head %}
+<style>
+    /* 🌟 Premium Card & Table Styling */
+    .premium-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+    .table-hover tbody tr:hover {
+        background-color: #f8fafc;
+        transition: background-color 0.2s ease;
+    }
+
+    /* 🌟 iOS-Style Toggle Switch (ប៊ូតុងទូរស័ព្ទដៃ) */
+    .form-switch .form-check-input {
+        width: 3rem;
+        height: 1.5rem;
+        background-color: #cbd5e1;
+        border: none;
+        border-radius: 2rem;
+        cursor: pointer;
+        transition: background-color 0.3s ease-in-out;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .form-switch .form-check-input:checked {
+        background-color: #10b981; /* ពណ៌បៃតងពេលបើក */
+    }
+    .form-switch .form-check-input:focus {
+        box-shadow: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%28255, 255, 255, 1%29'/%3e%3c/svg%3e");
+    }
+
+    /* 🌟 Premium Action Buttons */
+    .btn-edit-pro {
+        background-color: #eff6ff;
+        color: #3b82f6;
+        border: none;
+        border-radius: 8px;
+        padding: 6px 12px;
+        transition: all 0.2s;
+    }
+    .btn-edit-pro:hover {
+        background-color: #3b82f6;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold text-dark mb-1" style="font-family: 'Khmer OS Siemreap', sans-serif;">បញ្ជីមូលហេតុនៃការបដិសេធពាក្យសុំ</h4>
+            <p class="text-muted small mb-0">គ្រប់គ្រងការបន្ថែម កែប្រែ ឬបិទផ្អាកមូលហេតុ</p>
+        </div>
+        <button class="btn btn-primary fw-bold px-4 py-2 rounded-pill shadow-sm" onclick="openAddModal()">
+            <i class="fas fa-plus-circle me-1"></i> បន្ថែមមូលហេតុថ្មី
+        </button>
+    </div>
+
+    <div class="card premium-card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-secondary small text-uppercase">
+                        <tr>
+                            <th class="py-3 px-4" width="5%">ល.រ</th>
+                            <th class="py-3 px-4" width="40%">មូលហេតុ (ភាសាខ្មែរ)</th>
+                            <th class="py-3 px-4" width="30%">មូលហេតុ (English)</th>
+                            <th class="py-3 px-4 text-center" width="15%">ស្ថានភាព (បើក/បិទ)</th>
+                            <th class="py-3 px-4 text-center" width="10%">សកម្មភាព</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in reasons %}
+                        <tr>
+                            <td class="px-4 fw-bold text-muted">{{ loop.index }}</td>
+                            <td class="px-4 fw-bold text-dark" style="font-family: 'Khmer OS Siemreap', sans-serif;">{{ r.reason_kh }}</td>
+                            <td class="px-4 text-muted">{{ r.reason_en or '---' }}</td>
+                            
+                            <td class="px-4 text-center">
+                                <div class="form-check form-switch d-flex justify-content-center m-0">
+                                    <input class="form-check-input" type="checkbox" role="switch" 
+                                           id="switch_{{ r.id }}" 
+                                           {{ 'checked' if r.is_active else '' }}
+                                           data-id="{{ r.id }}"
+                                           onchange="toggleReasonStatus(this)">
+                                </div>
+                            </td>
+                            
+                            <td class="px-4 text-center">
+                                <button class="btn btn-edit-pro" 
+                                        data-id="{{ r.id }}" 
+                                        data-kh="{{ r.reason_kh }}" 
+                                        data-en="{{ r.reason_en if r.reason_en else '' }}" 
+                                        onclick="openEditModal(this)" 
+                                        title="កែប្រែទិន្នន័យ">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="fas fa-folder-open fa-3x mb-3 opacity-25"></i>
+                                <p class="mb-0">មិនទាន់មានទិន្នន័យនៅឡើយទេ</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="reasonSetupModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header bg-primary text-white border-0 rounded-top-4 p-4">
+                <h5 class="modal-title fw-bold" id="modalTitle"><i class="fas fa-edit me-2"></i> បន្ថែមមូលហេតុថ្មី</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="setupReasonId"> <div class="mb-4">
+                    <label class="form-label fw-bold text-dark small">មូលហេតុ (ភាសាខ្មែរ) <span class="text-danger">*</span></label>
+                    <input type="text" id="setupReasonKh" class="form-control form-control-lg fs-6" placeholder="ឧទាហរណ៍៖ រូបថតមិនច្បាស់..." style="font-family: 'Khmer OS Siemreap', sans-serif;">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark small">មូលហេតុ (ភាសាអង់គ្លេស - ជាជម្រើស)</label>
+                    <input type="text" id="setupReasonEn" class="form-control form-control-lg fs-6" placeholder="Ex: Invalid Photo...">
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0 rounded-bottom-4 p-3">
+                <button type="button" class="btn btn-secondary px-4 fw-bold rounded-pill" data-bs-dismiss="modal">បោះបង់</button>
+                <button type="button" class="btn btn-primary px-5 fw-bold rounded-pill shadow-sm" onclick="saveReasonData()" id="btnSaveReason">
+                    <i class="fas fa-save me-1"></i> រក្សាទុក
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const setupModal = new bootstrap.Modal(document.getElementById('reasonSetupModal'));
+
+    // 🟢 ១. បើក Modal ដើម្បីបញ្ចូលថ្មី (Add)
+    function openAddModal() {
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle me-2"></i> បន្ថែមមូលហេតុថ្មី';
+        document.getElementById('setupReasonId').value = ''; // បញ្ជាក់ថាជាការ Add
+        document.getElementById('setupReasonKh').value = '';
+        document.getElementById('setupReasonEn').value = '';
+        setupModal.show();
+    }
+
+    // 🟢 ២. បើក Modal ដើម្បីកែប្រែ (Edit)
+    function openEditModal(btnElement) {
+        // ទាញយកទិន្នន័យពី data-* របស់ប៊ូតុងដែលបានចុច
+        const id = btnElement.getAttribute('data-id');
+        const kh = btnElement.getAttribute('data-kh');
+        const en = btnElement.getAttribute('data-en');
+
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-pen me-2"></i> កែប្រែទិន្នន័យ';
+        document.getElementById('setupReasonId').value = id; 
+        document.getElementById('setupReasonKh').value = kh;
+        document.getElementById('setupReasonEn').value = en === 'None' ? '' : en;
+        setupModal.show();
+    }
+
+    // 🟢 ៣. បញ្ជូនទិន្នន័យទៅកាន់ Backend (Save API)
+    async function saveReasonData() {
+        const id = document.getElementById('setupReasonId').value;
+        const kh = document.getElementById('setupReasonKh').value.trim();
+        const en = document.getElementById('setupReasonEn').value.trim();
+
+        if (!kh) {
+            alert('សូមបញ្ជាក់មូលហេតុជាភាសាខ្មែរ!');
+            document.getElementById('setupReasonKh').focus();
+            return;
+        }
+
+        const btnSave = document.getElementById('btnSaveReason');
+        btnSave.disabled = true;
+        btnSave.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> កំពុងរក្សាទុក...';
+
+        try {
+            let res = await fetch('/admin/settings/reject_reasons/save', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id: id, reason_kh: kh, reason_en: en })
+            });
+            let result = await res.json();
+            
+            if(result.status === 'success') {
+                location.reload(); // Refresh ដើម្បីបង្ហាញទិន្នន័យថ្មី
+            } else {
+                alert(result.message);
+                btnSave.disabled = false;
+                btnSave.innerHTML = '<i class="fas fa-save me-1"></i> រក្សាទុក';
+            }
+        } catch(e) {
+            alert('មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ប្រព័ន្ធ!');
+            btnSave.disabled = false;
+        }
+    }
+
+    // 🟢 ៤. មុខងារបិទ/បើក ស្ថានភាព (Toggle Switch API)
+    async function toggleReasonStatus(checkboxElement) {
+        // ទាញយក ID ពី data-id របស់ Switch នោះ
+        const id = checkboxElement.getAttribute('data-id');
+        const newStatus = checkboxElement.checked ? 1 : 0;
+        
+        checkboxElement.disabled = true; 
+
+        try {
+            let res = await fetch('/admin/settings/reject_reasons/toggle', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id: id, is_active: newStatus })
+            });
+            let result = await res.json();
+            
+            if(result.status !== 'success') {
+                alert(result.message);
+                checkboxElement.checked = !newStatus; 
+            }
+        } catch(e) {
+            alert('មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ប្រព័ន្ធ!');
+            checkboxElement.checked = !newStatus;
+        } finally {
+            checkboxElement.disabled = false; 
+        }
+    }
+</script>
+{% endblock %}

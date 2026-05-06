@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+    /* 🌟 ការរចនាតារាងទូទៅ (Premium Table Wrapper) */
+    .premium-table-wrapper {
+        border-radius: 12px;
+        overflow: hidden; /* 🔴 ចំណុចសំខាន់៖ ជួយកាត់ជ្រុង Header ពណ៌ខៀវឱ្យកោងស្អាតតាម Wrapper */
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    }
+    
+    .table-premium {
+        margin-bottom: 0;
+        border-collapse: collapse;
+    }
+
+    /* 🔴 ស្តាយ Header ខៀវចាស់ (Navy Blue) ដូចរូបភាព */
+    .table-premium thead th {
+        background-color: #1a365d !important; /* ពណ៌ខៀវចាស់ (Corporate Blue) */
+        color: #ffffff !important;            /* អក្សរពណ៌ស */
+        font-family: 'Khmer OS Siemreap', sans-serif;
+        font-weight: 600;
+        font-size: 0.95rem;
+        padding: 1.2rem 1rem;
+        border: none;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+    
+    /* 🌟 បង្កើត Hover Effect ឱ្យច្បាស់ */
+    .table-premium tbody tr {
+        transition: all 0.2s ease-in-out;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .table-premium tbody tr:hover {
+        background-color: #f1f8ff !important;
+        box-shadow: inset 4px 0 0 0 #3b82f6; 
+    }
+
+    /* 🌟 ការបែងចែកកម្រិតពណ៌ និងគម្លាត (Hierarchy) */
+    .row-level-1 {
+        background-color: #fcfcfc;
+    }
+    .row-level-1 td {
+        padding: 1.2rem 1rem;
+    }
+    .row-level-2 td {
+        padding: 0.8rem 1rem;
+    }
+    .row-level-3 td {
+        padding: 0.6rem 1rem;
+    }
+
+    /* 🌟 ការរុញចូលក្នុង (Indentation) */
+    .indent-2 { padding-left: 3.5rem !important; }
+    .indent-3 { padding-left: 6.5rem !important; }
+
+    /* 🌟 ប៊ូតុង Premium */
+    .btn-action-pro {
+        border-radius: 8px;
+        padding: 6px 10px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: none;
+    }
+    .btn-action-pro:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .btn-edit { background-color: #eff6ff; color: #3b82f6; }
+    .btn-edit:hover { background-color: #3b82f6; color: #fff; }
+    .btn-del { background-color: #fef2f2; color: #ef4444; }
+    .btn-del:hover { background-color: #ef4444; color: #fff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4 mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold text-dark mb-1" style="font-family: 'Khmer OS Siemreap', sans-serif;">
+                <i class="fas fa-sitemap text-primary me-2"></i> គ្រប់គ្រងម៉ឺនុយប្រព័ន្ធ
+            </h4>
+            <p class="text-muted small mb-0">Developer Setup - រៀបចំរចនាសម្ព័ន្ធ និងសិទ្ធិប្រើប្រាស់</p>
+        </div>
+        <button class="btn btn-primary fw-bold px-4 py-2 rounded-pill shadow-sm" onclick="openAddModule()">
+            <i class="fas fa-plus-circle me-1"></i> បន្ថែមម៉ឺនុយថ្មី
+        </button>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-0">
+            <div class="premium-table-wrapper table-responsive">
+                <table class="table table-premium align-middle">
+                    <thead class="align-middle">
+                        <tr>
+                            <th class="ps-4" width="8%">ID</th>
+                            <th width="35%">ឈ្មោះម៉ឺនុយ (Menu Name)</th>
+                            <th width="20%">Module Code</th>
+                            <th width="25%">Route URL</th>
+                            <th class="text-center" width="12%">សកម្មភាព</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for level1 in module_tree %}
+                        <tr class="row-level-1">
+                            <td class="fw-bold text-secondary ps-4">{{ level1.id }}</td>
+                            <td class="fw-bold text-dark fs-6" style="font-family: 'Khmer OS Siemreap', sans-serif;">
+                                <i class="fas fa-folder text-warning me-2 fs-5 align-middle"></i> {{ level1.module_name_kh }}
+                            </td>
+                            <td><span class="badge bg-light text-dark border px-2 py-1">{{ level1.module_code }}</span></td>
+                            <td class="text-muted small">{{ level1.route_url }}</td>
+                            <td class="text-center">
+                                <button class="btn-action-pro btn-edit me-1" 
+                                        data-id="{{ level1.id }}" data-name="{{ level1.module_name_kh }}" data-code="{{ level1.module_code }}"
+                                        data-url="{{ level1.route_url }}" data-parent="" data-perm="{{ level1.permission_name or '' }}"
+                                        onclick="openEditModule(this)" title="កែប្រែ">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                                <button class="btn-action-pro btn-del" data-id="{{ level1.id }}" data-name="{{ level1.module_name_kh }}" onclick="deleteModule(this)" title="លុប">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+
+                            {% for level2 in level1.children %}
+                            <tr class="row-level-2">
+                                <td class="text-muted small ps-4">{{ level2.id }}</td>
+                                <td class="indent-2 text-dark fw-bold"> 
+                                    <i class="fas fa-level-up-alt fa-rotate-90 text-primary me-2 opacity-50"></i> {{ level2.module_name_kh }}
+                                </td>
+                                <td><span class="badge bg-light text-secondary border px-2 py-1">{{ level2.module_code }}</span></td>
+                                <td class="text-primary small">{{ level2.route_url }}</td>
+                                <td class="text-center">
+                                    <button class="btn-action-pro btn-edit me-1" 
+                                            data-id="{{ level2.id }}" data-name="{{ level2.module_name_kh }}" data-code="{{ level2.module_code }}"
+                                            data-url="{{ level2.route_url }}" data-parent="{{ level2.parent_id }}" data-perm="{{ level2.permission_name or '' }}"
+                                            onclick="openEditModule(this)" title="កែប្រែ">
+                                        <i class="fas fa-pen"></i>
+                                    </button>
+                                    <button class="btn-action-pro btn-del" data-id="{{ level2.id }}" data-name="{{ level2.module_name_kh }}" onclick="deleteModule(this)" title="លុប">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            
+                                {% for level3 in level2.children %}
+                                <tr class="row-level-3">
+                                    <td class="text-muted small ps-4">{{ level3.id }}</td>
+                                    <td class="indent-3"> 
+                                        <i class="fas fa-circle text-muted me-2" style="font-size: 6px; vertical-align: middle;"></i> 
+                                        <span class="text-secondary">{{ level3.module_name_kh }}</span>
+                                    </td>
+                                    <td><span class="text-muted small" style="font-family: monospace;">{{ level3.module_code }}</span></td>
+                                    <td class="text-muted small">{{ level3.route_url }}</td>
+                                    <td class="text-center">
+                                        <button class="btn-action-pro btn-edit me-1" 
+                                                data-id="{{ level3.id }}" data-name="{{ level3.module_name_kh }}" data-code="{{ level3.module_code }}"
+                                                data-url="{{ level3.route_url }}" data-parent="{{ level3.parent_id }}" data-perm="{{ level3.permission_name or '' }}"
+                                                onclick="openEditModule(this)" title="កែប្រែ">
+                                            <i class="fas fa-pen"></i>
+                                        </button>
+                                        <button class="btn-action-pro btn-del" data-id="{{ level3.id }}" data-name="{{ level3.module_name_kh }}" onclick="deleteModule(this)" title="លុប">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+
+                            {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addModuleModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-primary text-white border-0 p-4">
+                <h5 class="modal-title fw-bold" id="modalTitle"><i class="fas fa-plus-circle me-2"></i> បន្ថែមម៉ឺនុយថ្មី</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="mId"> 
+                
+                <div class="mb-3">
+                    <label class="fw-bold text-dark small mb-1">ឈ្មោះម៉ឺនុយ (ខ្មែរ)*</label>
+                    <input type="text" id="mName" class="form-control form-control-lg fs-6" required>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold text-dark small mb-1">Module Code* (ឧ. cat_settings)</label>
+                    <input type="text" id="mCode" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold text-dark small mb-1">URL (ឧ. /admin/settings)</label>
+                    <input type="text" id="mUrl" class="form-control" value="#">
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold text-dark small mb-1">Parent (ជ្រើសរើសម៉ឺនុយមេ)</label>
+                    <select id="mParent" class="form-select">
+                        <option value="">-- ជាម៉ឺនុយមេ (Top Level) --</option>
+                        {% for m in all_modules %}
+                        <option value="{{ m.id }}">{{ m.id }} - {{ m.module_name_kh }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <hr class="my-4">
+                <div class="mb-2">
+                    <label class="fw-bold text-dark small mb-1">ការកំណត់សិទ្ធិ (Permission Name)</label>
+                    <input type="text" id="pName" class="form-control" placeholder="ឧ. manage_settings">
+                    <small class="text-muted d-block mt-1"><i class="fas fa-info-circle"></i> ប្រព័ន្ធនឹងបង្កើតសិទ្ធិដោយស្វ័យប្រវត្តិបើអ្នកបំពេញចន្លោះនេះ</small>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0 p-3">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">បោះបង់</button>
+                <button type="button" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm" onclick="saveModule()"><i class="fas fa-save me-1"></i> រក្សាទុក</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let moduleModal;
+
+    document.addEventListener("DOMContentLoaded", function() {
+        moduleModal = new bootstrap.Modal(document.getElementById('addModuleModal'));
+    });
+
+    function openAddModule() {
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle me-2"></i> បន្ថែមម៉ឺនុយថ្មី';
+        document.getElementById('mId').value = '';
+        document.getElementById('mName').value = '';
+        document.getElementById('mCode').value = '';
+        document.getElementById('mUrl').value = '#';
+        document.getElementById('mParent').value = '';
+        document.getElementById('pName').value = '';
+        moduleModal.show();
+    }
+
+    function openEditModule(btnElement) {
+        const id = btnElement.getAttribute('data-id');
+        const name = btnElement.getAttribute('data-name');
+        const code = btnElement.getAttribute('data-code');
+        const url = btnElement.getAttribute('data-url');
+        const parent = btnElement.getAttribute('data-parent');
+        const perm = btnElement.getAttribute('data-perm');
+
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-pen me-2"></i> កែប្រែម៉ឺនុយប្រព័ន្ធ';
+        document.getElementById('mId').value = id;
+        document.getElementById('mName').value = name;
+        document.getElementById('mCode').value = code;
+        document.getElementById('mUrl').value = url;
+        document.getElementById('mParent').value = parent;
+        document.getElementById('pName').value = perm;
+        moduleModal.show();
+    }
+
+    async function saveModule() {
+        const data = {
+            id: document.getElementById('mId').value,
+            module_name_kh: document.getElementById('mName').value,
+            module_code: document.getElementById('mCode').value,
+            route_url: document.getElementById('mUrl').value,
+            parent_id: document.getElementById('mParent').value,
+            permission_name: document.getElementById('pName').value
+        };
+
+        if(!data.module_name_kh || !data.module_code) {
+            alert("សូមបំពេញឈ្មោះ និង Code ឱ្យបានត្រឹមត្រូវ!"); return;
+        }
+
+        try {
+            let res = await fetch('/admin/system_modules/save', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            let result = await res.json();
+            if(result.status === 'success') {
+                location.reload();
+            } else {
+                alert(result.message);
+            }
+        } catch(e) {
+            alert("មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ Server!");
+        }
+    }
+
+    async function deleteModule(btnElement) {
+        const id = btnElement.getAttribute('data-id');
+        const name = btnElement.getAttribute('data-name');
+
+        if(confirm(`តើអ្នកពិតជាចង់លុបម៉ឺនុយ [${name}] នេះមែនទេ?\nបញ្ជាក់៖ វានឹងលុបទិន្នន័យសិទ្ធិដែលពាក់ព័ន្ធទាំងអស់! (មិនអាចទាញមកវិញបានទេ)`)) {
+            try {
+                let res = await fetch(`/admin/system_modules/delete/${id}`, { method: 'POST' });
+                let result = await res.json();
+                if(result.status === 'success') {
+                    location.reload();
+                } else {
+                    alert(result.message);
+                }
+            } catch(e) {
+                alert("មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ Server!");
+            }
+        }
+    }
+</script>
+{% endblock %}

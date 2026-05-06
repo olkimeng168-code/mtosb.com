@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ទម្រង់ពាក្យសុំ | EPS System</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @font-face { font-family: 'Khmer OS Siemreap'; src: local('Khmer OS Siemreap'); }
+        body { background-color: #f4f7fb; font-family: 'Khmer OS Siemreap', sans-serif; color: #334155; padding-bottom: 50px; }
+        
+        .candidate-navbar { background: linear-gradient(135deg, #0b5394, #1a73e8); box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 15px 20px; }
+        .candidate-brand { color: #ffffff; font-weight: 700; font-size: 1.2rem; text-decoration: none; display: flex; align-items: center; }
+        .candidate-brand i { color: #f6b024; margin-right: 10px; font-size: 1.5rem; }
+        .btn-logout { background-color: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 8px 20px; font-weight: bold; transition: 0.3s; text-decoration: none; }
+        .btn-logout:hover { background-color: #dc3545; border-color: #dc3545; color: white; }
+
+        .form-wrapper { max-width: 1050px; margin: 30px auto; padding: 0 15px; }
+
+        .premium-card { background: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); border: 1px solid #e2e8f0; margin-bottom: 25px; padding: 25px; }
+
+        .section-header { display: flex; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f1f5f9; }
+        .icon-wrapper { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-right: 15px; }
+        .icon-blue { background: #eff6ff; color: #2563eb; }
+        .icon-green { background: #f0fdf4; color: #16a34a; }
+        .icon-orange { background: #fff7ed; color: #ea580c; }
+        .icon-purple { background: #fdf4ff; color: #9333ea; }
+        
+        .section-title { font-weight: 700; color: #0f172a; font-size: 1.1rem; margin: 0; }
+
+        .form-label { font-weight: 600; color: #475569; font-size: 0.9rem; margin-bottom: 6px; }
+        .req-star { color: #ef4444; margin-left: 3px; font-weight: bold; }
+        
+        .form-control, .form-select { border-radius: 8px; border: 1px solid #cbd5e1; padding: 10px 14px; font-size: 16px; color: #1e293b; background-color: #f8fafc; }
+        .form-control:focus, .form-select:focus { background-color: #ffffff; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        
+        .locked-input { background-color: #f1f5f9 !important; color: #64748b; font-weight: 600; border: 1px dashed #cbd5e1; pointer-events: none; }
+
+        .photo-display { border: 2px dashed #cbd5e1; border-radius: 12px; height: 180px; width: 135px; display: flex; align-items: center; justify-content: center; margin: 0 auto; background: #f8fafc; overflow: hidden; padding: 4px; }
+        .photo-display img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+
+        .btn-submit { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border: none; border-radius: 50px; padding: 15px 40px; font-size: 1.15rem; font-weight: bold; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); transition: all 0.3s; width: 100%; max-width: 400px; margin: 0 auto; display: block; }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4); color: white; }
+    </style>
+</head>
+<body>
+
+    <nav class="candidate-navbar d-flex justify-content-between align-items-center">
+        <a href="#" class="candidate-brand">
+            <i class="fas fa-graduation-cap"></i> EPS SYSTEM
+        </a>
+        <a href="/candidate/logout" class="btn-logout">
+            <i class="fas fa-sign-out-alt me-2"></i>ចាកចេញ
+        </a>
+    </nav>
+
+    <div class="form-wrapper">
+
+        <div id="flashMessagesContainer">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} rounded-4 shadow-sm mb-4 fw-bold border-0"><i class="fas fa-check-circle me-2"></i>{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <form action="/candidate/submit_application" method="POST" enctype="multipart/form-data" id="applicationForm">
+    
+            <div class="premium-card">
+                <div class="section-header">
+                    <div class="icon-wrapper bg-secondary bg-opacity-10 text-secondary"><i class="fas fa-lock"></i></div>
+                    <h5 class="section-title">ព័ត៌មានផ្ទៀងផ្ទាត់បេក្ខជន</h5>
+                </div>
+                <div class="row g-3">
+                    <div class="col-6 col-md-3"><label class="form-label">លេខរៀងបេក្ខជន</label><input type="text" class="form-control locked-input text-primary" value="{{ candidate.application_no }}" readonly></div>
+                    <div class="col-6 col-md-3"><label class="form-label">ឈ្មោះ (ឡាតាំង)</label><input type="text" class="form-control locked-input text-uppercase" value="{{ candidate.name_en }}" readonly></div>
+                    <div class="col-6 col-md-3"><label class="form-label">ថ្ងៃខែឆ្នាំកំណើត</label><input type="text" class="form-control locked-input" value="{{ candidate.dob }}" readonly></div>
+                    <div class="col-6 col-md-3"><label class="form-label">ភេទ</label><input type="text" class="form-control locked-input" value="{{ candidate.gender }}" readonly></div>
+                    
+                    <div class="col-12 col-md-5"><label class="form-label">ប្រភេទការងារ</label><input type="text" class="form-control locked-input" value="{{ candidate.industry }}" title="{{ candidate.industry }}" style="font-size: 0.9rem;" readonly></div>
+                    <div class="col-4 col-md-3"><label class="form-label">ថ្ងៃប្រឡង</label><input type="text" class="form-control locked-input px-1 text-center" value="{{ candidate.test_date }}" readonly></div>
+                    <div class="col-4 col-md-2"><label class="form-label">ម៉ោងប្រឡង</label><input type="text" class="form-control locked-input px-1 text-center" value="{{ candidate.exam_session }}" readonly></div>
+                    <div class="col-4 col-md-2"><label class="form-label">បន្ទប់ប្រឡង</label><input type="text" class="form-control locked-input text-danger fw-bold px-1 text-center" value="{{ candidate.test_room }}" readonly></div>
+                </div>
+            </div>
+
+            {% if settings.show_personal_info %}
+            <div class="premium-card">
+                <div class="section-header">
+                    <div class="icon-wrapper icon-blue"><i class="fas fa-user"></i></div>
+                    <h5 class="section-title">ព័ត៌មានផ្ទាល់ខ្លួនបេក្ខជន</h5>
+                </div>
+                <div class="row g-4">
+                    <div class="col-md-3 text-center border-end pe-md-4">
+                        <div class="photo-display mb-2">
+                        {% if candidate.uploaded_photo %}
+                            <img src="{{ url_for('static', filename='uploads/' + candidate.uploaded_photo) }}">
+                        {% elif candidate.original_photo_path %}
+                            <img src="{{ url_for('static', filename='uploads/reference_photos/' + candidate.original_photo_path) }}">
+                        {% else %}
+                            <i class="fas fa-user-circle text-secondary opacity-25" style="font-size: 6rem;"></i>
+                        {% endif %}
+                        </div>
+                        <div class="text-muted small fw-bold mt-2">រូបថតពីប្រព័ន្ធ</div>
+                    </div>
+                    
+                    <div class="col-md-9 ps-md-4">
+                        <div class="row g-3">
+                            <div class="col-6 col-md-4"><label class="form-label text-primary">នាមត្រកូល (ខ្មែរ)<span class="req-star">*</span></label><input type="text" class="form-control" name="last_name_kh" id="last_name_kh" oninput="this.value = this.value.replace(/[^\u1780-\u17FF\s]/g, '')" required autofocus></div>
+                            <div class="col-6 col-md-4"><label class="form-label text-primary">នាមខ្លួន (ខ្មែរ)<span class="req-star">*</span></label><input type="text" class="form-control" name="first_name_kh" id="first_name_kh" oninput="this.value = this.value.replace(/[^\u1780-\u17FF\s]/g, '')" required></div>
+                            <div class="col-12 col-md-4"><label class="form-label text-primary">លេខអត្តសញ្ញាណប័ណ្ណ<span class="req-star">*</span></label><input type="tel" class="form-control font-monospace fw-bold" name="id_card_no" id="id_card_no" placeholder="0XXXXXXXXX" oninput="this.value = this.value.replace(/[^0-9]/g, '')" maxlength="9" required></div>
+                            
+                            <div class="col-6 col-md-4"><label class="form-label text-primary">កម្ពស់ (Cm)<span class="req-star">*</span></label><input type="number" step="0.1" class="form-control" name="height" placeholder="ឧ. 170" required></div>
+                            <div class="col-6 col-md-4"><label class="form-label text-primary">ទម្ងន់ (Kg)<span class="req-star">*</span></label><input type="number" step="0.1" class="form-control" name="weight" placeholder="ឧ. 65" required></div>
+                            
+                            <div class="col-12 col-md-4"><label class="form-label text-primary">ស្ថានភាពគ្រួសារ<span class="req-star">*</span></label>
+                                <select class="form-select border-primary" name="marital_status" id="marital_status" onchange="toggleSpouse()" required>
+                                    <option value="">---សូមជ្រើសរើស---</option>
+                                    <option value="Single">នៅលីវ</option><option value="Married">មានគ្រួសារ</option><option value="Divorced">លែងលះ</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-md-4"><label class="form-label text-primary">ទូរស័ព្ទផ្ទាល់ខ្លួន<span class="req-star">*</span></label><input type="tel" class="form-control fw-bold" name="phone_number" id="phone_number" required></div>
+                            <div class="col-12 col-md-4"><label class="form-label text-primary">Email<span class="req-star">*</span></label><input type="email" class="form-control" name="email" id="email" placeholder="example@gmail.com" required></div>
+                            
+                            {% if settings.show_social_media %}
+                            {% if settings.show_fb_link %}
+                            <div class="col-6 col-md-2"><label class="form-label text-primary">Facebook<span class="req-star">*</span></label><input type="url" class="form-control" name="facebook_link" id="facebook_link" placeholder="https://www.facebook.com/..." required></div>
+                            {% endif %}
+                            {% if settings.show_tk_link %}
+                            <div class="col-6 col-md-2"><label class="form-label text-primary">TikTok<span class="req-star">*</span></label><input type="url" class="form-control" name="tiktok_link" id="tiktok_link" placeholder="https://www.tiktok.com/..." required></div>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if settings.show_spouse_info %}
+            <div class="col-12 mt-4 mb-4 d-none" id="spouse_section">
+                <div class="bg-success bg-opacity-10 border border-success border-opacity-50 rounded-4 p-4 pb-4 position-relative shadow-sm">
+                    
+                    <span class="position-absolute top-0 start-0 translate-middle-y ms-4 badge bg-success px-3 py-2 shadow-sm" style="font-size: 0.95rem;">
+                        <i class="fas fa-child text-white me-1"></i> ព័ត៌មានប្តី ឬ ប្រពន្ធ និងកូន
+                    </span>
+                    
+                    <div class="row g-3 mt-1">
+                        {% if settings.show_s_lname %}
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-success">ត្រកូល (ឡាតាំង) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control bg-white border-success border-opacity-25 shadow-sm" name="spouse_last_name" id="spouse_last_name" oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')" placeholder="ឧ. SOK" style="text-transform: uppercase;">
+                            <div class="invalid-feedback">សូមបញ្ចូលត្រកូល។</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if settings.show_s_fname %}
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-success">នាមខ្លួន (ឡាតាំង) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control bg-white border-success border-opacity-25 shadow-sm" name="spouse_first_name" id="spouse_first_name" oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')" placeholder="ឧ. SAN" style="text-transform: uppercase;">
+                            <div class="invalid-feedback">សូមបញ្ចូលនាមខ្លួន។</div>
+                        </div>
+                        {% endif %}
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-success">ថ្ងៃខែឆ្នាំកំណើត <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control bg-white border-success border-opacity-25 shadow-sm" name="spouse_dob" id="spouse_dob">
+                            <div class="invalid-feedback">សូមជ្រើសរើសថ្ងៃខែ។</div>
+                        </div>
+                        
+                        {% if settings.show_s_job %}
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-success">មុខរបរ <span class="text-danger">*</span></label>
+                            <select class="form-select bg-white border-success border-opacity-25 shadow-sm" name="spouse_occupation_id" id="spouse_occupation_id">
+                                <option value="" disabled selected>-- ជ្រើសរើសមុខរបរ --</option>
+                                {% for job in occupations %}
+                                    <option value="{{ job.id }}">{{ job.job_name_kh }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">សូមជ្រើសរើសមុខរបរ។</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if settings.show_s_phone %}
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-success">លេខទូរស័ព្ទ <span class="text-danger">*</span></label>
+                            <div class="input-group shadow-sm" style="border-radius: 8px; overflow: hidden;">
+                                <span class="input-group-text bg-success text-white border-success"><i class="fas fa-phone"></i></span>
+                                <input type="tel" class="form-control bg-white font-monospace border-success border-opacity-25" name="spouse_phone" id="spouse_phone" placeholder="012345678">
+                                <div class="invalid-feedback">បញ្ចូលលេខឱ្យត្រូវ។</div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-success">ចំនួនកូន (សរសេរលេខ) <span class="text-danger">*</span></label>
+                            <div class="input-group shadow-sm" style="border-radius: 8px; overflow: hidden;">
+                                <span class="input-group-text bg-success text-white border-success"><i class="fas fa-baby"></i></span>
+                                <input type="number" class="form-control bg-white border-success border-opacity-25 fw-bold" name="spouse_children_count" id="spouse_children_count" placeholder="ឧ. 2" min="0" value="0">
+                                <div class="invalid-feedback">សូមបញ្ចូលចំនួនកូន។</div>
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="premium-card">
+                <div class="section-header">
+                    <div class="icon-wrapper icon-orange"><i class="fas fa-map-marker-alt"></i></div>
+                    <h5 class="section-title">អាសយដ្ឋានបច្ចុប្បន្ន (បេក្ខជន)</h5>
+                </div>
+                <div class="row g-3">
+                    <div class="col-12 col-md-3">
+                        <label class="form-label text-primary">ខេត្ត / រាជធានី<span class="req-star">*</span></label>
+                        <select class="form-select border-primary" name="province_id" id="c_prov" onchange="fetchLocation(this.value, 'c_dist', 'c_comm', 'c_vill', 'district')" required>
+                            <option value="">---សូមជ្រើសរើស---</option>
+                            {% for p in provinces %}<option value="{{ p.id }}">{{ p.name_kh }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-3"><label class="form-label">ស្រុក / ខណ្ឌ / ក្រុង<span class="req-star">*</span></label><select class="form-select" name="district_id" id="c_dist" onchange="fetchLocation(this.value, 'c_comm', 'c_vill', null, 'commune')" disabled required><option value="">---សូមជ្រើសរើស---</option></select></div>
+                    <div class="col-12 col-md-3"><label class="form-label">ឃុំ / សង្កាត់<span class="req-star">*</span></label><select class="form-select" name="commune_id" id="c_comm" onchange="fetchLocation(this.value, 'c_vill', null, null, 'village')" disabled required><option value="">---សូមជ្រើសរើស---</option></select></div>
+                    <div class="col-12 col-md-3"><label class="form-label">ភូមិ<span class="req-star">*</span></label><select class="form-select" name="village_id" id="c_vill" disabled required><option value="">---សូមជ្រើសរើស---</option></select></div>
+                </div>
+            </div>
+
+            {% if settings.show_parents_info %}
+            <div class="premium-card">
+                <div class="section-header">
+                    <div class="icon-wrapper icon-green"><i class="fas fa-users"></i></div>
+                    <h5 class="section-title">ព័ត៌មានឪពុកម្តាយ</h5>
+                </div>
+                
+               <div class="row g-3 mb-4 border-bottom pb-4">
+                {% if settings.show_f_lname %}
+                <div class="col-6 col-md-3">
+                    <label class="form-label text-primary">ត្រកូលឪពុក(ឡាតាំង)<span class="req-star">*</span></label>
+                    <input type="text" class="form-control text-uppercase" name="father_last_name" required 
+                        oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')">
+                </div>
+                {% endif %}
+                {% if settings.show_f_fname %}
+                <div class="col-6 col-md-3">
+                    <label class="form-label text-primary">ឈ្មោះឪពុក(ឡាតាំង)<span class="req-star">*</span></label>
+                    <input type="text" class="form-control text-uppercase" name="father_first_name" required 
+                        oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')">
+                </div>
+                {% endif %}
+                {% if settings.show_f_status %}
+                <div class="col-12 col-md-2">
+                    <label class="form-label text-primary">ស្ថានភាព<span class="req-star">*</span></label>
+                    <select class="form-select" name="father_status" id="father_status" onchange="toggleParentFields('father')" required>
+                        <option value="">--រើស--</option>
+                        <option value="Alive">រស់</option>
+                        <option value="Deceased">ស្លាប់</option>
+                    </select>
+                </div>
+                {% endif %}
+                {% if settings.show_f_job %}
+                <div class="col-6 col-md-2">
+                    <label class="form-label text-primary">មុខរបរ<span class="req-star">*</span></label>
+                    <select class="form-select" name="father_occupation_id" id="father_occupation_id" required>
+                        <option value="" disabled selected>-- ជ្រើសរើស --</option>
+                        {% for job in occupations %}
+                            <option value="{{ job.id }}">{{ job.job_name_kh }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">សូមជ្រើសរើសមុខរបរ។</div>
+                </div>
+                {% endif %}
+                {% if settings.show_f_phone %}
+                <div class="col-6 col-md-2">
+                    <label class="form-label text-primary">ទូរស័ព្ទ<span class="req-star">*</span></label>
+                    <input type="tel" class="form-control font-monospace" name="father_phone" id="father_phone" required>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="row g-3 mb-4">
+                {% if settings.show_m_lname %}
+                <div class="col-6 col-md-3">
+                    <label class="form-label text-primary">ត្រកូលម្តាយ(ឡាតាំង)<span class="req-star">*</span></label>
+                    <input type="text" class="form-control text-uppercase" name="mother_last_name" required 
+                        oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')">
+                </div>
+                {% endif %}
+                {% if settings.show_m_fname %}
+                <div class="col-6 col-md-3">
+                    <label class="form-label text-primary">ឈ្មោះម្តាយ(ឡាតាំង)<span class="req-star">*</span></label>
+                    <input type="text" class="form-control text-uppercase" name="mother_first_name" required 
+                        oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')">
+                </div>
+                {% endif %}
+                {% if settings.show_m_status %}
+                <div class="col-12 col-md-2">
+                    <label class="form-label text-primary">ស្ថានភាព<span class="req-star">*</span></label>
+                    <select class="form-select" name="mother_status" id="mother_status" onchange="toggleParentFields('mother')" required>
+                        <option value="">--រើស--</option>
+                        <option value="Alive">រស់</option>
+                        <option value="Deceased">ស្លាប់</option>
+                    </select>
+                </div>
+                {% endif %}
+                {% if settings.show_m_job %}
+                <div class="col-6 col-md-2">
+                    <label class="form-label text-primary">មុខរបរ<span class="req-star">*</span></label>
+                    <select class="form-select" name="mother_occupation_id" id="mother_occupation_id" required>
+                        <option value="" disabled selected>-- ជ្រើសរើស --</option>
+                        {% for job in occupations %}
+                            <option value="{{ job.id }}">{{ job.job_name_kh }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">សូមជ្រើសរើសមុខរបរ។</div>
+                </div>
+                {% endif %}
+                {% if settings.show_m_phone %}
+                <div class="col-6 col-md-2">
+                    <label class="form-label text-primary">ទូរស័ព្ទ<span class="req-star">*</span></label>
+                    <input type="tel" class="form-control font-monospace" name="mother_phone" id="mother_phone" required>
+                </div>
+                {% endif %}
+            </div>
+
+                <div class="p-3 bg-light border rounded-4">
+                    <label class="form-label fw-bold text-primary mb-3"><i class="fas fa-home text-muted"></i> អាសយដ្ឋានបច្ចុប្បន្ន (ឪពុកម្តាយ)<span class="req-star">*</span></label>
+                    <div class="row g-2">
+                        {% if settings.show_p_province %}
+                        <div class="col-12 col-md-3"><select class="form-select" name="parent_province_id" onchange="fetchLocation(this.value, 'p_dist', 'p_comm', 'p_vill', 'district')" required><option value="">-- ខេត្ត --</option>{% for p in provinces %}<option value="{{ p.id }}">{{ p.name_kh }}</option>{% endfor %}</select></div>
+                        {% endif %}
+                        {% if settings.show_p_district %}
+                        <div class="col-12 col-md-3"><select class="form-select" name="parent_district_id" id="p_dist" onchange="fetchLocation(this.value, 'p_comm', 'p_vill', null, 'commune')" disabled required><option value="">-- ស្រុក --</option></select></div>
+                        {% endif %}
+                        {% if settings.show_p_commune %}
+                        <div class="col-12 col-md-3"><select class="form-select" name="parent_commune_id" id="p_comm" onchange="fetchLocation(this.value, 'p_vill', null, null, 'village')" disabled required><option value="">-- ឃុំ --</option></select></div>
+                        {% endif %}
+                        {% if settings.show_p_village %}
+                        <div class="col-12 col-md-3"><select class="form-select" name="parent_village_id" id="p_vill" disabled required><option value="">-- ភូមិ --</option></select></div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="premium-card">
+                <div class="section-header">
+                    <div class="icon-wrapper bg-warning bg-opacity-10 text-warning"><i class="fas fa-file-invoice"></i></div>
+                    <h5 class="section-title">លិខិតឆ្លងដែន ធនាគារ និងឯកសារភ្ជាប់</h5>
+                </div>
+                
+                {% if settings.show_passport_info %}
+                <div class="row g-3 mb-4 border-bottom pb-4">
+                    {% if settings.show_pass_no %}
+                    <div class="col-12 col-md-3">
+                        <label class="form-label text-primary">លេខលិខិតឆ្លងដែន<span class="req-star">*</span></label>
+                        <input type="text" class="form-control text-uppercase font-monospace fw-bold" name="passport_no" id="passport_no" placeholder="N00000000" maxlength="9" minlength="9" required>
+                    </div>
+                    {% endif %}
+
+                    {% if settings.show_pass_issue_year %}
+                    <div class="col-4 col-md-3">
+                        <label class="form-label text-primary">ផ្តល់នៅឆ្នាំ<span class="req-star">*</span></label>
+                        <select class="form-select" id="pp_year" required>
+                            <option value="">-ឆ្នាំ-</option>
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    {% if settings.show_pass_issue_month %}
+                    <div class="col-4 col-md-3">
+                        <label class="form-label text-primary">ផ្តល់នៅខែ<span class="req-star">*</span></label>
+                        <select class="form-select" id="pp_month" required>
+                            <option value="">-ខែ-</option>
+                            <option value="01">មករា</option><option value="02">កុម្ភៈ</option><option value="03">មីនា</option><option value="04">មេសា</option>
+                            <option value="05">ឧសភា</option><option value="06">មិថុនា</option><option value="07">កក្កដា</option><option value="08">សីហា</option>
+                            <option value="09">កញ្ញា</option><option value="10">តុលា</option><option value="11">វិច្ឆិកា</option><option value="12">ធ្នូ</option>
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    {% if settings.show_pass_issue_day %}
+                    <div class="col-4 col-md-3">
+                        <label class="form-label text-primary">ផ្តល់នៅថ្ងៃ<span class="req-star">*</span></label>
+                        <select class="form-select" id="pp_day" required>
+                            <option value="">-ថ្ងៃ-</option>
+                        </select>
+                    </div>
+                    {% endif %}
+                    <input type="hidden" name="passport_issue_date" id="passport_issue_date">
+                </div>
+                {% endif %}
+
+                {% if settings.show_bank_info %}
+                <div class="row g-3 mb-4 border-bottom pb-4">
+                    {% if settings.show_bank_name %}
+                    <div class="col-12 col-md-6"><label class="form-label text-primary">ឈ្មោះធនាគារ<span class="req-star">*</span></label><select class="form-select" name="bank_id" required><option value="">---សូមជ្រើសរើស---</option>{% for b in banks %}<option value="{{ b.id }}">{{ b.bank_full_name }}</option>{% endfor %}</select></div>
+                    {% endif %}
+
+                    {% if settings.show_bank_account %}
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-primary">លេខគណនេយ្យធនាគារ<span class="req-star">*</span></label>
+                        <input type="text" class="form-control font-monospace text-success fw-bold" name="bank_account_no" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if settings.show_pass_doc or settings.show_bank_book %}
+                <div class="p-3 bg-light border rounded-3 mt-3">
+                    <div class="row g-3">
+                        {% if settings.show_pass_doc %}
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-bold text-primary">ឯកសារលិខិតឆ្លងដែន<span class="req-star">*</span></label>
+                            <input type="file" class="form-control bg-white" name="passport_file" id="passport_file_upload" accept=".pdf, image/jpeg, image/png, image/jpg" required>
+                            <div class="form-text small">សូមបញ្ចូលឯកសារជាទម្រង់ PDF, JPG, ឬ PNG។</div>
+                        </div>
+                        {% endif %}
+
+                        {% if settings.show_bank_book %}
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-bold text-primary">ឯកសារសៀវភៅធនាគារ<span class="req-star">*</span></label>
+                            <input type="file" class="form-control bg-white" name="bank_book_file" id="bank_book_file" accept=".pdf, image/jpeg, image/png, image/jpg" required>
+                            <div class="form-text small">សូមបញ្ចូលឯកសារជាទម្រង់ PDF, JPG, ឬ PNG។</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="premium-card">
+                <div class="section-header">
+                    <div class="icon-wrapper icon-purple"><i class="fas fa-graduation-cap"></i></div>
+                    <h5 class="section-title">ការអប់រំ និង បទពិសោធន៍ការងារ</h5>
+                </div>
+                
+                <div class="row g-3 mb-4 pb-4 border-bottom">
+            <div class="col-12 col-md-4">
+                <label class="form-label text-primary">កម្រិតសិក្សា <span class="req-star">*</span></label>
+                <select class="form-select" name="education_level_id" required>
+                    <option value="">---សូមជ្រើសរើស---</option>
+                    {% for e in education_levels %}<option value="{{ e.id }}">{{ e.level_name_kh }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-md-8">
+                <div class="row g-3">
+                    
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-primary">សាលាឈ្មោះ(ឡាតាំង)<span class="req-star">*</span></label>
+                        <input type="text" class="form-control text-uppercase" name="khmer_school_name" oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')" required>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-primary">ទីតាំងសាលា(ខេត្ត)<span class="req-star">*</span></label>
+                        <select class="form-select" name="khmer_school_province_id" required>
+                            <option value="">-- ជ្រើសរើស --</option>
+                            {% for p in provinces %}<option value="{{ p.id }}">{{ p.name_kh }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-primary">សាលារៀនភាសាកូរ៉េឈ្មោះ(ឡាតាំង)<span class="req-star">*</span></label>
+                        <input type="text" class="form-control text-uppercase" name="korean_school_name" oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')" required>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-primary">ទីតាំងសាលាកូរ៉េ (ខេត្ត)<span class="req-star">*</span></label>
+                        <select class="form-select" name="korean_school_province_id" required>
+                            <option value="">-- ជ្រើសរើស --</option>
+                            {% for p in provinces %}<option value="{{ p.id }}">{{ p.name_kh }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+
+                {% if settings.show_korea_experience %}
+                <div class="bg-primary bg-opacity-10 p-3 rounded-3 text-center">
+                    <label class="form-label fw-bold text-dark w-100 mb-2">តើក្នុងរយៈពេល៥ឆ្នាំចុងក្រោយនេះ អ្នកធ្លាប់ទៅធ្វើការនៅកូរ៉េដែរឬទេ?</label>
+                    
+                    {% if settings.show_exp_korea %}
+                    <div class="d-flex justify-content-center gap-4 mb-3">
+                        <div class="form-check"><input class="form-check-input border-primary" type="radio" name="worked_in_korea_last_5yrs" value="1" id="koreaYes" onchange="toggleAlienReg()"><label class="form-check-label text-primary fw-bold" for="koreaYes">ធ្លាប់ (YES)</label></div>
+                        <div class="form-check"><input class="form-check-input border-danger" type="radio" name="worked_in_korea_last_5yrs" value="0" id="koreaNo" onchange="toggleAlienReg()" checked><label class="form-check-label text-danger fw-bold" for="koreaNo">មិនធ្លាប់ (NO)</label></div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if settings.show_exp_alien_card %}
+                    <div class="row justify-content-center">
+                        <div class="col-12 col-md-6">
+                            <input type="tel" class="form-control text-center font-monospace bg-white" name="alien_registration_no" id="alien_reg_no" placeholder="លេខប័ណ្ណសម្គាល់ជនបរទេស..." disabled oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            {% if settings.show_guarantor %}
+            <div class="premium-card">
+                <div class="section-header">
+                    <div class="icon-wrapper bg-dark bg-opacity-10 text-dark"><i class="fas fa-user-shield"></i></div>
+                    <h5 class="section-title">ព័ត៌មានអ្នកធានា (ក្រៅពីប្តី/ប្រពន្ធ)</h5>
+                </div>
+                <div class="row g-3">
+    
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-success">នាមត្រកូល(ឡាតាំង) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control bg-white border-success border-opacity-25 shadow-sm text-uppercase" 
+                            id="guarantor_last_name_en" name="guarantor_last_name_en" required 
+                            oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')">
+                        <div class="invalid-feedback">សូមបញ្ចូលជាអក្សរអង់គ្លេសប៉ុណ្ណោះ។</div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-success">នាមខ្លួន(ឡាតាំង) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control bg-white border-success border-opacity-25 shadow-sm text-uppercase" 
+                            id="guarantor_first_name_en" name="guarantor_first_name_en" required 
+                            oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')">
+                        <div class="invalid-feedback">សូមបញ្ចូលជាអក្សរអង់គ្លេសប៉ុណ្ណោះ។</div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-success">ទំនាក់ទំនងជាមួយអ្នកធានា <span class="text-danger">*</span></label>
+                        <select class="form-select bg-white border-success border-opacity-25 shadow-sm" name="guarantor_relation_id" required>
+                            <option value="" selected disabled>--- សូមជ្រើសរើស ---</option>
+                            {% for rel in relationships %}
+                                <option value="{{ rel.id }}">{{ rel.relation_name_kh }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label class="form-label text-primary">លេខទូរសព្ទអ្នកធានា<span class="req-star">*</span></label>
+                        <input type="tel" 
+                            class="form-control fw-bold" 
+                            name="guarantor_phone" 
+                            id="guarantor_phone" 
+                            required 
+                            maxlength="12" 
+                            placeholder="012 345 6789">
+                        <div class="invalid-feedback">សូមបញ្ចូលលេខទូរសព្ទឱ្យបានគ្រប់ ១០ ខ្ទង់។</div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-success">ទីលំនៅ(ខេត្ត) <span class="text-danger">*</span></label>
+                        <select class="form-select bg-white border-success border-opacity-25 shadow-sm" id="guarantor_province_id" name="guarantor_province_id" required>
+                            <option value="" disabled selected>-- ជ្រើសរើសខេត្ត --</option>
+                            {% for prov in provinces %}
+                                <option value="{{ prov.id }}">{{ prov.name_kh }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">សូមជ្រើសរើសទីលំនៅ។</div>
+                    </div>
+
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if session.get('role_name') == 'Super Admin' %}
+            <!-- 🌟 ប៊ូតុង Auto-Fill សម្រាប់ធ្វើតេស្ត (បង្ហាញតែ Super Admin ប៉ុណ្ណោះ) -->
+            <button type="button" class="btn btn-warning mb-3 w-100 fw-bold rounded-pill text-dark" onclick="autoFillTest()" style="max-width: 400px; margin: 0 auto; display: block; border: 2px dashed #ca8a04;">
+                <i class="fas fa-magic me-2"></i> បំពេញទិន្នន័យស្វ័យប្រវត្តិ (សម្រាប់ Test)
+            </button>
+            {% endif %}
+            
+        
+            <!-- ប៊ូតុងចាស់របស់លោកអ្នក -->
+            
+            <button type="submit" class="btn-submit" id="btnSubmit"><i class="fas fa-paper-plane me-2"></i> បញ្ជូនទិន្នន័យពាក្យសុំ</button>
+
+        </form>
+    </div>
+
+<script>
+    // =======================================================
+    // ១. មុខងារទូទៅ (Functions)
+    // =======================================================
+
+    function toggleSpouse() {
+        let status = document.getElementById('marital_status');
+        let spouseSec = document.getElementById('spouse_section');
+        if (!status || !spouseSec) return; 
+        if (status.value === 'Married') { 
+            spouseSec.classList.remove('d-none'); 
+            ['spouse_last_name', 'spouse_first_name', 'spouse_dob', 'spouse_occupation_id', 'spouse_phone'].forEach(id => {
+                let el = document.getElementById(id);
+                if (el) el.setAttribute('required', 'required');
+            });
+        } else { 
+            spouseSec.classList.add('d-none');
+            ['spouse_last_name', 'spouse_first_name', 'spouse_dob', 'spouse_occupation_id', 'spouse_phone'].forEach(id => {
+                let el = document.getElementById(id);
+                if (el) { el.removeAttribute('required'); el.value = ''; }
+            });
+            if(document.getElementById('spouse_children_count')) document.getElementById('spouse_children_count').value = '0';
+        }
+    }
+
+    function toggleAlienReg() {
+        let isYes = document.getElementById('koreaYes');
+        let alienInput = document.getElementById('alien_reg_no');
+        if (!isYes || !alienInput) return; 
+        if (isYes.checked) { 
+            alienInput.disabled = false; 
+            alienInput.setAttribute('required', 'required');
+        } else { 
+            alienInput.disabled = true; alienInput.value = ''; 
+            alienInput.removeAttribute('required');
+        }
+    }
+
+    function toggleParentFields(parentType) {
+        const statusSelect = document.getElementById(parentType + '_status');
+        const jobSelect = document.getElementById(parentType + '_occupation_id');
+        const phoneInput = document.getElementById(parentType + '_phone');
+
+        if (!statusSelect || !jobSelect || !phoneInput) return;
+
+        if (statusSelect.value === 'Deceased') {
+            jobSelect.removeAttribute('required');
+            phoneInput.removeAttribute('required');
+            jobSelect.value = '';
+            phoneInput.value = '';
+            jobSelect.disabled = true;
+            phoneInput.disabled = true;
+        } else {
+            jobSelect.setAttribute('required', 'required');
+            phoneInput.setAttribute('required', 'required');
+            jobSelect.disabled = false;
+            phoneInput.disabled = false;
+        }
+    }
+
+    async function fetchLocation(sourceVal, targetId, resetId1, resetId2, type) {
+        let targetEl = document.getElementById(targetId);
+        let r1 = resetId1 ? document.getElementById(resetId1) : null;
+        let r2 = resetId2 ? document.getElementById(resetId2) : null;
+
+        if (!targetEl) return;
+        if(r1) { r1.innerHTML = '<option value="">---សូមជ្រើសរើស---</option>'; r1.disabled = true; }
+        if(r2) { r2.innerHTML = '<option value="">---សូមជ្រើសរើស---</option>'; r2.disabled = true; }
+
+        if (!sourceVal) {
+            targetEl.innerHTML = '<option value="">---សូមជ្រើសរើស---</option>';
+            targetEl.disabled = true;
+            return;
+        }
+
+        targetEl.innerHTML = '<option value="">-- កំពុងផ្ទុក... --</option>'; targetEl.disabled = true;
+        let apiURL = type === 'district' ? `/api/get_districts/${sourceVal}` : 
+                     type === 'commune' ? `/api/get_communes/${sourceVal}` : `/api/get_villages/${sourceVal}`;
+
+        try {
+            let res = await fetch(apiURL); 
+            let data = await res.json();
+            targetEl.innerHTML = '<option value="">---សូមជ្រើសរើស---</option>';
+            data.forEach(item => { targetEl.innerHTML += `<option value="${item.id}">${item.name_kh}</option>`; });
+            targetEl.disabled = false;
+        } catch(e) { 
+            targetEl.innerHTML = '<option value="">---បរាជ័យ---</option>'; 
+        }
+    }
+
+    function validateApplicationFormSync() {
+        const requiredElements = document.querySelectorAll('#applicationForm [required]');
+        for (let i = 0; i < requiredElements.length; i++) {
+            let el = requiredElements[i];
+            if (!el.disabled && el.value.trim() === '') {
+                let fieldName = el.previousElementSibling ? el.previousElementSibling.innerText.replace('*', '').trim() : "ព័ត៌មាន";
+                alert(`សូមបំពេញ៖ [${fieldName}] ឱ្យបានគ្រប់គ្រាន់!`);
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.focus();
+                return false; 
+            }
+        }
+
+        // 🌟 1. បង្កើតក្បួន Regex តឹងរ៉ឹង
+        const regexKhmerOnly = /^[\u1780-\u17FF\s]+$/;
+        const regexLatinOnly = /^[a-zA-Z\s]+$/; 
+        const regexIdCard = /^[0-9]{9}$/;
+        const regexPassport = /^N[0-9]{8}$/;
+        const regexPhone = /^0[0-9]{8,9}$/; 
+        
+        // ក្បួនសម្រាប់ Email: ត្រូវតែមាន @ និង . (ឧ. name@domain.com)
+        const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        
+        // ក្បួនសម្រាប់ Facebook: ត្រូវតែមានពាក្យ facebook.com ឬ fb.com និងមានសញ្ញា / ពីក្រោយ
+        const regexFacebook = /^(https?:\/\/)?(www\.)?(facebook\.com|fb\.com|fb\.me)\/.+/i;
+        
+        // ក្បួនសម្រាប់ TikTok: ត្រូវតែមានពាក្យ tiktok.com និងមានសញ្ញា / ពីក្រោយ
+        const regexTikTok = /^(https?:\/\/)?(www\.)?(tiktok\.com|vt\.tiktok\.com)\/.+/i;
+
+        let lastNameKh = document.getElementById('last_name_kh');
+        let firstNameKh = document.getElementById('first_name_kh');
+        let idCardNo = document.getElementById('id_card_no');
+        let passportNo = document.getElementById('passport_no');
+        let phoneNo = document.getElementById('phone_number');
+        let emailField = document.getElementById('email');
+        let fbField = document.getElementById('facebook_link');
+        let tiktokField = document.getElementById('tiktok_link');
+        let height = document.getElementsByName('height')[0];
+        let weight = document.getElementsByName('weight')[0];
+        let maritalStatus = document.getElementById('marital_status');
+
+        // 🌟 2. ចាប់ផ្តើមធ្វើការផ្ទៀងផ្ទាត់ (Validation) ទូទៅ
+        if (lastNameKh && !regexKhmerOnly.test(lastNameKh.value)) { alert("នាមត្រកូល (ខ្មែរ) ត្រូវតែជាអក្សរខ្មែរសុទ្ធ!"); return false; }
+        if (firstNameKh && !regexKhmerOnly.test(firstNameKh.value)) { alert("នាមខ្លួន (ខ្មែរ) ត្រូវតែជាអក្សរខ្មែរសុទ្ធ!"); return false; }
+        if (idCardNo && !regexIdCard.test(idCardNo.value)) { alert("លេខអត្តសញ្ញាណប័ណ្ណត្រូវតែមាន ៩ ខ្ទង់សុទ្ធ!"); return false; }
+        if (passportNo && passportNo.value && !regexPassport.test(passportNo.value)) { alert("លេខលិខិតឆ្លងដែនត្រូវតែផ្តើមដោយអក្សរ 'N' តាមដោយលេខ៨ខ្ទង់!"); return false; }
+        
+        if (phoneNo && phoneNo.value) {
+            let cleanPhone = phoneNo.value.replace(/\s/g, ''); 
+            if (!regexPhone.test(cleanPhone)) { alert("លេខទូរស័ព្ទផ្ទាល់ខ្លួនមិនត្រឹមត្រូវទេ!"); return false; }
+        }
+
+        // 🌟 3. ផ្ទៀងផ្ទាត់ Email និង Link បណ្តាញសង្គមយ៉ាងតឹងរ៉ឹង
+        if (emailField && emailField.value) {
+            if (!regexEmail.test(emailField.value.trim())) {
+                alert("❌ ទម្រង់ Email មិនត្រឹមត្រូវទេ! (ឧទាហរណ៍ដែលត្រូវ៖ example@gmail.com)");
+                emailField.focus();
+                return false;
+            }
+        }
+
+        if (fbField && fbField.value) {
+            if (!regexFacebook.test(fbField.value.trim())) {
+                alert("❌ ទម្រង់ Link Facebook មិនត្រឹមត្រូវទេ!\nសូម Copy លីងគណនីរបស់អ្នកមកដាក់ឱ្យពេញលេញ (ឧ. https://www.facebook.com/username)");
+                fbField.focus();
+                return false;
+            }
+        }
+
+        if (tiktokField && tiktokField.value) {
+            if (!regexTikTok.test(tiktokField.value.trim())) {
+                alert("❌ ទម្រង់ Link TikTok មិនត្រឹមត្រូវទេ!\nសូម Copy លីងគណនីរបស់អ្នកមកដាក់ឱ្យពេញលេញ (ឧ. https://www.tiktok.com/@username)");
+                tiktokField.focus();
+                return false;
+            }
+        }
+
+        if (height && height.value && (height.value < 100 || height.value > 250)) { alert("សូមបញ្ចូលកម្ពស់គិតជា Cm!"); return false; }
+        if (weight && weight.value && (weight.value < 30 || weight.value > 300)) { alert("សូមបញ្ចូលទម្ងន់គិតជា Kg!"); return false; }
+
+        if (maritalStatus && maritalStatus.value === 'Married') {
+            let spouseLastName = document.getElementById('spouse_last_name');
+            let spouseFirstName = document.getElementById('spouse_first_name');
+            let spousePhone = document.getElementById('spouse_phone');
+            let childrenCount = document.getElementById('spouse_children_count');
+
+            if (spouseLastName && spouseLastName.value && !regexLatinOnly.test(spouseLastName.value)) { alert("ត្រកូលប្តី/ប្រពន្ធ ត្រូវតែជាអក្សរឡាតាំង!"); return false; }
+            if (spouseFirstName && spouseFirstName.value && !regexLatinOnly.test(spouseFirstName.value)) { alert("នាមខ្លួនប្តី/ប្រពន្ធ ត្រូវតែជាអក្សរឡាតាំង!"); return false; }
+            if (spousePhone && spousePhone.value) {
+                let cleanSpousePhone = spousePhone.value.replace(/\s/g, '');
+                if (!regexPhone.test(cleanSpousePhone)) { alert("លេខទូរស័ព្ទប្តី/ប្រពន្ធ មិនត្រឹមត្រូវទេ!"); return false; }
+            }
+            if (childrenCount && childrenCount.value < 0) { alert("ចំនួនកូនមិនអាចជាលេខអវិជ្ជមានបានទេ!"); return false; }
+        }
+        return true; 
+    }
+    
+    // =======================================================
+    // 🌟 មុខងារបំពេញទិន្នន័យស្វ័យប្រវត្តិ (Auto-Fill សម្រាប់ Test)
+    // =======================================================
+    function autoFillTest() {
+        // 1. បំពេញប្រអប់ Text ទាំងអស់តាមក្បួន Regex យ៉ាងតឹងរ៉ឹង
+        const textData = {
+            'last_name_kh': 'តេស្ត',
+            'first_name_kh': 'ប្រព័ន្ធ',
+            'id_card_no': '012345678',
+            'height': '170',
+            'weight': '60',
+            'phone_number': '012345678',
+            'email': 'tester@gmail.com',
+            'facebook_link': 'https://www.facebook.com/tester',
+            'tiktok_link': 'https://www.tiktok.com/@tester',
+            
+            'father_last_name': 'តេស្ត',
+            'father_first_name': 'ឪពុក',
+            'father_phone': '012111222',
+            
+            'mother_last_name': 'តេស្ត',
+            'mother_first_name': 'ម្តាយ',
+            'mother_phone': '012333444',
+            
+            'passport_no': 'N12345678',
+            'bank_account_no': '123456789',
+            
+            'khmer_school_name': 'Khmer School',
+            'korean_school_name': 'Korean School',
+            
+            'guarantor_last_name_en': 'TEST',
+            'guarantor_first_name_en': 'GUARANTOR',
+            'guarantor_phone': '012999888'
+        };
+
+        for (const [id, value] of Object.entries(textData)) {
+            let el = document.getElementById(id) || document.getElementsByName(id)[0];
+            if (el) el.value = value;
+        }
+
+        // 2. ជ្រើសរើស Dropdown (Select) ទាំងអស់យក Option ទី១ ដោយស្វ័យប្រវត្តិ
+        const selects = document.querySelectorAll('#applicationForm select');
+        selects.forEach(sel => {
+            if (sel.options.length > 1) {
+                sel.selectedIndex = 1; 
+                sel.dispatchEvent(new Event('change')); // Trigger events
+            }
+        });
+
+        // 3. បញ្ចូលទិន្នន័យ Dummy ចូលទៅក្នុងទីតាំង ភូមិ/ឃុំ/ស្រុក ដើម្បីកុំឱ្យទាក់ API លោត Error Required
+        const dynamicLocations = ['c_dist', 'c_comm', 'c_vill', 'p_dist', 'p_comm', 'p_vill'];
+        dynamicLocations.forEach(id => {
+            let el = document.getElementById(id);
+            if(el) {
+                el.innerHTML = '<option value="1">ទីតាំងតេស្ត (Test)</option>';
+                el.disabled = false;
+                el.value = '1';
+            }
+        });
+        
+        // 4. កំណត់ស្ថានភាពគ្រួសារទៅ "នៅលីវ" ដើម្បីកុំឱ្យទាមទារទិន្នន័យប្រពន្ធ/ប្តី (ងាយស្រួល Test លឿន)
+        let marital = document.getElementById('marital_status');
+        if(marital) { marital.value = 'Single'; marital.dispatchEvent(new Event('change')); }
+
+        // 5. កំណត់ Radio Button ទៅ "មិនធ្លាប់ទៅកូរ៉េ"
+        let koreaNo = document.getElementById('koreaNo');
+        if(koreaNo) { koreaNo.checked = true; koreaNo.dispatchEvent(new Event('change')); }
+
+        // 6. លោតសារបញ្ជាក់
+        alert("✅ ទិន្នន័យស្វ័យប្រវត្តិត្រូវបានបញ្ចូលត្រឹមត្រូវ ១០០%!\n\n⚠️ ចំណាំ៖ ដោយសារច្បាប់សុវត្ថិភាពរបស់ Browser ឯកសារភ្ជាប់ (រូបភាព/PDF) មិនអាច Auto-fill បានទេ។ សូមលោកអ្នក Upload ឯកសារ Passport & Bank ចូលដោយផ្ទាល់ដៃ មុននឹងចុចបញ្ជូន។");
+    }
+    
+    // =======================================================
+    // ២. ការរៀបចំពេល Load Page
+    // =======================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleSpouse(); 
+        toggleAlienReg();
+        toggleParentFields('father');
+        toggleParentFields('mother');
+
+        let yearSelect = document.getElementById('pp_year');
+        let daySelect = document.getElementById('pp_day');
+        if(yearSelect && daySelect) {
+            let currentYear = new Date().getFullYear();
+            for (let i = currentYear; i >= currentYear - 15; i--) yearSelect.options.add(new Option(i, i)); 
+            for (let i = 1; i <= 31; i++) { 
+                let day = i < 10 ? '0' + i : i.toString(); 
+                daySelect.options.add(new Option(day, day)); 
+            }
+        }
+
+        const phoneInputs = document.querySelectorAll('input[name*="phone"]');
+        phoneInputs.forEach(input => {
+            input.addEventListener('input', function (e) {
+                let numbersOnly = e.target.value.replace(/\D/g, '');
+                if (numbersOnly.length > 0 && numbersOnly[0] !== '0') numbersOnly = '0' + numbersOnly;
+                let match = numbersOnly.match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
+                if (match) {
+                    e.target.value = (!match[2] ? match[1] : match[1] + ' ' + match[2] + (match[3] ? ' ' + match[3] : '')).trim();
+                }
+            });
+        });
+
+        const passportInput = document.getElementById('passport_no');
+        if (passportInput) {
+            passportInput.addEventListener('input', function (e) {
+                let val = e.target.value.toUpperCase();
+                if (val.length === 0) return;
+                if (val.charAt(0) !== 'N') { val = 'N' + val.replace(/[^0-9]/g, ''); } 
+                else { val = 'N' + val.substring(1).replace(/[^0-9]/g, ''); }
+                if (val.length > 9) val = val.substring(0, 9);
+                e.target.value = val;
+            });
+        }
+
+        // 🌟 ការកែប្រែ៖ ប្រើប្រាស់ AJAX Fetch ដើម្បី Submit ការពារកុំឱ្យ Reload ទំព័រ
+        let appForm = document.getElementById('applicationForm');
+        if (appForm) {
+            appForm.addEventListener('submit', async function(e) {
+                e.preventDefault(); 
+
+                let y = document.getElementById('pp_year'), m = document.getElementById('pp_month'), d = document.getElementById('pp_day'), ppIssue = document.getElementById('passport_issue_date');
+                if(y && m && d && ppIssue) ppIssue.value = (y.value && m.value && d.value) ? `${y.value}-${m.value}-${d.value}` : '';
+
+                if (!validateApplicationFormSync()) return; 
+
+                let btn = document.getElementById('btnSubmit');
+                let originalBtnText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> កំពុងបញ្ជូន...';
+                btn.disabled = true;
+
+                try {
+                    let isDuplicate = false;
+                    async function checkDB(field, val, nameKhmer) {
+                        if(!val) return false;
+                        let res = await fetch('/api/check_duplicate', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({field: field, value: val}) });
+                        let data = await res.json();
+                        if (data.exists) { alert(`❌ បដិសេធ៖ ${nameKhmer} [${val}] ត្រូវបានប្រើប្រាស់រួចហើយ!`); return true; }
+                        return false;
+                    }
+
+                    let emailInput = document.getElementById('email'), fbInput = document.getElementById('facebook_link'), tiktokInput = document.getElementById('tiktok_link');
+                    if (emailInput && await checkDB('email', emailInput.value, 'អ៊ីមែល')) isDuplicate = true;
+                    else if (fbInput && await checkDB('facebook_link', fbInput.value, 'តំណភ្ជាប់ Facebook')) isDuplicate = true;
+                    else if (tiktokInput && await checkDB('tiktok_link', tiktokInput.value, 'តំណភ្ជាប់ TikTok')) isDuplicate = true;
+
+                    if (isDuplicate) { btn.innerHTML = originalBtnText; btn.disabled = false; return; }
+
+                    // 🌟 ប្រើប្រាស់ Fetch API ជំនួសការ Submit ធម្មតា
+                    let formData = new FormData(appForm);
+                    let response = await fetch(appForm.action, {
+                        method: 'POST',
+                        body: formData,
+                        redirect: 'follow'
+                    });
+
+                    // ប្រសិនបើម៉ាស៊ីនមេបញ្ជូន (Redirect) ទៅទំព័រជោគជ័យ
+                    if (response.url && response.url.includes('application_success')) {
+                        window.location.href = response.url;
+                        return;
+                    }
+
+                    // ប្រសិនបើម៉ាស៊ីនមេលោត Error បញ្ជូនមកទំព័រដើមវិញ យើងស្រង់យកតែសារក្រហមមកបង្ហាញ
+                    let htmlText = await response.text();
+                    let parser = new DOMParser();
+                    let doc = parser.parseFromString(htmlText, 'text/html');
+                    
+                    let alerts = doc.querySelectorAll('.alert');
+                    let flashContainer = document.getElementById('flashMessagesContainer');
+                    
+                    if (flashContainer) {
+                        flashContainer.innerHTML = '';
+                        if (alerts.length > 0) {
+                            // បង្ហាញសារ Error ដោយមិនលុបទិន្នន័យចាស់
+                            alerts.forEach(a => flashContainer.appendChild(a));
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        } else if (htmlText.includes('application_success')) {
+                            // ករណីជោគជ័យ តែប្រព័ន្ធមិនព្រម Redirect
+                            window.location.href = '/candidate/application_success';
+                            return;
+                        } else {
+                            // បង្ហាញសារ Error ទូទៅ
+                            flashContainer.innerHTML = '<div class="alert alert-danger rounded-4 shadow-sm mb-4 fw-bold border-0"><i class="fas fa-exclamation-circle me-2"></i>មានបញ្ហាក្នុងការបញ្ជូនទិន្នន័យ (សូមពិនិត្យមើលឯកសារភ្ជាប់ ឬទិន្នន័យម្តងទៀត)។</div>';
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                    }
+
+                    // បើកប៊ូតុងឱ្យដំណើរការវិញ
+                    btn.innerHTML = originalBtnText; 
+                    btn.disabled = false;
+
+                } catch (error) {
+                    alert('មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ម៉ាស៊ីនមេ! សូមឆែកមើលអ៊ីនធឺណិត។');
+                    btn.innerHTML = originalBtnText; 
+                    btn.disabled = false;
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>

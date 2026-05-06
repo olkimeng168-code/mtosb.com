@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TV Display | MTOSB Queue System</title>
+    
+    {% set sys_slideshow_speed = settings.get('slideshow_speed') or '8000' %}
+    {% set sys_enable_chime = settings.get('enable_chime') or 'true' %}
+    {% set sys_enable_voice = settings.get('enable_voice') or 'true' %}
+    {% set sys_enable_video_audio = settings.get('enable_video_audio') or 'false' %}
+    
+    <meta name="sys-slideshow-speed" content="{{ sys_slideshow_speed }}">
+    <meta name="sys-enable-chime" content="{{ sys_enable_chime }}">
+    <meta name="sys-enable-voice" content="{{ sys_enable_voice }}">
+    <meta name="sys-enable-video-audio" content="{{ sys_enable_video_audio }}">
+
+    <meta name="sys-slides-count" content="{{ slide_images|length if slide_images is defined and slide_images else '0' }}">
+
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='uploads/profiles/MTOSB Big Size.ico') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Moul&family=Siemreap&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* ផ្នែកទូទៅ និងផ្ទៃខាងក្រោយ */
+            --tv-bg: {{ settings.get('tv_bg_color') or '#f1f5f9' }};
+            --tv-header-bg: {{ settings.get('tv_header_bg') or 'linear-gradient(90deg, #1e3a8a, #2563eb)' | safe }};
+            
+            /* ឡូហ្គោ និង គម្លាត */
+            --logo-size: {{ settings.get('logo_size') or '90' }}px;
+            --logo-margin-left: {{ settings.get('logo_margin_left') or '50' }}px;
+            --logo-title-gap: {{ settings.get('logo_title_gap') or '30' }}px;
+            /* ត្រូវប្រាកដថាប្រើ logo_margin_left */
+            --logo-margin-left: {{ settings.get('logo_margin_left') or '50' }}px;
+            /* ថែមអថេរថ្មីនេះសម្រាប់គ្រប់គ្រងល្បឿនចលនាឡូហ្គោ */
+            --logo-anim-duration: {{ settings.get('logo_animation_speed') or '4' }}s;
+            
+            /* ផ្នែក Footer និងអក្សររត់ */
+            --footer-bg: {{ settings.get('footer_bg_color') or '#0f172a' }};
+            --footer-color: {{ settings.get('footer_color') or '#ffffff' }};
+            --footer-font: {{ settings.get('footer_font_family') or "'Moul', serif" | safe }};
+            --footer-size: {{ settings.get('footer_font_size') or '24' }}px;
+            --marquee-speed: {{ settings.get('marquee_speed') or '25' }}s;
+
+            /* ផ្នែកចំណងជើងភាសាខ្មែរ */
+            --kh-font: {{ settings.get('kh_font_family') or "'Moul', serif" | safe }};
+            --kh-size: {{ settings.get('kh_font_size') or '36' }}px;
+            --kh-color: {{ settings.get('kh_color') or '#ffffff' }};
+            --kh-weight: {{ settings.get('kh_font_weight') or 'normal' }};
+            --kh-line-height: {{ settings.get('kh_line_height') or '1.4' }};
+            --kh-margin-bottom: {{ settings.get('kh_margin_bottom') or '2' }}px;
+            --kh-letter-spacing: {{ settings.get('kh_letter_spacing') or '0' }}px;
+            --kh-text-shadow: {{ settings.get('kh_text_shadow') or '2px 2px 4px rgba(0,0,0,0.4)' | safe }};
+
+            /* ផ្នែកចំណងជើងភាសាអង់គ្លេស */
+            --en-font: {{ settings.get('en_font_family') or "'Arial', sans-serif" | safe }};
+            --en-size: {{ settings.get('en_font_size') or '20' }}px;
+            --en-color: {{ settings.get('en_color') or '#93c5fd' }};
+            --en-weight: {{ settings.get('en_font_weight') or 'bold' }};
+            --en-line-height: {{ settings.get('en_line_height') or '1.2' }};
+            --en-margin-bottom: {{ settings.get('en_margin_bottom') or '0' }}px;
+            --en-letter-spacing: {{ settings.get('en_letter_spacing') or '2' }}px;
+            --en-text-shadow: {{ settings.get('en_text_shadow') or 'none' | safe }};
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; 
+            font-family: 'Siemreap', sans-serif; 
+            background-color: var(--tv-bg); 
+            transition: background-color 0.5s ease;
+        }
+
+        .tv-container { display: flex; flex-direction: column; height: 100vh; width: 100vw; }
+
+        .tv-controls {
+            position: absolute; top: 15px; right: 20px; z-index: 9999;
+            display: flex; gap: 10px; opacity: 0.1; transition: opacity 0.3s;
+        }
+        .tv-controls:hover { opacity: 1; }
+
+        .tv-header {
+            flex-shrink: 0; height: 14vh;
+            background: var(--tv-header-bg);
+            display: flex; 
+            align-items: center; 
+            justify-content: center; /* ធានាថា អក្សរនៅចំកណ្តាលអេក្រង់ជានិច្ច */
+            position: relative; 
+            z-index: 10;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15); 
+        }
+        
+        .header-logo-container { 
+            position: absolute; /* ផ្ដាច់ឡូហ្គោឱ្យអណ្តែតឯករាជ្យ */
+            left: var(--logo-margin-left); /* រំកិលតាមលេខដែលអ្នកកំណត់ក្នុង Settings */
+            top: 50%;
+            transform: translateY(-50%); /* ឱ្យនៅចំកណ្តាលពីលើចុះក្រោម */
+            transition: left 0.4s ease; /* រំកិលដោយរលូន */
+        }
+
+        .header-logo { 
+            height: var(--logo-size); 
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2)); 
+            transition: height 0.3s ease;
+        }
+        /* ---------------------------------------------------- */
+        /* 💥 ផ្នែកចលនាឡូហ្គោស្តង់ដា & Professional (New Keys) */
+        /* ---------------------------------------------------- */
+
+        /* ១. Fade & Float (ទន់ភ្លន់បំផុត និង Professional) */
+        @keyframes prof-fade-float {
+            0% { opacity: 0.7; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(-6px); }
+            100% { opacity: 0.7; transform: translateY(0); }
+        }
+
+        /* ២. Reveal (ដូចឡូហ្គោព័ត៌មាន លេចចេញពីក្រោយមក) */
+        @keyframes prof-reveal {
+            0% { transform: scale(0.8) translateZ(0); opacity: 0; filter: blur(3px); }
+            100% { transform: scale(1) translateZ(0); opacity: 1; filter: blur(0); }
+        }
+
+        /* ៣. Subtle Shine (ពន្លឺរត់កាត់ ដូចឡូហ្គោឡានស៊េរីទំនើប) */
+        @keyframes prof-shine {
+            0% { filter: contrast(100%) brightness(100%); }
+            50% { filter: contrast(110%) brightness(130%); drop-shadow: 0 0 10px rgba(255,255,255,0.8); }
+            100% { filter: contrast(100%) brightness(100%); }
+        }
+
+        /* ៤. Breathing (ដកដង្ហើមថ្នមៗ មានលំនឹង) */
+        @keyframes prof-breathing {
+            0% { transform: scale(1); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+            50% { transform: scale(1.03); filter: drop-shadow(0 8px 15px rgba(0,0,0,0.15)); }
+            100% { transform: scale(1); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+        }
+
+        @keyframes anim-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @keyframes anim-float { 0% { transform: translateY(0); } 50% { transform: translateY(-8px); } 100% { transform: translateY(0); } }
+        @keyframes anim-spin { 100% { transform: rotate(360deg); } }
+
+        /* ---------------------------------------------------- */
+        /* 🌟 ផ្នែកចលនាឡូហ្គោ Premium បន្ថែមថ្មីទាំង ៤ */
+        /* ---------------------------------------------------- */
+
+        /* ៨. ត្រឡប់ 3D (បង្វិលយឺតៗ មើលទៅមានជម្រៅ 3D) */
+        @keyframes prof-flip-3d {
+            0% { transform: perspective(600px) rotateY(0deg); }
+            50% { transform: perspective(600px) rotateY(180deg); }
+            100% { transform: perspective(600px) rotateY(360deg); }
+        }
+    
+        /* ៩. ពន្លឺជុំវិញ (បញ្ចេញពន្លឺពីក្រោយឡូហ្គោ ទាក់ទាញភ្នែក) */
+        @keyframes prof-soft-glow {
+            0% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.2)); }
+            50% { filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.8)); }
+            100% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.2)); }
+        }
+
+        /* ១០. យោលថ្នមៗ (ដូចផ្លាកសញ្ញាត្រូវខ្យល់បក់) */
+        @keyframes prof-gentle-swing {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(4deg); }
+            50% { transform: rotate(0deg); }
+            75% { transform: rotate(-4deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        /* ១១. ចង្វាក់បេះដូង (លោតទ្វេរដងជាប់គ្នា រួចសម្រាកបន្តិច) */
+        @keyframes prof-heartbeat {
+            0% { transform: scale(1); }
+            10% { transform: scale(1.05); }
+            20% { transform: scale(1); }
+            30% { transform: scale(1.05); }
+            40%, 100% { transform: scale(1); }
+        }
+
+        /* ក្រុម Professional */
+        .logo-anim-fade-float { animation: prof-fade-float var(--logo-anim-duration) cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+        .logo-anim-reveal { animation: prof-reveal var(--logo-anim-duration) cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+        .logo-anim-shine { animation: prof-shine var(--logo-anim-duration) ease-in-out infinite; }
+        .logo-anim-breathing { animation: prof-breathing var(--logo-anim-duration) cubic-bezier(0.37, 0, 0.63, 1) infinite; }
+
+        /* ក្រុម Classic */
+        .logo-anim-pulse { animation: anim-pulse var(--logo-anim-duration) infinite; }
+        .logo-anim-float { animation: anim-float var(--logo-anim-duration) infinite ease-in-out; }
+        .logo-anim-spin { animation: anim-spin var(--logo-anim-duration) infinite linear; }
+
+        /* ក្រុម Premium */
+        .logo-anim-flip-3d { animation: prof-flip-3d var(--logo-anim-duration) infinite linear; }
+        .logo-anim-soft-glow { animation: prof-soft-glow var(--logo-anim-duration) infinite ease-in-out; }
+        .logo-anim-gentle-swing { 
+            transform-origin: top center; 
+            animation: prof-gentle-swing var(--logo-anim-duration) infinite ease-in-out; 
+        }
+        .logo-anim-heartbeat { animation: prof-heartbeat var(--logo-anim-duration) infinite cubic-bezier(0.215, 0.61, 0.355, 1); }
+        
+        .header-text-container { 
+            width: 100%; 
+            text-align: center; /* តម្រឹមអក្សរទាំង២ឱ្យនៅចំកណ្តាលគ្នា */
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center;
+        }
+
+        /* ---------------------------------------------------- */
+        /* រចនាបថចំណងជើង ដែលទាញចេញពី Settings ទាំងស្រុង */
+        /* ---------------------------------------------------- */
+        .header-title-kh {
+            font-family: var(--kh-font); 
+            font-size: var(--kh-size); 
+            color: var(--kh-color); 
+            font-weight: var(--kh-weight); 
+            line-height: var(--kh-line-height); 
+            margin-bottom: var(--kh-margin-bottom); 
+            letter-spacing: var(--kh-letter-spacing); 
+            text-shadow: var(--kh-text-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .header-title-en {
+            font-family: var(--en-font); 
+            font-size: var(--en-size); 
+            color: var(--en-color); 
+            font-weight: var(--en-weight); 
+            line-height: var(--en-line-height); 
+            margin-bottom: var(--en-margin-bottom); 
+            letter-spacing: var(--en-letter-spacing); 
+            text-shadow: var(--en-text-shadow);
+            transition: all 0.3s ease;
+        }
+        
+        .tv-body {
+            flex-grow: 1; display: flex; padding: 1.5vh 1.5vw; gap: 1.5vw; box-sizing: border-box;
+            overflow: hidden; 
+        }
+
+        .media-section {
+            width: 65%; 
+            background: #000000; border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2); 
+            overflow: hidden; position: relative;
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        .slideshow-container { width: 100%; height: 100%; }
+        .carousel-item { height: 100%; }
+        
+        .tv-media-content {
+            width: 100%; height: 100%;
+            object-fit: contain; 
+            background-color: #1e293b;
+        }
+
+        .queue-section { 
+            width: 35%; display: flex; flex-direction: column; 
+            background: #ffffff; border-radius: 20px; padding: 1.5vh 1.5vw;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+        .queue-header {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            padding-bottom: 0.8vh; border-bottom: 3px solid #3b82f6; margin-bottom: 1vh; 
+        }
+        .queue-header h3 { font-family: 'Moul', serif; font-size: clamp(18px, 1.6vw, 26px); color: #1e293b; margin: 0; }
+        .queue-header h4 { font-family: 'Moul', serif; font-size: clamp(16px, 1.4vw, 22px); color: #64748b; margin: 0; }
+
+        .queue-list { 
+            display: flex; flex-direction: column; gap: 0.6vh; 
+            overflow: hidden; height: 100%;
+        }
+        
+        .queue-card {
+            background: #f8fafc; border-radius: 12px; 
+            padding: 0.5vh 1.5vw; 
+            display: flex; justify-content: space-between; align-items: center;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            transition: all 0.3s ease; 
+            flex: 1; 
+            min-height: 8vh; 
+            max-height: 12vh; 
+        }
+        
+        .q-num { font-size: clamp(24px, 2.8vw, 45px); font-weight: 900; color: #475569; letter-spacing: 1px; flex: 1; text-align: left; white-space: nowrap; }
+        .q-dash { font-size: clamp(16px, 1.5vw, 25px); color: #cbd5e1; flex: 1; text-align: center; }
+        .q-counter { font-size: clamp(26px, 3vw, 50px); font-weight: 900; color: #94a3b8; flex: 1; text-align: right; white-space: nowrap; }
+
+        .queue-card.processing {
+            background: linear-gradient(135deg, #ffffff, #f0fdf4); 
+            border: 3px solid #22c55e;
+            transform: scale(1); 
+            padding: 0.5vh 1.5vw; 
+            animation: active-pulse 1.5s infinite ease-out;
+            z-index: 2;
+        }
+        .queue-card.processing .q-num { font-size: clamp(28px, 3.2vw, 55px); color: #166534; }
+        .queue-card.processing .q-counter { font-size: clamp(30px, 3.5vw, 60px); color: #dc2626; } 
+
+        @keyframes active-pulse {
+            0% { box-shadow: 0 4px 6px rgba(34, 197, 94, 0.1); }
+            50% { box-shadow: 0 15px 30px rgba(34, 197, 94, 0.3), inset 0 0 10px rgba(255,255,255,0.5); }
+            100% { box-shadow: 0 4px 6px rgba(34, 197, 94, 0.1); }
+        }
+
+        .queue-card.blink {
+            background: linear-gradient(135deg, #fffbeb, #fef3c7); 
+            border-color: #f59e0b;
+            animation: pulse-border 1s infinite alternate;
+        }
+        .queue-card.blink .q-num { color: #b45309; }
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.3); }
+            100% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+        }
+
+        .tv-footer { 
+            flex-shrink: 0; height: 7vh; min-height: 40px;
+            background: var(--footer-bg); 
+            display: flex; align-items: center; 
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.3); overflow: hidden;
+            transition: background-color 0.5s ease;
+        }
+        .marquee-container { 
+            width: 100%; white-space: nowrap; overflow: hidden; 
+        }
+        .marquee-text { 
+            display: inline-block; 
+            padding-left: 100vw; /* 💡 ប្រើ 100vw ល្អជាង 100% សម្រាប់ TV */
+            animation: marquee var(--marquee-speed) linear infinite; 
+            font-family: var(--footer-font); 
+            font-size: var(--footer-size); 
+            color: var(--footer-color); 
+            padding-top: 4px; letter-spacing: 1px;
+            
+            /* 🌟 បង្ខំឱ្យ Smart TV ប្រើ GPU (Hardware Acceleration) ដើម្បីឱ្យអក្សររត់រលូនដូចទឹក */
+            will-change: transform; 
+            transform: translateZ(0); 
+            backface-visibility: hidden;
+        }
+        @keyframes marquee { 
+            0% { transform: translateX(0); } 
+            100% { transform: translateX(-100%); } 
+        }
+
+        @media (max-width: 1024px) {
+            .header-logo-container { position: relative; left: 0; margin-right: 15px; }
+            .tv-header { justify-content: flex-start; padding: 0 2vw; }
+            .header-text-container { text-align: left; padding: 0; width: auto; }
+            .tv-body { flex-direction: row; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="tv-controls">
+    <button onclick="toggleFullScreen()" class="btn btn-light btn-sm rounded-circle shadow" title="Full Screen"><i class="fas fa-expand"></i></button>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-danger btn-sm rounded-circle shadow" title="ចាកចេញ"><i class="fas fa-times"></i></a>
+</div>
+
+<div class="tv-container">
+    <header class="tv-header">
+        <div class="header-logo-container">
+            {% set current_logo = settings.get('tv_logo') or 'MTOSB Big Size.png' %}
+            {% set anim_class = settings.get('logo_animation') or 'none' %}
+            <img src="{{ url_for('static', filename='uploads/profiles/' ~ current_logo) }}" 
+                 alt="MTOSB Logo" 
+                 class="header-logo {% if anim_class != 'none' %}logo-anim-{{ anim_class }}{% endif %}" id="mainLogo">
+        </div>
+        
+        <div class="header-text-container">
+            <h1 class="header-title-kh">{{ settings.get('header_title_kh') or 'គណៈកម្មាធិការបណ្តុះបណ្តាល និងបញ្ជូនពលករទៅបរទេស' }}</h1>
+            <h2 class="header-title-en">{{ settings.get('header_title_en') or 'Manpower Training and Overseas Sending Board' }}</h2>
+        </div>
+    </header>
+
+    <main class="tv-body">
+        <div class="media-section">
+            <div id="tvCarousel" class="carousel slide slideshow-container">
+                <div class="carousel-inner h-100">
+
+                    {% if slide_images %}
+
+                        {% for slide in slide_images %}
+
+                        {% set is_video = slide.lower().endswith('.mp4') or slide.lower().endswith('.webm') %}
+
+                        
+
+                        <div class="carousel-item {% if loop.first %}active{% endif %} h-100" {% if not is_video %}data-bs-interval="{{ sys_slideshow_speed }}"{% endif %}>
+
+                            {% if is_video %}
+
+                                <video src="{{ url_for('static', filename='uploads/tv_slides/' ~ slide) }}" class="tv-media-content tv-video" autoplay playsinline {% if sys_enable_video_audio != 'true' %}muted{% endif %}></video>
+
+                            {% else %}
+
+                                <img src="{{ url_for('static', filename='uploads/tv_slides/' ~ slide) }}" class="tv-media-content">
+
+                            {% endif %}
+
+                        </div>
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <div class="carousel-item active h-100">
+
+                            <div class="d-flex flex-column align-items-center justify-content-center h-100 bg-dark text-white text-center p-5">
+
+                                <img src="{{ url_for('static', filename='uploads/profiles/MTOSB Big Size.png') }}" alt="Logo" style="height: 15vh; opacity: 0.3; margin-bottom: 2vh;">
+
+                                <h2 style="font-family: 'Moul'; color: #475569;">ផ្ទាំងផ្សព្វផ្សាយ MTOSB</h2>
+
+                            </div>
+
+                            </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+        </div>
+
+        <div class="queue-section">
+            <div class="queue-header">
+                <h3>លេខរង់ចាំ</h3>
+                <h4>បញ្ជរលេខ</h4>
+            </div>
+            <div class="queue-list" id="queue-display-body">
+                <div class="text-center py-5">
+                    <div class="spinner-grow text-primary" style="width: 40px; height: 40px;" role="status"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="tv-footer">
+        <div class="marquee-container">
+            {% set m_text = settings.get('footer_marquee') or 'សូមស្វាគមន៍មកកាន់គណៈកម្មាធិការបណ្តុះបណ្តាល និងបញ្ជូនពលករទៅបរទេស (MTOSB)។' %}
+            <div class="marquee-text" id="marqueeTextDisplay">
+                {{ m_text }}
+            </div>
+        </div>
+    </footer>
+</div>
+
+<div id="audioUnlockOverlay" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-flex justify-content-center align-items-center" style="z-index: 9999; cursor: pointer; backdrop-filter: blur(5px);">
+
+    <div class="text-center text-white p-5 border border-2 border-white rounded-4" style="background: rgba(0,0,0,0.5);">
+
+        <i class="fas fa-volume-up fa-5x mb-4 text-warning"></i>
+
+        <h1 class="fw-bold" style="font-family: 'Moul';">សូមចុចលើអេក្រង់</h1>
+
+        <h4 class="mt-3">ដើម្បីចាប់ផ្តើមទូរទស្សន៍ និងបើកប្រព័ន្ធសំឡេង</h4>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ==========================================
+    // 💡 ១. ការប្រកាសអថេរទូទៅ
+    // ==========================================
+    function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(e => console.log(e));
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+        }
+    }
+
+    let sys_chime_filename = "{{ settings.get('chime_filename') or 'dingdong.mp3' }}";
+    const chimeSound = new Audio("/static/sounds/" + sys_chime_filename);
+    chimeSound.preload = 'auto';
+
+    let notifiedTickets = []; 
+    let isAudioUnlocked = false; 
+    let isFirstLoad = true; 
+    let audioCallQueue = []; 
+    let isSpeakingNow = false; 
+    let currentlyCallingTicket = null; 
+
+    let sys_enable_chime = (document.querySelector('meta[name="sys-enable-chime"]').content === 'true');
+    let sys_enable_voice = (document.querySelector('meta[name="sys-enable-voice"]').content === 'true');
+    let sys_enable_video_audio = (document.querySelector('meta[name="sys-enable-video-audio"]').content === 'true');
+    let dynamicSlideSpeed = parseInt(document.querySelector('meta[name="sys-slideshow-speed"]').content, 10);
+    
+    let sys_voice_speed = 1.25;
+
+    const unlockOverlay = document.getElementById('audioUnlockOverlay');
+    
+    function unlockAudioSystem() {
+        if (isAudioUnlocked) return; 
+        
+        chimeSound.play().then(() => {
+            chimeSound.pause(); 
+            chimeSound.currentTime = 0;
+            isAudioUnlocked = true;
+            if(unlockOverlay) unlockOverlay.classList.add('d-none');
+        }).catch(e => { console.log("មិនទាន់អាចដោះសោសំឡេងបានទេ:", e); });
+    }
+
+    if (unlockOverlay) {
+        unlockOverlay.addEventListener('click', unlockAudioSystem);
+    }
+    document.addEventListener('keydown', unlockAudioSystem);
+
+    // ==========================================
+    // 💡 ២. អថេរសម្រាប់ទប់ស្កាត់ភាពយឺត (Diff Checkers)
+    // ==========================================
+    let currentSlideCount = parseInt(document.querySelector('meta[name="sys-slides-count"]').content, 10);
+    let current_video_audio_state = sys_enable_video_audio;
+    let current_marquee_text = ""; 
+    let lastQueueDataString = ""; 
+    let current_settings_string = "";
+    
+    // 🌟 អថេរថ្មី៖ សម្រាប់ចងចាំលេខដែលកំពុងបង្ហាញនៅលើអេក្រង់
+    let tvDisplayCache = []; 
+
+    // ==========================================
+    // 💡 ៣. មុខងារ Fetch Data ឆ្លាតវៃ
+    // ==========================================
+    function fetchQueueData() {
+        let cacheBuster = '?t=' + new Date().getTime();
+        
+        fetch('/api/queue_tv_data' + cacheBuster, { cache: 'no-store' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    
+                    if(data.settings) {
+                        sys_enable_chime = (data.settings.enable_chime === 'true');
+                        sys_enable_voice = (data.settings.enable_voice === 'true');
+
+                        if(data.settings.voice_speed) {
+                            sys_voice_speed = parseFloat(data.settings.voice_speed);
+                        }
+
+                        if(data.settings.chime_filename && data.settings.chime_filename !== sys_chime_filename) {
+                            window.location.reload(); 
+                        }
+
+                        let new_video_audio_state = (data.settings.enable_video_audio === 'true');
+                        if (new_video_audio_state !== current_video_audio_state) {
+                            current_video_audio_state = new_video_audio_state;
+                            sys_enable_video_audio = new_video_audio_state;
+                            
+                            document.querySelectorAll('.tv-video').forEach(vid => {
+                                vid.muted = !sys_enable_video_audio; 
+                            });
+                        }
+                        
+                        let newSettingsString = JSON.stringify(data.settings);
+                        if (newSettingsString !== current_settings_string) {
+                            applyDynamicSettings(data.settings);
+                            current_settings_string = newSettingsString;
+                        }
+                    }
+                    
+                    let newDataString = JSON.stringify(data.tv_list);
+                    if (newDataString !== lastQueueDataString) {
+                        updateTVDisplay(data.tv_list);
+                        lastQueueDataString = newDataString;
+                    }
+
+                    if(data.settings && data.settings.footer_marquee) {
+                        let newMarqueeText = data.settings.footer_marquee;
+                        if (newMarqueeText !== current_marquee_text) {
+                            updateMarquee(newMarqueeText);
+                            current_marquee_text = newMarqueeText;
+                        }
+                    }
+
+                    if(data.slides_count !== undefined && data.slides_count !== currentSlideCount) {
+                        window.location.reload();
+                    }
+                }
+            })
+            .catch(e => { console.error("Error fetching data:", e); })
+            .finally(() => {
+                setTimeout(fetchQueueData, 1000); 
+            });
+    }
+
+    // ==========================================
+    // ៤. អនុគមន៍គាំទ្រទាំងអស់របស់អ្នក
+    // ==========================================
+    function applyDynamicSettings(s) {
+        try { 
+            const root = document.documentElement;
+
+            if(s.header_title_kh) document.querySelector('.header-title-kh').innerText = s.header_title_kh;
+            if(s.header_title_en) document.querySelector('.header-title-en').innerText = s.header_title_en;
+
+            if(s.tv_bg_color) root.style.setProperty('--tv-bg', s.tv_bg_color);
+            if(s.tv_header_bg) root.style.setProperty('--tv-header-bg', s.tv_header_bg);
+
+            if(s.footer_bg_color) root.style.setProperty('--footer-bg', s.footer_bg_color);
+            if(s.footer_color) root.style.setProperty('--footer-color', s.footer_color);
+            if(s.footer_font_family) root.style.setProperty('--footer-font', s.footer_font_family);
+            if(s.footer_font_size) root.style.setProperty('--footer-size', s.footer_font_size + 'px');
+            if(s.marquee_speed) root.style.setProperty('--marquee-speed', s.marquee_speed + 's');
+
+            if(s.kh_font_family) root.style.setProperty('--kh-font', s.kh_font_family);
+            if(s.kh_font_size) root.style.setProperty('--kh-size', s.kh_font_size + 'px');
+            if(s.kh_color) root.style.setProperty('--kh-color', s.kh_color);
+            if(s.kh_font_weight) root.style.setProperty('--kh-weight', s.kh_font_weight);
+            if(s.kh_line_height) root.style.setProperty('--kh-line-height', s.kh_line_height);
+            if(s.kh_margin_bottom) root.style.setProperty('--kh-margin_bottom', s.kh_margin_bottom + 'px');
+            if(s.kh_letter_spacing) root.style.setProperty('--kh-letter-spacing', s.kh_letter_spacing + 'px');
+            if(s.kh_text_shadow) root.style.setProperty('--kh-text-shadow', s.kh_text_shadow);
+
+            if(s.en_font_family) root.style.setProperty('--en-font', s.en_font_family);
+            if(s.en_font_size) root.style.setProperty('--en-size', s.en_font_size + 'px');
+            if(s.en_color) root.style.setProperty('--en-color', s.en_color);
+            if(s.en_font_weight) root.style.setProperty('--en-weight', s.en_font_weight);
+            if(s.en_line_height) root.style.setProperty('--en-line-height', s.en_line_height);
+            if(s.en_margin_bottom) root.style.setProperty('--en-margin_bottom', s.en_margin_bottom + 'px');
+            if(s.en_letter_spacing) root.style.setProperty('--en-letter_spacing', s.en_letter_spacing + 'px');
+            if(s.en_text_shadow) root.style.setProperty('--en-text-shadow', s.en_text_shadow);
+
+            let logoImg = document.getElementById('mainLogo');
+            if(logoImg) {
+                if(s.tv_logo && !logoImg.src.includes(s.tv_logo)) logoImg.src = "/static/uploads/profiles/" + s.tv_logo;
+                if(s.logo_size) root.style.setProperty('--logo-size', s.logo_size + 'px');
+                if(s.logo_margin_left) root.style.setProperty('--logo-margin-left', s.logo_margin_left + 'px');
+                if(s.logo_title_gap) root.style.setProperty('--logo-title-gap', s.logo_title_gap + 'px');
+                if(s.logo_animation_speed) root.style.setProperty('--logo-anim-duration', s.logo_animation_speed + 's');
+                
+                logoImg.className = 'header-logo';
+                if(s.logo_animation && s.logo_animation !== 'none') {
+                    logoImg.classList.add('logo-anim-' + s.logo_animation);
+                }
+            }
+            
+            if(s.slideshow_speed) {
+                let newSpeed = parseInt(s.slideshow_speed, 10);
+                if(newSpeed && newSpeed !== dynamicSlideSpeed) {
+                    dynamicSlideSpeed = newSpeed; 
+                    document.querySelectorAll('.carousel-item').forEach(item => {
+                        if(!item.querySelector('.tv-video')) {
+                            item.setAttribute('data-bs-interval', dynamicSlideSpeed);
+                        }
+                    });
+                    let tvCarouselEl = document.getElementById('tvCarousel');
+                    if (tvCarouselEl) {
+                        let carouselInstance = bootstrap.Carousel.getInstance(tvCarouselEl);
+                        if(carouselInstance) {
+                            carouselInstance._config.interval = dynamicSlideSpeed;
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Error Applying Dynamic Settings:", error);
+        }
+    }
+
+    function updateTVDisplay(tvList) {
+        const queueListContainer = document.getElementById('queue-display-body');
+        if (!queueListContainer) return;
+
+        // 🌟 ដំណោះស្រាយ៖ ចាប់ទាញយកលេខដែលកំពុងហៅយកមកបញ្ជូលវិញ បើសិនជា Database លុបវាចោល
+        let pendingAudioTickets = audioCallQueue.map(call => call.ticket);
+        if (currentlyCallingTicket && !pendingAudioTickets.includes(currentlyCallingTicket)) {
+            pendingAudioTickets.push(currentlyCallingTicket);
+        }
+
+        pendingAudioTickets.forEach(ticketNum => {
+            let existsInNewList = tvList.some(item => item.queue_number === ticketNum);
+            if (!existsInNewList) {
+                let oldRecord = tvDisplayCache.find(item => item.queue_number === ticketNum);
+                if (oldRecord) {
+                    tvList.unshift(oldRecord); // បញ្ចូលវាទៅលើគេវិញ
+                }
+            }
+        });
+
+        // Update Cache សម្រាប់ប្រើនៅជុំក្រោយ
+        tvDisplayCache = JSON.parse(JSON.stringify(tvList));
+
+        if (!tvList || tvList.length === 0) {
+            queueListContainer.innerHTML = `<div class="text-center py-5"><h3 class="text-secondary opacity-50">មិនទាន់មានអ្នករង់ចាំទេ</h3></div>`;
+            return;
+        }
+
+        let htmlContent = '';
+        let newCalls = [];
+
+        tvList.forEach((item) => {
+            let isProcessing = item.status === 'processing';
+            let counterDisplay = '-';
+            let baseClass = isProcessing ? 'processing' : '';
+
+            if (isProcessing) {
+                let counterNum = item.counter_name_kh || item.counter_name || '-';
+                let matches = counterNum.match(/\d+|[១-៩]+/g);
+                let cNum = matches ? matches[0] : '-';
+                counterDisplay = cNum;
+
+                if (!notifiedTickets.includes(item.queue_number)) {
+                    notifiedTickets.push(item.queue_number);
+                    if (!isFirstLoad) { 
+                        newCalls.push({ ticket: item.queue_number, counter: cNum });
+                    }
+                }
+            }
+
+            let blinkClass = (item.queue_number === currentlyCallingTicket) ? 'blink' : '';
+
+            htmlContent += `
+                <div class="queue-card ${baseClass} ${blinkClass}" id="card-${item.queue_number}">
+                    <div class="q-num">${item.queue_number}</div>
+                    <div class="q-dash"><i class="fas fa-caret-right"></i></div>
+                    <div class="q-counter">${counterDisplay}</div>
+                </div>`;
+        });
+
+        if (newCalls.length > 0) {
+            newCalls.sort((a, b) => a.ticket.localeCompare(b.ticket));
+            audioCallQueue.push(...newCalls);
+            processAudioQueue();
+        }
+
+        queueListContainer.innerHTML = htmlContent;
+        if (currentlyCallingTicket) {
+            let activeCard = document.getElementById('card-' + currentlyCallingTicket);
+            if (activeCard) activeCard.classList.add('blink');
+        }
+        
+        isFirstLoad = false; 
+    }
+
+    function updateMarquee(dbMarqueeText) {
+        const marqueeElement = document.getElementById('marqueeTextDisplay');
+        if (marqueeElement && dbMarqueeText) { 
+            marqueeElement.innerHTML = dbMarqueeText; 
+        }
+    }
+
+    // 💡 ៥. ដំណើរការនៅពេលបើកទំព័រ
+    document.addEventListener("DOMContentLoaded", function() {
+        fetchQueueData(); 
+        
+        let tvCarouselEl = document.getElementById('tvCarousel');
+        if (!tvCarouselEl) return;
+
+        let bsCarousel = new bootstrap.Carousel(tvCarouselEl, {
+            interval: dynamicSlideSpeed,
+            pause: false 
+        });
+
+        function playMedia(slideItem) {
+            let video = slideItem.querySelector('.tv-video');
+            
+            if (video) {
+                bsCarousel.pause();
+                video.currentTime = 0;
+                
+                let playPromise = video.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log("Browser ទប់ស្កាត់សំឡេង, ដូច្នេះសាកល្បង Mute...");
+                        video.muted = true;
+                        video.play().catch(e => {
+                            setTimeout(() => bsCarousel.next(), 2000);
+                        });
+                    });
+                }
+                video.onended = function() {
+                    bsCarousel.next();
+                };
+            } else {
+                bsCarousel.cycle();
+            }
+        }
+
+        let firstSlide = tvCarouselEl.querySelector('.carousel-item.active');
+        if (firstSlide) {
+            playMedia(firstSlide);
+        }
+
+        tvCarouselEl.addEventListener('slid.bs.carousel', function (e) {
+            document.querySelectorAll('.tv-video').forEach(vid => {
+                vid.pause();
+                vid.onended = null;
+            });
+            playMedia(e.relatedTarget);
+        });
+    });
+
+    // ==========================================
+    // ៦. ប្រព័ន្ធចាក់សំឡេងហៅលេខ
+    // ==========================================
+    function playAudio(fileName, isVoice = true) {
+        return new Promise(function(resolve) {
+            let audioUrl = "/static/sounds/" + fileName; 
+            let audio = new Audio(audioUrl);
+            
+            audio.playbackRate = isVoice ? sys_voice_speed : 1.0; 
+            
+            audio.onended = resolve; 
+            audio.onerror = resolve; 
+            audio.play().catch(function(e) { resolve(); });
+        });
+    }
+
+    async function callTicketInKhmer(ticketNum, counterNum) {
+        if (!isAudioUnlocked) return; 
+        
+        document.querySelectorAll('.tv-video').forEach(vid => vid.muted = true);
+
+        try {
+            if (sys_enable_chime) {
+                await playAudio(sys_chime_filename, false); 
+            }
+            if (sys_enable_voice) {
+                let cleanTicket = ticketNum.replace(/-/g, '').split(''); 
+                await playAudio("ticket.mp3", true); 
+                for (let i = 0; i < cleanTicket.length; i++) {
+                    let char = cleanTicket[i].toUpperCase(); 
+                    await playAudio(char + ".mp3", true);
+                }
+                await playAudio("goto_counter.mp3", true);
+                await playAudio(counterNum + ".mp3", true);
+            }
+        } catch (error) {}
+        
+        if (sys_enable_video_audio) {
+            document.querySelectorAll('.tv-video').forEach(vid => vid.muted = false);
+        }
+    }
+
+    async function processAudioQueue() {
+        if (isSpeakingNow || audioCallQueue.length === 0) return;
+
+        isSpeakingNow = true; 
+        let nextCall = audioCallQueue.shift(); 
+        
+        currentlyCallingTicket = nextCall.ticket;
+        
+        let cardElement = document.getElementById('card-' + currentlyCallingTicket);
+        if (cardElement) {
+            cardElement.classList.add('blink');
+            cardElement.classList.add('processing');
+        }
+
+        await callTicketInKhmer(nextCall.ticket, nextCall.counter);
+
+        currentlyCallingTicket = null; 
+        if (cardElement) cardElement.classList.remove('blink');
+        
+        isSpeakingNow = false; 
+        
+        // 🌟 ដំណោះស្រាយ៖ នៅពេលសំឡេងហៅចប់ យើងកំណត់អថេរនេះទៅទទេស្អាត
+        // ដើម្បីបង្ខំឱ្យ TV ទាញទិន្នន័យសាជាថ្មី ហើយលុបលេខដែលហៅរួចចេញពីអេក្រង់
+        lastQueueDataString = ""; 
+
+        processAudioQueue(); 
+    }
+</script>
+</body>
+</html>

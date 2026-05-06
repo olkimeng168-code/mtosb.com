@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ស្នើសុំកែតម្រូវទិន្នន័យ | EPS System</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @font-face {
+            font-family: 'Khmer OS Siemreap';
+            src: local('Khmer OS Siemreap');
+        }
+        
+        body {
+            font-family: 'Khmer OS Siemreap', sans-serif;
+            background-color: #f8fafc; /* ពណ៌ផ្ទៃខាងក្រោយរាងប្រផេះស្រាល */
+            color: #334155;
+            padding-top: 20px;
+        }
+
+        /* Card ធំនៅកណ្តាល */
+        .edit-card { 
+            max-width: 850px; 
+            margin: 0 auto 40px auto; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+            border: 1px solid #e2e8f0;
+            background-color: white;
+        }
+        
+        /* ក្បាល Card */
+        .edit-header { 
+            background-color: #06427b; /* ពណ៌ខៀវចាស់របស់ប្រព័ន្ធបង */
+            color: white; 
+            border-radius: 12px 12px 0 0 !important; 
+            padding: 18px; 
+            text-align: center; 
+            border-bottom: 4px solid #f6b024; /* បន្ទាត់ពណ៌លឿង */
+        }
+        
+        /* ប្រអប់ព័ត៌មាន (Section) */
+        .comparison-section { 
+            border: 1px solid #e2e8f0; 
+            border-radius: 8px; 
+            margin-bottom: 25px;
+        }
+        .section-title { 
+            background-color: #f1f5f9; 
+            color: #1e3a8a; 
+            font-weight: bold; 
+            padding: 12px 15px; 
+            border-radius: 8px 8px 0 0; 
+            border-bottom: 1px solid #e2e8f0; 
+        }
+        .comparison-body { padding: 15px 20px; }
+        
+        /* ជួរនីមួយៗ */
+        .comparison-row { 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 12px; 
+            padding-bottom: 12px; 
+            border-bottom: 1px dashed #e2e8f0; 
+        }
+        .comparison-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        
+        /* ស្លាកឈ្មោះ (Label) */
+        .field-label { font-weight: bold; color: #475569; width: 150px; flex-shrink: 0; font-size: 0.95rem; }
+        
+        /* ប្រអប់ទិន្នន័យចាស់ */
+        .old-data-box { 
+            background-color: #f8fafc; 
+            color: #64748b; 
+            border-radius: 6px; 
+            padding: 8px 12px; 
+            flex-grow: 1; 
+            margin-right: 15px; 
+            border: 1px solid #cbd5e1; 
+            font-size: 0.95rem; 
+            display: flex;
+            align-items: center;
+        }
+        
+        /* សញ្ញាព្រួញ */
+        .separator-icon { color: #94a3b8; font-size: 1rem; margin-right: 15px; flex-shrink: 0; }
+        
+        /* ប្រអប់វាយទិន្នន័យថ្មី */
+        .new-input-box { flex-grow: 1; }
+        .form-control, .form-select { font-size: 0.95rem; border-color: #cbd5e1; }
+        .form-control:focus, .form-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25); }
+        
+        /* Responsive សម្រាប់ទូរសព្ទ */
+        @media (max-width: 768px) {
+            .edit-card { margin-left: 10px; margin-right: 10px; }
+            .comparison-row { 
+                flex-direction: column; 
+                align-items: stretch; 
+                background-color: #fafaf9; 
+                padding: 15px; 
+                border-radius: 8px; 
+                border: 1px solid #e5e7eb; 
+                margin-bottom: 15px; 
+            }
+            .field-label { width: 100%; margin-bottom: 5px; color: #0f172a; }
+            .old-data-box { margin-right: 0; margin-bottom: 10px; }
+            .separator-icon { transform: rotate(90deg); margin: 5px auto 10px auto; display: block; }
+            .new-input-box { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mb-5">
+    <div class="card edit-card">
+        <div class="card-header edit-header">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-edit me-2"></i>ទម្រង់ស្នើសុំកែតម្រូវទិន្នន័យ</h5>
+        </div>
+        
+        <div class="card-body p-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} rounded-3 shadow-sm mb-4">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="row mb-4 align-items-center bg-light p-3 rounded-3 border mx-0">
+                <div class="col-sm-4 text-sm-end mb-2 mb-sm-0">
+                    <span class="fw-bold text-muted">លេខរៀងបេក្ខជន:</span>
+                </div>
+                <div class="col-sm-8 text-center text-sm-start">
+                    <span class="fs-5 fw-bold text-primary">{{ app_no }}</span>
+                </div>
+            </div>
+
+            <div class="alert mb-4 rounded-3 border-0" style="background-color: #fffbeb; color: #92400e; font-size: 0.95rem;">
+                <i class="fas fa-info-circle me-2"></i> <strong>ចំណាំ៖</strong> អ្នកអាចដាក់សំណើសុំកែតម្រូវបានតែ <strong>១ ដងគត់</strong>។ សូមបំពេញព័ត៌មានថ្មីនៅខាងស្តាំដៃ (ប្រអប់ពណ៌ស) <strong>កន្លែងណាដែលអ្នកចង់កែប្រែប៉ុណ្ណោះ</strong>។ កន្លែងណាដែលមិនចង់កែ សូមទុកទទេ។
+            </div>
+
+            <form action="{{ url_for('submit_correction') }}" method="POST" id="correctionForm">
+                
+                <div class="comparison-section">
+                    <div class="section-title"><i class="fas fa-user-edit me-2"></i>ព័ត៌មានផ្ទាល់ខ្លួនបេក្ខជន</div>
+                    <div class="comparison-body">
+                        
+                        <div class="comparison-row">
+                            <label class="field-label">ឈ្មោះឡាតាំង</label>
+                            <div class="old-data-box" id="old_name_en">
+                                {{ c_data.name_en or '<span class="text-muted fst-italic">គ្មានទិន្នន័យ</span>'|safe }}
+                            </div>
+                            <i class="fas fa-arrow-right separator-icon"></i>
+                            <div class="new-input-box">
+                                <input type="text" name="name_en_new" class="form-control" placeholder="កែប្រែឈ្មោះថ្មី (ឡាតាំង)...">
+                            </div>
+                        </div>
+
+                        <div class="comparison-row">
+                            <label class="field-label">ភេទ</label>
+                            <div class="old-data-box" id="old_gender">
+                                {% if c_data.gender == 'M' %}ប្រុស
+                                {% elif c_data.gender == 'F' %}ស្រី
+                                {% else %}<span class="text-muted fst-italic">គ្មានទិន្នន័យ</span>
+                                {% endif %}
+                            </div>
+                            <i class="fas fa-arrow-right separator-icon"></i>
+                            <div class="new-input-box">
+                                <select name="gender_new" class="form-select">
+                                    <option value="" selected disabled>-- ជ្រើសរើសភេទថ្មី --</option>
+                                    <option value="M">ប្រុស (Male)</option>
+                                    <option value="F">ស្រី (Female)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="comparison-row">
+                            <label class="field-label">ថ្ងៃខែឆ្នាំកំណើត</label>
+                            <div class="old-data-box" id="old_dob">
+                                {{ c_data.dob or '<span class="text-muted fst-italic">គ្មានទិន្នន័យ</span>'|safe }}
+                            </div>
+                            <i class="fas fa-arrow-right separator-icon"></i>
+                            <div class="new-input-box">
+                                <input type="date" name="dob_new" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="comparison-row">
+                            <label class="field-label">អត្តសញ្ញាណប័ណ្ណ</label>
+                            <div class="old-data-box" id="old_id_card">
+                                {{ c_data.id_card_no or '<span class="text-muted fst-italic">គ្មានទិន្នន័យ</span>'|safe }}
+                            </div>
+                            <i class="fas fa-arrow-right separator-icon"></i>
+                            <div class="new-input-box">
+                                <input type="text" name="id_card_new" class="form-control" placeholder="កែប្រែលេខថ្មី..." oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                            </div>
+                        </div>
+
+                        <div class="comparison-row">
+                            <label class="field-label">លិខិតឆ្លងដែន</label>
+                            <div class="old-data-box" id="old_passport">
+                                {{ c_data.passport_no or '<span class="text-muted fst-italic">គ្មានទិន្នន័យ</span>'|safe }}
+                            </div>
+                            <i class="fas fa-arrow-right separator-icon"></i>
+                            <div class="new-input-box">
+                                <input type="text" name="passport_new" class="form-control" placeholder="កែប្រែលេខថ្មី...">
+                            </div>
+                        </div>
+                        
+                        <div class="comparison-row">
+                            <label class="field-label">លេខទូរសព្ទ</label>
+                            <div class="old-data-box" id="old_phone">
+                                {{ c_data.phone_number or '<span class="text-muted fst-italic">គ្មានទិន្នន័យ</span>'|safe }}
+                            </div>
+                            <i class="fas fa-arrow-right separator-icon"></i>
+                            <div class="new-input-box">
+                                <input type="tel" name="phone_new" class="form-control" placeholder="កែប្រែលេខថ្មី...">
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3" style="border-top: 2px dashed #e2e8f0;">
+                            <label class="field-label w-100 mb-2 text-primary"><i class="fas fa-plus-circle me-1"></i> ចំណុចផ្សេងៗទៀតដែលចង់កែតម្រូវ (បើមាន)៖</label>
+                            <textarea name="other_changes" class="form-control" rows="3" placeholder="ឧ. ចង់កែឈ្មោះម្តាយពី សុខ ទៅ សៅ..."></textarea>
+                        </div>
+
+                    </div>
+                </div>
+
+                <input type="hidden" name="requested_info_json" id="requestedInfoJSON">
+
+                <div class="d-flex gap-3 justify-content-end mt-4">
+                    <a href="{{ url_for('candidate_application_success') }}" class="btn btn-light border px-4 fw-bold text-secondary">
+                        <i class="fas fa-times me-1"></i> បោះបង់
+                    </a>
+                    <button type="submit" class="btn btn-success px-4 fw-bold" style="background-color: #10b981; border: none;">
+                        <i class="fas fa-paper-plane me-2"></i> បញ្ជូនសំណើកែតម្រូវ
+                    </button>
+                </div>
+            </form>
+            
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const correctionForm = document.getElementById('correctionForm');
+    const requestedInfoJSON = document.getElementById('requestedInfoJSON');
+
+    // មុខងារសម្អាតពាក្យ "គ្មានទិន្នន័យ" ពេលទាញយកមកប្រៀបធៀប
+    function cleanText(elementId) {
+        let text = document.getElementById(elementId).innerText.trim();
+        return text === 'គ្មានទិន្នន័យ' ? '' : text;
+    }
+
+    correctionForm.addEventListener('submit', function(e) {
+        let changes = []; 
+        
+        // ទាញយកទិន្នន័យចាស់ (ដោយសម្អាតពាក្យ "គ្មានទិន្នន័យ" ចេញ)
+        const oldData = {
+            name_en: cleanText('old_name_en'),
+            gender: cleanText('old_gender'),
+            dob: cleanText('old_dob'),
+            id_card: cleanText('old_id_card'),     
+            passport: cleanText('old_passport'), 
+            phone: cleanText('old_phone')
+        };
+
+        // ១. ឆែកឈ្មោះឡាតាំង
+        const nameEnNew = document.getElementsByName('name_en_new')[0].value.trim();
+        if (nameEnNew !== "" && nameEnNew !== oldData.name_en) {
+            changes.push({ field: "ឈ្មោះឡាតាំង", old: oldData.name_en || "គ្មាន", new: nameEnNew });
+        }
+
+        // ២. ឆែកភេទ
+        const genderNewSelect = document.getElementsByName('gender_new')[0];
+        const genderNew = genderNewSelect.value;
+        const genderNewText = genderNewSelect.options[genderNewSelect.selectedIndex].text;
+        
+        if (genderNew !== "" && genderNewText !== oldData.gender) {
+            changes.push({ field: "ភេទ", old: oldData.gender || "គ្មាន", new: genderNewText });
+        }
+
+        // ៣. ឆែកថ្ងៃខែឆ្នាំកំណើត
+        const dobNew = document.getElementsByName('dob_new')[0].value;
+        if (dobNew !== "" && dobNew !== oldData.dob) {
+            changes.push({ field: "ថ្ងៃខែឆ្នាំកំណើត", old: oldData.dob || "គ្មាន", new: dobNew });
+        }
+
+        // ៤. ឆែកអត្តសញ្ញាណប័ណ្ណ
+        const idCardNew = document.getElementsByName('id_card_new')[0].value.trim();
+        if (idCardNew !== "" && idCardNew !== oldData.id_card) {
+            changes.push({ field: "អត្តសញ្ញាណប័ណ្ណ", old: oldData.id_card || "គ្មាន", new: idCardNew });
+        }
+
+        // ៥. ឆែកលិខិតឆ្លងដែន
+        const passportNew = document.getElementsByName('passport_new')[0].value.trim();
+        if (passportNew !== "" && passportNew !== oldData.passport) {
+            changes.push({ field: "លិខិតឆ្លងដែន", old: oldData.passport || "គ្មាន", new: passportNew });
+        }
+        
+        // ៦. ឆែកលេខទូរសព្ទ
+        const phoneNew = document.getElementsByName('phone_new')[0].value.trim();
+        if (phoneNew !== "" && phoneNew !== oldData.phone) {
+            changes.push({ field: "លេខទូរសព្ទ", old: oldData.phone || "គ្មាន", new: phoneNew });
+        }
+
+        // ៧. ឆែកចំណុចផ្សេងៗ
+        const otherChanges = document.getElementsByName('other_changes')[0].value.trim();
+        if (otherChanges !== "") {
+            changes.push({ field: "ចំណុចផ្សេងៗ", old: "គ្មាន", new: otherChanges });
+        }
+
+        // ត្រួតពិនិត្យថាមានទិន្នន័យកែប្រែដែរឬទេ
+        if (changes.length === 0) {
+            e.preventDefault(); 
+            alert("សូមបំពេញព័ត៌មានថ្មីយ៉ាងហោចណាស់មួយចំណុច! ប្រអប់ខាងស្តាំដៃ (ពណ៌ស) គឺសម្រាប់វាយព័ត៌មានដែលអ្នកចង់កែប្រែ។");
+            return;
+        }
+
+        // បំប្លែង Array ទៅជា JSON String ហើយញាត់ចូល Hidden Input
+        requestedInfoJSON.value = JSON.stringify(changes);
+    });
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
