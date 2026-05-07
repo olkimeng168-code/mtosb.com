@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ប្រព័ន្ធផ្ទៀងផ្ទាត់ឯកសារ - EPS Smart Exam</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; }
+        .container { max-width: 700px; margin: 50px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; }
+        input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .btn-submit { background-color: #28a745; color: white; padding: 12px; border: none; border-radius: 6px; width: 100%; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
+        .btn-submit:hover { background-color: #218838; }
+        
+        /* រចនាប័ទ្មប្រអប់លទ្ធផល */
+        #resultBox { margin-top: 25px; padding: 20px; border-radius: 8px; display: none; border: 1px solid #eee; }
+        .match-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+        .match-item:last-child { border-bottom: none; }
+        .status-icon { font-size: 20px; }
+        .success-text { color: #28a745; font-weight: bold; }
+        .error-text { color: #dc3545; font-weight: bold; }
+        .loading { text-align: center; display: none; color: #007bff; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 style="text-align: center; color: #0056b3;">🔍 ផ្ទៀងផ្ទាត់ទិន្នន័យបេក្ខជន</h2>
+    <hr>
+
+    <form id="matchingForm">
+        <div class="form-group">
+            <label>១. ឯកសារ Excel បេក្ខជន (.xlsx, .csv)</label>
+            <input type="file" id="excel_file" name="excel_file" required>
+        </div>
+
+        <div class="form-group">
+            <label>២. រូបថត Passport / ID Card</label>
+            <input type="file" id="id_image" name="id_image" accept="image/*" required>
+        </div>
+
+        <div class="form-group">
+            <label>៣. ជ្រើសរើសប្រព័ន្ធ OCR</label>
+            <select name="ocr_option" id="ocr_option" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+                <option value="free">Tesseract (Free - ល្បឿនលឿន)</option>
+                <option value="google">Google Cloud Vision (AI - ត្រឹមត្រូវខ្ពស់)</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submitBtn">ចាប់ផ្តើមផ្ទៀងផ្ទាត់</button>
+    </form>
+
+    <div id="loading" class="loading">⏳ កំពុងពិនិត្យ និងស្កេនឯកសារ សូមរង់ចាំ...</div>
+
+    <div id="resultBox">
+        <h3 id="overallStatus" style="text-align: center;"></h3>
+        <div class="match-item">
+            <span>ឈ្មោះបេក្ខជន (Name):</span>
+            <span id="nameStatus" class="status-icon"></span>
+        </div>
+        <div class="match-item">
+            <span>លេខអត្តសញ្ញាណ (ID Number):</span>
+            <span id="idStatus" class="status-icon"></span>
+        </div>
+        <div style="margin-top: 15px; font-size: 12px; color: #777;">
+            <b>ទិន្នន័យ OCR ចាប់បានខ្លះៗ៖</b> <span id="rawOcrText"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('matchingForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const form = e.target;
+        const formData = new FormData(form);
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const resultBox = document.getElementById('resultBox');
+
+        // បង្ហាញ Loading និងលាក់ប៊ូតុង
+        submitBtn.disabled = true;
+        loading.style.display = 'block';
+        resultBox.style.display = 'none';
+
+        try {
+            const response = await fetch('/document-matching', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                // បង្ហាញលទ្ធផលឈ្មោះ
+                document.getElementById('nameStatus').innerHTML = data.matching_result.name_verified 
+                    ? '<span class="success-text">✅ ត្រឹមត្រូវ</span>' 
+                    : '<span class="error-text">❌ មិនត្រូវគ្នា</span>';
+
+                // បង្ហាញលទ្ធផល ID
+                document.getElementById('idStatus').innerHTML = data.matching_result.id_verified 
+                    ? '<span class="success-text">✅ ត្រឹមត្រូវ</span>' 
+                    : '<span class="error-text">❌ មិនត្រូវគ្នា</span>';
+
+                // បង្ហាញស្ថានភាពរួម
+                const overall = document.getElementById('overallStatus');
+                if (data.matching_result.is_all_correct) {
+                    overall.innerHTML = "🎉 ទិន្នន័យត្រឹមត្រូវ ១០០%";
+                    overall.style.color = "#28a745";
+                } else {
+                    overall.innerHTML = "⚠️ ទិន្នន័យមានចំណុចខុសគ្នា";
+                    overall.style.color = "#dc3545";
+                }
+
+                document.getElementById('rawOcrText').innerText = data.raw_ocr;
+                resultBox.style.display = 'block';
+            } else {
+                alert("មានបញ្ហា៖ " + data.message);
+            }
+        } catch (error) {
+            alert("កំហុសក្នុងការតភ្ជាប់ទៅកាន់ Server");
+        } finally {
+            submitBtn.disabled = false;
+            loading.style.display = 'none';
+        }
+    });
+</script>
+
+</body>
+</html>

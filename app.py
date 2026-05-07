@@ -8,10 +8,16 @@ from datetime import datetime, time # បន្ថែម time សម្រាប
 import pytz
 from dateutil.relativedelta import relativedelta
 
+from flask import Flask
+from ocr_matching import ocr_sync_bp # ១. ទាញយក Blueprint ដែលទើបបង្កើត
+app = Flask(__name__)
+# ២. ចុះឈ្មោះ Blueprint ចូលក្នុងប្រព័ន្ធ EPS Smart Exam
+app.register_blueprint(ocr_sync_bp)
+
 from datetime import datetime, date
 import pytz # <--- បន្ថែមបន្ទាត់នេះ
 
-import pandas as pd
+import pandas as pd 
 import numpy as np
 import cv2
 from PIL import Image
@@ -6970,6 +6976,3 @@ if __name__ == '__main__':
     # កំណត់ Port 5000 ជាស្តង់ដារតែមួយ ទាំង Local (Mac/Windows) និង Server (VPS)
     print("🚀 ប្រព័ន្ធកំពុងដំណើរការលើ Port: 5000")
     app.run(host='127.0.0.1', port=5001, debug=True)
-
-    
-# ធ្វើតេស្តប្រព័ន្ធ Git សម្រាប់ EPS Smart System)
