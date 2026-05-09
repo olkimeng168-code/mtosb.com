@@ -8,6 +8,7 @@ from openpyxl.utils import get_column_letter
 import io
 from datetime import datetime, date
 
+
 # 💡 កំណត់ Blueprint
 queue_bp = Blueprint('queue', __name__)
 
@@ -63,7 +64,81 @@ def counter_dashboard():
                            reject_reasons=reject_reasons)
 
 # ==========================================
-# API សម្រាប់ចុច "ហៅអ្នកបន្ទាប់" និង "បញ្ចប់ & សម្រាក"
+# API សម្រាប់ហៅលេខចុងក្រោយត្រឡប់មកវិញ (Undo) - តម្រូវឱ្យមាន EPS-ID
+# ==========================================
+@queue_bp.route('/api/recall_last_ticket', methods=['POST'])
+def recall_last_ticket():
+    if 'loggedin' not in session: return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+    
+    # សុវត្ថិភាពទី១៖ សម្រាប់តែ Admin ឡើងទៅ
+    if session.get('role_name') not in ['Admin', 'Super Admin']:
+        return jsonify({'status': 'error', 'message': 'គ្មានសិទ្ធិ! អនុញ្ញាតសម្រាប់តែ Admin ប៉ុណ្ណោះ។'}), 403
+
+    data = request.json
+    counter_id = data.get('counter_no') 
+    user_id = session.get('id')
+    scanned_barcode = str(data.get('scanned_barcode', '')).strip() # ទាមទារ Barcode
+    
+    if not scanned_barcode:
+        return jsonify({'status': 'error', 'message': 'សូមបញ្ចូលលេខ EPS-ID ដើម្បីផ្ទៀងផ្ទាត់!'})
+
+    import pytz
+    from datetime import datetime
+    today_date_khmer = datetime.now(pytz.timezone('Asia/Phnom_Penh')).strftime('%Y-%m-%d')
+    current_kh_time = datetime.now(pytz.timezone('Asia/Phnom_Penh')).strftime('%Y-%m-%d %H:%M:%S')
+
+    from app import get_db_connection
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        conn.start_transaction()
+        cursor.execute("SELECT id FROM queue_tickets WHERE counter_no = %s AND status = 'Processing' LIMIT 1", (counter_id,))
+        if cursor.fetchone():
+            return jsonify({'status': 'error', 'message': 'សូមបញ្ចប់លេខកំពុងនៅលើអេក្រង់សិន!'})
+            
+        cursor.execute("""
+            SELECT qt.id, qt.queue_number, qt.application_no, c.name_en 
+            FROM queue_tickets qt
+            LEFT JOIN candidates c ON qt.application_no = c.application_no
+            WHERE qt.counter_no = %s AND qt.processed_by = %s 
+              AND qt.status IN ('Completed', 'Rejected') AND DATE(qt.created_at) = %s
+            ORDER BY qt.updated_at DESC LIMIT 1 FOR UPDATE
+        """, (counter_id, user_id, today_date_khmer))
+        
+        last_ticket = cursor.fetchone()
+        if not last_ticket: return jsonify({'status': 'error', 'message': 'មិនមានប្រវត្តិលេខដែលអ្នកទើបតែចុចទេ!'})
+            
+        app_no = last_ticket['application_no']
+        
+        # សុវត្ថិភាពទី២៖ ផ្ទៀងផ្ទាត់ EPS-ID
+        if scanned_barcode.upper() != str(app_no).strip().upper():
+            return jsonify({'status': 'error', 'message': f'EPS-ID ខុស! ម្ចាស់សំបុត្រដែលទើបតែចេញទៅគឺលេខ {app_no}'})
+        
+        cursor.execute("UPDATE queue_tickets SET status = 'Processing', reject_reason = NULL, updated_at = %s WHERE id = %s", (current_kh_time, last_ticket['id']))
+        if app_no:
+            cursor.execute("UPDATE application_details SET status_id = 1, remark = NULL, scan_status = 'Pending' WHERE application_no = %s", (app_no,))
+            cursor.execute("UPDATE candidates SET job_app_status = 'PENDING' WHERE application_no = %s", (app_no,))
+            
+        conn.commit()
+        return jsonify({
+            'status': 'success', 
+            'message': f'បានទាញយកលេខ {last_ticket["queue_number"]} ត្រឡប់មកវិញ!', 
+            'ticket': {
+                'queue_number': last_ticket['queue_number'],
+                'candidate_name': last_ticket['name_en'] or '---',
+                'exam_code': app_no or '---'
+            }
+        })
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'status': 'error', 'message': str(e)})
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
+# ==========================================
+# API សម្រាប់ចុច "ហៅអ្នកបន្ទាប់", "យល់ព្រម", "អវត្តមាន", "បដិសេធ" និង "សម្អាតអេក្រង់"
 # ==========================================
 @queue_bp.route('/api/call_next', methods=['POST'])
 def call_next():
@@ -73,17 +148,20 @@ def call_next():
     data = request.json
     counter_id = data.get('counter_no') 
     user_id = session.get('id')
-    
     action_type = data.get('action_type', 'complete') 
     reject_reason = data.get('reject_reason', None)
-    
-    if not counter_id:
+    scanned_barcode = str(data.get('scanned_barcode', '')).strip()
+
+    if not counter_id: 
         return jsonify({'status': 'error', 'message': 'សូមជ្រើសរើសបញ្ជរ!'})
 
-    # កំណត់ម៉ោងកម្ពុជា
-    from datetime import datetime, timedelta
-    today_date_khmer = (datetime.utcnow() + timedelta(hours=7)).strftime('%Y-%m-%d')
+    import pytz
+    from datetime import datetime
+    khmer_tz = pytz.timezone('Asia/Phnom_Penh')
+    today_date_khmer = datetime.now(khmer_tz).strftime('%Y-%m-%d')
+    current_kh_time = datetime.now(khmer_tz).strftime('%Y-%m-%d %H:%M:%S')
 
+    from app import get_db_connection
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     
@@ -91,89 +169,145 @@ def call_next():
         conn.start_transaction()
         cursor.execute("UPDATE counters SET status = 'Active', current_user_id = %s WHERE id = %s", (user_id, counter_id))
         
-        # 🌟 ដំណាក់កាលទី ១៖ ឆែកមើលសំបុត្រដែលកំពុងដំណើរការ (Processing) របស់បញ្ជរនេះ
+        # ១. ទាញយកសំបុត្រដែលកំពុង Processing 
         cursor.execute("""
             SELECT qt.id, qt.application_no, qt.queue_number, c.name_en 
             FROM queue_tickets qt
             LEFT JOIN candidates c ON qt.application_no = c.application_no
-            WHERE qt.counter_no = %s AND qt.status = 'Processing' AND DATE(qt.updated_at) = %s 
-            LIMIT 1
-        """, (counter_id, today_date_khmer))
+            WHERE qt.counter_no = %s AND qt.status = 'Processing'
+            LIMIT 1 FOR UPDATE
+        """, (counter_id,))
         current_ticket = cursor.fetchone()
 
-        # 🚀 ដំណោះស្រាយការពារការ Refresh (F5) និង Double-Click
+        # មុខងារសង្គ្រោះលេខពេល Refresh
         if current_ticket and action_type == 'call_next_new':
-            # បើគាត់ចុចហៅលេខថ្មី តែនៅមានលេខចាស់មិនទាន់ចប់ យើងប្រគល់លេខចាស់នោះឱ្យគាត់វិញ (មិនឱ្យទៅ Scanner ទេ)
             conn.commit()
-            ticket_data = {
-                'queue_number': current_ticket['queue_number'],
-                'candidate_name': current_ticket['name_en'] if current_ticket['name_en'] else 'មិនមានព័ត៌មាន',
-                'exam_code': current_ticket['application_no'] if current_ticket['application_no'] else 'មិនមានព័ត៌មាន'
-            }
             return jsonify({
                 'status': 'success', 
-                'message': f'សូមបន្តពិនិត្យលេខ {current_ticket["queue_number"]} ដែលនៅសេសសល់ឱ្យចប់សិន!', 
-                'ticket': ticket_data
+                'message': f'បានទាញយកលេខ {current_ticket["queue_number"]} ដែលកំពុងគាំងមកវិញ!', 
+                'ticket': {
+                    'queue_number': current_ticket['queue_number'],
+                    'candidate_name': current_ticket['name_en'] or 'មិនមានព័ត៌មាន',
+                    'exam_code': current_ticket['application_no'] or 'មិនមានព័ត៌មាន'
+                }
             })
 
-        # ប្រសិនបើជាការចុច "បដិសេធ", "យល់ព្រម", ឬ "សម្រាក" លើសំបុត្រដែលកំពុងកាន់
-        elif current_ticket:
+        # ២. អនុវត្តសកម្មភាព (Approve / Reject)
+        if current_ticket:
             app_no = current_ticket['application_no']
 
+            # 🔴 ករណី អវត្តមាន ឬ បដិសេធ
             if action_type == 'reject':
-                if not reject_reason or str(reject_reason).strip() == '':
-                    raise ValueError("សូមបញ្ចូលមូលហេតុនៃការបដិសេធ!")
-                    
-                cursor.execute("UPDATE queue_tickets SET status = 'Rejected', reject_reason = %s, updated_at = NOW() WHERE id = %s", (str(reject_reason).strip(), current_ticket['id']))
-                cursor.execute("UPDATE application_details SET status_id = 3, remark = %s WHERE application_no = %s", (str(reject_reason).strip(), app_no))
-                cursor.execute("UPDATE candidates SET job_app_status = 'REJECTED' WHERE application_no = %s", (app_no,))
-
-            elif action_type in ['complete', 'clear_only']: 
-                # 🌟 កន្លែងនេះហើយដែលបញ្ជូនទិន្នន័យទៅ Scanner (ព្រោះ Status ដូរទៅ Completed)
-                cursor.execute("UPDATE queue_tickets SET status = 'Completed', updated_at = NOW() WHERE id = %s", (current_ticket['id'],))
+                if not reject_reason: raise ValueError("សូមបញ្ជាក់មូលហេតុបដិសេធ!")
                 
-                # 🌟🌟 ចំណុចដែលត្រូវកែតម្រូវ៖ ត្រូវ Reset `scan_status` ឱ្យត្រឡប់ទៅជា 'Pending' វិញជានិច្ច 🌟🌟
-                cursor.execute("UPDATE application_details SET scan_status = 'Pending', status_id = 1, remark = NULL WHERE application_no = %s", (app_no,))
+                # Update queue_tickets ជា Rejected ជានិច្ច
+                cursor.execute("UPDATE queue_tickets SET status = 'Rejected', reject_reason = %s, updated_at = %s WHERE id = %s", (str(reject_reason).strip(), current_kh_time, current_ticket['id']))
+                
+                # បើបេក្ខជនមាន EPS-ID ទើបយើង Update ចូលតារាងធំ (ដើម្បីការពារការគាំង)
+                if app_no:
+                    cursor.execute("UPDATE application_details SET status_id = 3, remark = %s, scan_status = 'Pending' WHERE application_no = %s", (str(reject_reason).strip(), app_no))
+                    cursor.execute("UPDATE candidates SET job_app_status = 'REJECTED' WHERE application_no = %s", (app_no,))
+
+            # 🟢 ករណី យល់ព្រម
+            elif action_type == 'complete': 
+                if not app_no: raise ValueError("សំបុត្រនេះមិនមានភ្ជាប់ EPS-ID ទេ! សូមចុចបដិសេធចោល។")
+                if scanned_barcode:
+                    cursor.execute("SELECT name_en FROM candidates WHERE application_no = %s", (scanned_barcode,))
+                    if not cursor.fetchone():
+                        raise ValueError(f"លេខកូដ '{scanned_barcode}' រកមិនឃើញក្នុងប្រព័ន្ធទេ!")
+                    if scanned_barcode.upper() != str(app_no).upper():
+                        raise ValueError(f"លេខនេះមិនមែនជាម្ចាស់សំបុត្រ {current_ticket['queue_number']} ទេ!")
+                
+                cursor.execute("UPDATE queue_tickets SET status = 'Completed', reject_reason = NULL, updated_at = %s WHERE id = %s", (current_kh_time, current_ticket['id']))
+                cursor.execute("UPDATE application_details SET status_id = 2, remark = NULL, scan_status = 'Pending' WHERE application_no = %s", (app_no,))
+                cursor.execute("UPDATE candidates SET job_app_status = 'APPROVED' WHERE application_no = %s", (app_no,))
+            
+            # ⚪ ករណី សម្អាតអេក្រង់
+            elif action_type == 'clear_only':
+                cursor.execute("UPDATE queue_tickets SET status = 'Waiting', counter_no = NULL, processed_by = NULL WHERE id = %s", (current_ticket['id'],))
+                conn.commit()
+                return jsonify({'status': 'empty', 'message': 'បានសម្អាតអេក្រង់ និងត្រឡប់សំបុត្រចូលជួររង់ចាំវិញ។'})
+
+        # ៣. ហៅអ្នកបន្ទាប់ (អនុវត្តតែពេលមន្ត្រីចុច "ហៅអ្នកបន្ទាប់" ផ្ទាល់ប៉ុណ្ណោះ)
+        if action_type == 'call_next_new':
+            cursor.execute("""
+                SELECT qt.id, qt.queue_number, qt.application_no, c.name_en AS candidate_name
+                FROM queue_tickets qt
+                LEFT JOIN candidates c ON qt.application_no = c.application_no
+                WHERE qt.status = 'Waiting' AND DATE(qt.created_at) = %s
+                ORDER BY qt.id ASC LIMIT 1 FOR UPDATE
+            """, (today_date_khmer,))
+            next_ticket = cursor.fetchone()
+
+            if next_ticket:
+                cursor.execute("UPDATE queue_tickets SET status = 'Processing', counter_no = %s, processed_by = %s, updated_at = %s WHERE id = %s", 
+                               (counter_id, user_id, current_kh_time, next_ticket['id']))
+                conn.commit()
+                return jsonify({
+                    'status': 'success', 
+                    'message': f'កំពុងហៅលេខ {next_ticket["queue_number"]}', 
+                    'ticket': {
+                        'queue_number': next_ticket['queue_number'], 
+                        'candidate_name': next_ticket['candidate_name'] or 'មិនមានព័ត៌មាន', 
+                        'exam_code': next_ticket['application_no'] or 'មិនមានព័ត៌មាន'
+                    }
+                })
+            else:
+                conn.commit()
+                return jsonify({'status': 'empty', 'message': 'បច្ចុប្បន្នគ្មានអ្នករង់ចាំទៀតទេ។'})
         
-        # 🌟 ដំណាក់កាលទី ២៖ ហៅអ្នកបន្ទាប់ ឬ គ្រាន់តែសម្អាតអេក្រង់
-        if action_type == 'clear_only':
-            conn.commit()
-            return jsonify({'status': 'empty', 'message': 'បានបញ្ចប់សំបុត្រ និងសម្អាតអេក្រង់ជោគជ័យ!'})
-
-        # ទាញយកសំបុត្របន្ទាប់
-        cursor.execute("""
-            SELECT qt.id, qt.queue_number, qt.application_no, c.name_en AS candidate_name
-            FROM queue_tickets qt
-            LEFT JOIN candidates c ON qt.application_no = c.application_no
-            WHERE qt.status = 'Waiting' AND DATE(qt.created_at) = %s
-            ORDER BY qt.created_at ASC LIMIT 1 FOR UPDATE
-        """, (today_date_khmer,))
-        next_ticket = cursor.fetchone()
-
-        if next_ticket:
-            cursor.execute("UPDATE queue_tickets SET status = 'Processing', counter_no = %s, processed_by = %s, updated_at = NOW() WHERE id = %s", (counter_id, user_id, next_ticket['id']))
-            conn.commit()
-
-            ticket_data = {
-                'queue_number': next_ticket['queue_number'],
-                'candidate_name': next_ticket['candidate_name'] if next_ticket['candidate_name'] else 'មិនមានព័ត៌មាន',
-                'exam_code': next_ticket['application_no'] if next_ticket['application_no'] else 'មិនមានព័ត៌មាន'
-            }
-            return jsonify({'status': 'success', 'message': f'កំពុងហៅលេខ {next_ticket["queue_number"]}', 'ticket': ticket_data})
         else:
+            # សម្រាប់ action = 'complete', 'reject' គឺគ្រាន់តែ Commit រួចបញ្ជាឱ្យលោតទៅផ្ទាំងទំនេរ (Idle View)
             conn.commit()
-            return jsonify({'status': 'empty', 'message': 'មិនមានអ្នករង់ចាំទេ!'})
+            return jsonify({'status': 'empty', 'message': 'ប្រតិបត្តិការជោគជ័យ! សូមហៅអ្នកបន្ទាប់ដើម្បីបន្ត។'})
             
     except ValueError as ve:
         conn.rollback()
         return jsonify({'status': 'error', 'message': str(ve)})
     except Exception as e:
         conn.rollback()
-        print(f"Error in call_next: {e}")
-        return jsonify({'status': 'error', 'message': 'មានបញ្ហាប្រព័ន្ធ Server!'})
+        import traceback
+        print("=== បញ្ហា Error API Call Next ===")
+        print(traceback.format_exc())
+        return jsonify({'status': 'error', 'message': f'កំហុសប្រព័ន្ធ: {str(e)}'})
     finally:
         if cursor: cursor.close()
         if conn: conn.close()
+
+@queue_bp.route('/api/recover_ticket', methods=['GET'])
+def recover_ticket():
+    if 'loggedin' not in session: return jsonify({'status': 'error'})
+    
+    user_id = session.get('id')
+    import pytz
+    from datetime import datetime
+    today_date = datetime.now(pytz.timezone('Asia/Phnom_Penh')).strftime('%Y-%m-%d')
+    
+    from app import get_db_connection
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # ទាញយកលេខដែលជាប់គាំង Processing របស់មន្ត្រីនេះ
+        cursor.execute("""
+            SELECT qt.queue_number, qt.application_no, c.name_en AS candidate_name
+            FROM queue_tickets qt
+            LEFT JOIN candidates c ON qt.application_no = c.application_no
+            JOIN counters cnt ON qt.counter_no = cnt.id
+            WHERE cnt.current_user_id = %s AND qt.status = 'Processing' AND DATE(qt.created_at) = %s
+            LIMIT 1
+        """, (user_id, today_date))
+        ticket = cursor.fetchone()
+        
+        if ticket:
+            return jsonify({'status': 'success', 'ticket': {
+                'queue_number': ticket['queue_number'],
+                'exam_code': ticket['application_no'] or '---',
+                'candidate_name': ticket['candidate_name'] or '---'
+            }})
+        return jsonify({'status': 'empty'})
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()        
 
    
 
@@ -653,28 +787,21 @@ def manage_queue_tv_settings():
     return render_template('queue_tv_settings.html', settings=settings, slide_images=slide_images, full_name=session.get('full_name'))
 
 # ==========================================
-# API សម្រាប់ទូរទស្សន៍ទាញទិន្នន័យ (Auto-Refresh ស្ងាត់ៗ)
+# 📺 API សម្រាប់ទូរទស្សន៍ទាញទិន្នន័យ (Auto-Refresh ស្ងាត់ៗ) - Read Only!
 # ==========================================
 @queue_bp.route('/api/queue_tv_data', methods=['GET'])
 def get_queue_tv_data():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
+        # ១. ទាញយកការកំណត់ (Settings) របស់ទូរទស្សន៍
         cursor.execute("SELECT setting_key, setting_value FROM queue_tv_settings")
         settings = {row['setting_key']: row['setting_value'] for row in cursor.fetchall()}
 
-        try:
-            timeout_seconds = int(settings.get('auto_clear_timer', 300))
-            cursor.execute("""
-                UPDATE queue_tickets 
-                SET status = 'Completed' 
-                WHERE status = 'Processing' 
-                AND TIMESTAMPDIFF(SECOND, updated_at, NOW()) > %s
-            """, (timeout_seconds,))
-            conn.commit()
-        except:
-            pass 
+        # ❌ លុបកូដ Auto-Clear (Timeout) ចោលទាំងស្រុងនៅទីនេះ! ❌
+        # (ទូរទស្សន៍លែងមានសិទ្ធិ Update Status របស់បេក្ខជនទៀតហើយ)
 
+        # ២. ទាញយកបញ្ជីកំពុងដំណើរការ (Processing)
         cursor.execute("""
             SELECT q.queue_number, cnt.counter_name_en as counter_name, 'processing' as status, q.id 
             FROM queue_tickets q 
@@ -684,6 +811,7 @@ def get_queue_tv_data():
         """)
         processing_list = cursor.fetchall()
 
+        # ៣. ទាញយកបញ្ជីរង់ចាំ (Waiting) បន្ថែមពីលើ
         limit_waiting = 5 - len(processing_list)
         waiting_list = []
         if limit_waiting > 0:
@@ -696,6 +824,7 @@ def get_queue_tv_data():
             """, (limit_waiting,))
             waiting_list = cursor.fetchall()
 
+        # ៤. ទាញយករូបភាព Slide
         slide_images = []
         if os.path.exists(TV_SLIDES_FOLDER):
             valid_extensions = ('.png', '.jpg', '.jpeg', '.gif', '.webp', '.mp4', '.webm')
@@ -1163,10 +1292,13 @@ def get_scanner_pending_list():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
-        # 🌟 កំណត់ម៉ោងកម្ពុជា (UTC+7)
-        from datetime import datetime, timedelta
-        today_date_khmer = (datetime.utcnow() + timedelta(hours=7)).strftime('%Y-%m-%d')
+        # 🌟 កំណត់ម៉ោងកម្ពុជាឱ្យច្បាស់លាស់ (ប្រើ pytz សុវត្ថិភាពជាង)
+        import pytz
+        from datetime import datetime
+        khmer_tz = pytz.timezone('Asia/Phnom_Penh')
+        today_date_khmer = datetime.now(khmer_tz).strftime('%Y-%m-%d')
 
+        # 🌟 ទាញយកទិន្នន័យតឹងរ៉ឹង និងដើរលឿនជាងមុន
         cursor.execute("""
             SELECT 
                 q.queue_number, 
@@ -1174,21 +1306,21 @@ def get_scanner_pending_list():
                 CONCAT(IFNULL(a.last_name_kh, ''), ' ', IFNULL(a.first_name_kh, '')) as full_name_kh,
                 ct.counter_name_kh AS counter_name
             FROM queue_tickets q 
-            -- 🌟 ទាញយកជួរចុងក្រោយគេជានិច្ច ទោះបេក្ខជនមកចាប់លេខប៉ុន្មានដងក៏ដោយ
-            JOIN (
-                SELECT application_no, MAX(id) as max_id 
-                FROM queue_tickets 
-                WHERE DATE(IFNULL(updated_at, created_at)) = %s 
-                GROUP BY application_no
-            ) latest_q ON q.id = latest_q.max_id
-            
             LEFT JOIN candidates c ON q.application_no = c.application_no 
             LEFT JOIN application_details a ON q.application_no = a.application_no
             LEFT JOIN counters ct ON q.counter_no = ct.id 
             
             WHERE q.status = 'Completed' 
-              -- 🌟 កែតម្រូវចំនុចពិសេស៖ អនុញ្ញាតឱ្យបង្ហាញ ឱ្យតែវាមិនទាន់ 'Scanned' ឬ 'Rejected'
-              AND IFNULL(a.scan_status, '') NOT IN ('Scanned', 'Rejected')
+              -- យកតែសំបុត្រដែលមន្ត្រីបញ្ជរទើបតែចុចយល់ព្រម 'ថ្ងៃនេះ'
+              AND DATE(q.updated_at) = %s 
+              -- មន្ត្រីស្កេនមិនទាន់បានស្កេន
+              AND IFNULL(a.scan_status, 'Pending') = 'Pending'
+              -- 🌟 ការពារលេខស្ទួន៖ យកតែសំបុត្រដែលថ្មីចុងក្រោយបង្អស់របស់បេក្ខជនម្នាក់ៗ
+              AND q.id = (
+                  SELECT MAX(id) 
+                  FROM queue_tickets 
+                  WHERE application_no = q.application_no
+              )
             ORDER BY q.updated_at ASC
         """, (today_date_khmer,))
         
@@ -1201,7 +1333,9 @@ def get_scanner_pending_list():
         })
         
     except Exception as e:
+        import traceback
         print(f"❌ SQL Error in Scanner Pending List: {e}")
+        print(traceback.format_exc())
         return jsonify({'status': 'error', 'message': str(e)})
         
     finally:
@@ -1271,13 +1405,16 @@ def admin_search_rejected():
 
     search_val = request.json.get('search_val', '').strip()
     
-    from datetime import datetime, timedelta
-    today_date_khmer = (datetime.utcnow() + timedelta(hours=7)).strftime('%Y-%m-%d')
+    import pytz
+    from datetime import datetime
+    khmer_tz = pytz.timezone('Asia/Phnom_Penh')
+    today_date_khmer = datetime.now(khmer_tz).strftime('%Y-%m-%d')
 
+    from app import get_db_connection
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
-        # 🌟 កែប្រែត្រង់នេះ៖ បន្ថែមលក្ខខណ្ឌឆែកមើល Status ទាំង ៣ តារាងបញ្ចូលគ្នា
+        # 🌟 ត្រូវបន្ថែម ORDER BY q.id DESC ដើម្បីធានាថាចាប់បានសំបុត្រដែលថ្មីចុងក្រោយបំផុតជានិច្ច
         cursor.execute("""
             SELECT q.application_no, 
                    c.name_en,
@@ -1292,7 +1429,7 @@ def admin_search_rejected():
                   a.status_id = 3
               )
               AND DATE(q.updated_at) = %s
-            LIMIT 1
+            ORDER BY q.id DESC LIMIT 1
         """, (search_val, search_val, today_date_khmer))
         
         candidate = cursor.fetchone()
@@ -1306,8 +1443,9 @@ def admin_search_rejected():
     except Exception as e:
         return jsonify({'status': 'error', 'message': f'Server Error: {str(e)}'})
     finally:
-        cursor.close()
-        conn.close()
+        if cursor: cursor.close()
+        if conn: conn.close()
+
 
 @queue_bp.route('/api/admin_revive_to_scanner', methods=['POST'])
 def admin_revive_to_scanner():
@@ -1317,41 +1455,55 @@ def admin_revive_to_scanner():
     app_no = request.json.get('application_no')
     admin_name = session.get('full_name', 'Admin')
 
+    import pytz
+    from datetime import datetime
+    khmer_tz = pytz.timezone('Asia/Phnom_Penh')
+    current_kh_time = datetime.now(khmer_tz).strftime('%Y-%m-%d %H:%M:%S')
+
     from app import get_db_connection
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
     try:
         conn.start_transaction()
 
-        # ១. ដូរ Status ក្នុងជួរទៅជា Completed វិញ ដើម្បីឱ្យលោតចូល Scanner
+        # ១. 🌟 ស្វែងរកលេខ ID នៃសំបុត្រដែលចុងក្រោយបំផុតសិន (ការពារកុំឱ្យ Update ត្រូវសំបុត្រចាស់ៗ)
+        cursor.execute("SELECT id FROM queue_tickets WHERE application_no = %s ORDER BY id DESC LIMIT 1", (app_no,))
+        latest_ticket = cursor.fetchone()
+        
+        if not latest_ticket:
+            raise ValueError("រកមិនឃើញប្រវត្តិនៃការស្នើសុំលេខរង់ចាំរបស់បេក្ខជននេះទេ!")
+
+        # Update តែសំបុត្រមួយដែលចុងក្រោយគេប៉ុណ្ណោះ ឱ្យទៅជា Completed វិញ
         cursor.execute("""
             UPDATE queue_tickets 
-            SET status = 'Completed', reject_reason = NULL, updated_at = NOW() 
-            WHERE application_no = %s AND status = 'Rejected'
-        """, (app_no,))
+            SET status = 'Completed', reject_reason = NULL, updated_at = %s 
+            WHERE id = %s
+        """, (current_kh_time, latest_ticket['id']))
 
-        # ២. 🌟 កែត្រង់នេះ៖ ប្តូរ status_id = 1 (រង់ចាំ) វិញ ព្រោះគាត់ត្រូវរង់ចាំស្កេនសិន
-        remark_text = f"អនុម័តឱ្យស្កេនឡើងវិញដោយ Admin: {admin_name}"
+        # ២. 🌟 កែត្រង់នេះ៖ ត្រូវប្តូរ status_id = 2 វិញ ដើម្បីស៊ីគ្នានឹងការយល់ព្រមពីបញ្ជរ
+        remark_text = f"អនុម័តបញ្ជូនទៅស្កេន ដោយ Admin: {admin_name}"
         cursor.execute("""
             UPDATE application_details 
-            SET scan_status = 'Pending', status_id = 1, remark = %s 
+            SET scan_status = 'Pending', status_id = 2, remark = %s 
             WHERE application_no = %s
         """, (remark_text, app_no))
 
-        # ៣. 🌟 កែត្រង់នេះ៖ ប្តូរទៅជា PENDING វិញ
+        # ៣. 🌟 កែត្រង់នេះ៖ ត្រូវប្តូរទៅជា APPROVED វិញ ដូចមន្ត្រីបញ្ជរបានចុចយល់ព្រមដែរ
         cursor.execute("""
             UPDATE candidates 
-            SET job_app_status = 'PENDING' 
+            SET job_app_status = 'APPROVED' 
             WHERE application_no = %s
         """, (app_no,))
 
         conn.commit()
-        return jsonify({'status': 'success', 'message': f'ជោគជ័យ! លេខ {app_no} ត្រូវបានបញ្ជូនទៅបញ្ជីរង់ចាំស្កេនវិញហើយ។'})
+        return jsonify({'status': 'success', 'message': f'ជោគជ័យ! លេខ {app_no} ត្រូវបានបញ្ជូនទៅបញ្ជីរង់ចាំស្កេនរួចរាល់។'})
     except Exception as e:
         conn.rollback()
+        import traceback
+        print(traceback.format_exc())
         return jsonify({'status': 'error', 'message': str(e)})
     finally:
-        cursor.close()
-        conn.close()   
+        if cursor: cursor.close()
+        if conn: conn.close()
         
             

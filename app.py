@@ -4,122 +4,69 @@ import base64
 import io
 import re
 import uuid
-from datetime import datetime, time # បន្ថែម time សម្រាប់ឆែកម៉ោងបើកបិទប្រព័ន្ធ
-import pytz
-from dateutil.relativedelta import relativedelta
-
-from flask import Flask
-from ocr_matching import ocr_sync_bp # ១. ទាញយក Blueprint ដែលទើបបង្កើត
-app = Flask(__name__)
-# ២. ចុះឈ្មោះ Blueprint ចូលក្នុងប្រព័ន្ធ EPS Smart Exam
-app.register_blueprint(ocr_sync_bp)
-
-from datetime import datetime, date
-import pytz # <--- បន្ថែមបន្ទាត់នេះ
-
+import mysql.connector
 import pandas as pd 
 import numpy as np
 import cv2
-from PIL import Image
-import face_recognition
-
-# 💡 ថែមជួរនេះមកវិញ ដើម្បីឱ្យកូដស្គាល់ mysql.connector.Error
-import mysql.connector
-
+from datetime import datetime, time, date
+import pytz
+from dateutil.relativedelta import relativedelta
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_bcrypt import Bcrypt
-from werkzeug.utils import secure_filename
-from werkzeug.security import generate_password_hash
-
-# --- Import Limiter នៅទីនេះ ---
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash
+from werkzeug.exceptions import RequestEntityTooLarge
 
-# 💡 ១. Import DB Connection ពី File ថ្មី (db_config.py)
+
+# 💡 ១. Import បណ្តាល័យ និង Blueprint
 from db_config import get_db_connection
+from ocr_matching import ocr_sync_bp
+from routes.queue_tickets import queue_bp
 
-# --- ២. បង្កើត App និងកំណត់ទម្រង់កូដ (Setup) ---
+# --- ២. បង្កើត App តែមួយគត់ (កុំឱ្យស្ទួន) ---
 app = Flask(__name__)
 app.secret_key = '0a03d8cb318f0228cc8dd3abbd00371aec0df9a8e1c66bdd'
 bcrypt = Bcrypt(app) 
 
-# --- ៣. ការកំណត់ Session និង Security សម្រាប់ទូរសព្ទដៃ ---
+# --- ៣. ចុះឈ្មោះ Blueprint ទាំងអស់នៅទីនេះ ---
+app.register_blueprint(ocr_sync_bp)
+app.register_blueprint(queue_bp)
+
+# --- ៤. ការកំណត់ Session និង Security ---
 app.config.update(
-    SESSION_COOKIE_SAMESITE='Lax',  # បង្ការបញ្ហា Session បាត់ពេល Submit លើ Mobile
-    SESSION_COOKIE_SECURE=False,   # ដាក់ False បើតេស្តលើ Local/HTTP (បើប្រើ HTTPS ត្រូវដាក់ True)
+    SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_COOKIE_SECURE=False,
     SESSION_COOKIE_HTTPONLY=True,
-    PERMANENT_SESSION_LIFETIME=3600 # ទុក Session ឱ្យនៅរស់បាន ១ម៉ោង
+    PERMANENT_SESSION_LIFETIME=3600 
 )
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024 # 50MB
 
-# កំណត់ទំហំ File រូបភាពឱ្យឡើងដល់ 16MB (ការពារការ Submit មិនទៅពេលរូបថតទូរសព្ទធំពេក)
-
-# 💡 កំណត់ទំហំ Upload ត្រឹម 50MB (Megabytes)
-# រូបមន្ត: ទំហំគិតជា MB * 1024 (ទៅជា KB) * 1024 (ទៅជា Bytes)
-app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
-
-# ១. បង្កើតអថេរ limiter ជាមុន (កំណត់លេខឱ្យធំទូលាយសម្រាប់អ្នកប្រើទូទៅ)
+# --- ៥. កំណត់ Limiter ---
 limiter = Limiter(
     key_func=get_remote_address,
-    # អនុញ្ញាត: ១ម៉ឺនដង/ថ្ងៃ | ២ពាន់ដង/ម៉ោង | ៦០ដង/នាទី
-    default_limits=["10000 per day", "2000 per hour", "60 per minute"] 
+    default_limits=["10000 per day", "2000 per hour", "60 per minute"],
+    app=app
 )
 
-# ២. បន្ទាប់មក ប្រើមុខងារ init_app ដើម្បីភ្ជាប់វាទៅនឹងកម្មវិធី Flask របស់អ្នក
-limiter.init_app(app)
-
-from flask import flash, redirect, request
-from werkzeug.exceptions import RequestEntityTooLarge
-
-# 💡 កូដចាប់យក Error 413 (ពេល File ធំពេក)
+# --- ៦. Error Handler សម្រាប់ File ធំពេក ---
 @app.errorhandler(413)
 @app.errorhandler(RequestEntityTooLarge)
 def handle_file_size_error(e):
-    # បង្ហាញសារប្រាប់អ្នកប្រើប្រាស់
-    flash('សុំទោស! ឯកសារនេះធំពេកហើយ។ សូមជ្រើសរើសវីដេអូ ឬរូបភាពដែលមានទំហំតូចជាង ៥០ មេកាបៃ (50MB)។', 'danger')
-    
-    # បញ្ជូនគាត់ត្រឡប់ទៅទំព័រដែលគាត់ទើបតែ Upload វិញ
-    # (ការពារកុំឱ្យគាត់ជាប់គាំងនៅលើទំព័រ Error)
+    flash('សុំទោស! ឯកសារនេះធំពេកហើយ (លើស 50MB)។', 'danger')
     return redirect(request.url)
 
-# --- ៤. កំណត់ទីតាំង Folder និងបង្កើត Folder ជាស្វ័យប្រវត្តិ ---
+# --- ៧. កំណត់ Folder និងបង្កើត Folder ---
 app.config['UPLOAD_FOLDER'] = 'static/uploads/excel'
 app.config['PHOTO_FOLDER'] = 'static/uploads/reference_photos'
-app.config['UPLOAD_FOLDER_APPS'] = 'static/uploads/apps' # សម្រាប់ឯកសារបេក្ខជន
+app.config['UPLOAD_FOLDER_APPS'] = 'static/uploads/apps'
 app.config['LATEST_SCANS_FOLDER'] = 'static/latest_scans'
 
-# បង្កើត Folder បើមិនទាន់មាន
 for folder in [app.config['UPLOAD_FOLDER'], app.config['PHOTO_FOLDER'], 
                app.config['UPLOAD_FOLDER_APPS'], app.config['LATEST_SCANS_FOLDER']]:
     os.makedirs(folder, exist_ok=True)
 
-# --- ៥. DEBUGGING PATH (សម្រាប់ឆែកមើល Folder templates) ---
-print("--- DEBUGGING PATH ---")
-template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
-print("Searching for templates in:", template_path)
-if os.path.exists(template_path):
-    print("Files found in templates:", os.listdir(template_path))
-print("----------------------")
-
-# --- ៦. Function ជំនួយសម្រាប់ទិន្នន័យលេខ ---
-def clean_int(val):
-    if val is None: return 0
-    val = str(val).strip()
-    if val and val.isdigit():
-        return int(val)
-    return 0
-
-# --- ៧. Route ផ្សេងៗ (Login, Form, Submit) ត្រូវដាក់នៅខាងក្រោមនេះ ---
-
-#@app.route('/')
-#def index():
-#    return "ប្រព័ន្ធដំណើរការធម្មតា!"
-
-# (បញ្ចូល Route ផ្សេងៗទៀតរបស់បងនៅទីនេះ បើមាន...)
-
-# --- ៨. ការចុះឈ្មោះ Blueprint (Register Blueprints) ---
-# 💡 ចុះឈ្មោះ Blueprint របស់ Queue System (និង Blueprint ផ្សេងៗបើបងមាន)
-from routes.queue_tickets import queue_bp
-app.register_blueprint(queue_bp)
 
 # ឧទាហរណ៍បើបងមាន Blueprint ផ្សេងទៀត ក៏ត្រូវដាក់នៅទីនេះដែរ៖
 # from routes.admin_routes import admin_bp
@@ -3852,6 +3799,11 @@ def candidate_face_login():
 # ==============================================================================
 @app.route('/candidate/manual_login', methods=['POST'])
 def candidate_manual_login():
+    # 🌟 ដាក់សោការពារ Backend៖ បដិសេធរាល់ការស្នើសុំពីអ្នកដែលមិនមែនជា Admin
+    if session.get('role_name') not in ['Admin', 'Super Admin']:
+        flash('អ្នកមិនមានសិទ្ធិប្រើប្រាស់មុខងារនេះទេ!', 'danger')
+        return redirect(url_for('candidate_login_page'))
+    
     application_no = request.form.get('application_no', '').strip()
     id_passport = request.form.get('id_passport', '').strip()
     
@@ -4456,7 +4408,10 @@ def candidate_application_success():
 
 
 # ==============================================================================
-# 🔴 Route 2: សម្រាប់ប៊ូតុង "ស្នើសុំលេខរង់ចាំថ្មី" (Re-Queue)
+# 🔴 Route: សម្រាប់ប៊ូតុង "ស្នើសុំលេខរង់ចាំថ្មី" (Re-Queue)
+# ==============================================================================
+# ==============================================================================
+# 🔴 Route: សម្រាប់ប៊ូតុង "ស្នើសុំលេខរង់ចាំថ្មី" (Re-Queue)
 # ==============================================================================
 @app.route('/candidate/request_new_ticket', methods=['POST'])
 def request_new_ticket():
@@ -4464,45 +4419,67 @@ def request_new_ticket():
         return redirect(url_for('candidate_login_page'))
         
     app_no = session.get('candidate_app_no')
+    
+    import pytz
+    from datetime import datetime
+    khmer_tz = pytz.timezone('Asia/Phnom_Penh')
+    current_kh_time = datetime.now(khmer_tz).strftime('%Y-%m-%d %H:%M:%S')
+    today_kh_date = datetime.now(khmer_tz).strftime('%Y-%m-%d')
+    
+    from app import get_db_connection
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
     
     try:
-        # 🌟 កំណត់ម៉ោងកម្ពុជា
-        khmer_tz = pytz.timezone('Asia/Phnom_Penh')
-        current_kh_time = datetime.now(khmer_tz).strftime('%Y-%m-%d %H:%M:%S')
-        today_kh_date = datetime.now(khmer_tz).strftime('%Y-%m-%d')
-        
         conn.start_transaction()
         
-        # ១. បង្កើតលេខថ្មីដោយមិនជាន់គ្នា
+        # 🔒 ១. ចាក់សោការពារ Double Click
+        cursor.execute("SELECT application_no FROM candidates WHERE application_no = %s FOR UPDATE", (app_no,))
+        cursor.fetchone()  # 🌟 ត្រូវថែមបន្ទាត់នេះ ដើម្បីអានទិន្នន័យចោល ការពារ Error (Unread result found) 🌟
+        
+        # 🔒 ២. ឆែកមើលថាតើគាត់មានលេខដែលកំពុង Waiting ឬ Processing ថ្ងៃនេះហើយឬនៅ?
+        cursor.execute("""
+            SELECT queue_number FROM queue_tickets 
+            WHERE application_no = %s AND status IN ('Waiting', 'Processing') AND DATE(created_at) = %s
+            LIMIT 1
+        """, (app_no, today_kh_date))
+        active_ticket = cursor.fetchone()
+        
+        # បើមានលេខកំពុងសកម្មហើយ ហាមមិនឱ្យបង្កើតថ្មីទេ
+        if active_ticket:
+            session['my_queue_number'] = active_ticket['queue_number']
+            flash(f'អ្នកមានលេខរង់ចាំ {active_ticket["queue_number"]} រួចហើយ!', 'warning')
+            conn.commit()
+            return redirect(url_for('candidate_application_success'))
+
+        # ៣. បង្កើតលេខថ្មី (Auto-Increment តាមថ្ងៃ)
         cursor.execute("INSERT IGNORE INTO queue_sequence (queue_date, last_number) VALUES (%s, 0)", (today_kh_date,))
         cursor.execute("SELECT last_number FROM queue_sequence WHERE queue_date = %s FOR UPDATE", (today_kh_date,))
         seq_record = cursor.fetchone()
         
-        new_number = seq_record[0] + 1
+        new_number = seq_record['last_number'] + 1
         cursor.execute("UPDATE queue_sequence SET last_number = %s WHERE queue_date = %s", (new_number, today_kh_date))
         queue_str = f"A-{new_number:03d}"
         
-        # ២. បញ្ចូលសំបុត្ររង់ចាំថ្មីទៅក្នុងប្រព័ន្ធ
-        # 🌟 ជំនួស NOW() ដោយ current_kh_time
+        # ៤. បញ្ចូលលេខថ្មីនេះទៅក្នុងប្រព័ន្ធ
         cursor.execute("""
             INSERT INTO queue_tickets (application_no, queue_number, status, created_at, updated_at)
             VALUES (%s, %s, 'Waiting', %s, %s)
         """, (app_no, queue_str, current_kh_time, current_kh_time))
         
-        # ៣. Update Status ឱ្យត្រឡប់ទៅជា 1 (រង់ចាំ) វិញ និងលុប Remark ចោល
-        cursor.execute("UPDATE application_details SET status_id = 1, remark = NULL WHERE application_no = %s", (app_no,))
+        # ៥. លុប Remark បដិសេធចាស់ៗចោល និងរុញទៅ Pending វិញទាំងអស់
+        cursor.execute("UPDATE application_details SET status_id = 1, remark = NULL, scan_status = 'Pending' WHERE application_no = %s", (app_no,))
         cursor.execute("UPDATE candidates SET job_app_status = 'PENDING' WHERE application_no = %s", (app_no,))
         
         conn.commit()
         session['my_queue_number'] = queue_str
-        flash(f'ទទួលបានលេខរង់ចាំថ្មីជោគជ័យ!', 'success')
+        flash('ទទួលបានលេខរង់ចាំថ្មីជោគជ័យ!', 'success')
         
     except Exception as e:
         conn.rollback()
-        print(f"Error requesting new ticket: {e}")
-        flash('មានបញ្ហាក្នុងការបង្កើតលេខរង់ចាំថ្មី!', 'danger')
+        import traceback
+        print(traceback.format_exc())
+        flash(f'មានបញ្ហា: {str(e)}', 'danger')
     finally:
         if cursor: cursor.close()
         if conn: conn.close()

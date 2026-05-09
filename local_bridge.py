@@ -3,9 +3,12 @@ from flask_cors import CORS
 import os
 import sys
 import base64
-import time
+import tempfile
 import subprocess
 import threading
+import io
+import time
+from PIL import Image, ImageDraw  # 🌟 រៀបចំ Import ឱ្យមានរបៀប (Compression + Mock Text)
 
 app = Flask(__name__)
 CORS(app) 
@@ -33,7 +36,6 @@ def choose_folder():
     selected_folder_path = ""
     
     if OS_TYPE == 'darwin':
-        # 🍏 សម្រាប់ Mac: ប្រើ AppleScript ជំនួស tkinter ដើម្បីកុំឱ្យគាំង (Crash)
         script = 'tell application "System Events" to activate\ntell application "System Events" to return POSIX path of (choose folder with prompt "ជ្រើសរើសទីតាំងរក្សាទុកឯកសារស្កេន")'
         try:
             result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True)
@@ -42,7 +44,6 @@ def choose_folder():
         except Exception as e:
             return jsonify({'status': 'error', 'message': str(e)})
     else:
-        # 🪟 សម្រាប់ Windows: រក្សាកូដដើមរបស់លោកអ្នកដែលដើរល្អស្រាប់
         t = threading.Thread(target=open_folder_dialog_windows)
         t.start()
         t.join()
@@ -52,65 +53,158 @@ def choose_folder():
     else:
         return jsonify({'status': 'error', 'message': 'បោះបង់ការជ្រើសរើស'})
 
+
 # ==========================================
-# 🖨️ មុខងារស្កេនឯកសារ
+# 🖨️ ១. មុខងារស្កេនទាញយករូប (មានភ្ជាប់មុខងារ Test Mode កម្រិតខ្ពស់)
 # ==========================================
 @app.route('/scan', methods=['POST'])
 def scan_document():
     data = request.json
     app_no = data.get('application_no', 'Unknown')
-    custom_save_dir = data.get('save_dir', '')
-    
-    if custom_save_dir and os.path.isdir(custom_save_dir):
-        final_save_dir = custom_save_dir
-    else:
-        final_save_dir = r"D:\EPS_Scanned_Passports" if OS_TYPE == 'win32' else os.path.expanduser("~/Desktop/EPS_Scanned_Passports")
-        if not os.path.exists(final_save_dir):
-            os.makedirs(final_save_dir)
-            
-    # ស្វែងរកបន្ទាត់ filename រួចកែដូចខាងក្រោម៖
-    filename = f"{app_no}.jpg"  # 👈 យកតែលេខកូដប្រឡងជាឈ្មោះ File
-    save_path = os.path.join(final_save_dir, filename)
+    temp_dir = tempfile.gettempdir()
+    # 🌟 ប្រើពេលវេលាជាក់ស្តែង ដើម្បីកុំឱ្យជាន់ឈ្មោះ File ចាស់ ពេលស្កេនជាប់ៗគ្នា
+    temp_path = os.path.join(temp_dir, f"temp_eps_scan_{int(time.time())}.jpg")
+
+    scan_success = False
+    error_msg = ""
 
     try:
+        # ១. ព្យាយាមស្កេនពីម៉ាស៊ីនពិតប្រាកដសិន
         if OS_TYPE == 'win32':
-            # 🪟 កូដ Windows ដើមរបស់លោកអ្នក (រក្សាទុកដដែល)
-            import pythoncom              # type: ignore
-            pythoncom.CoInitialize()      
             try:
-                import win32com.client  # type: ignore
-            except ImportError:
-                return jsonify({'status': 'error', 'message': 'សូមដំឡើង pywin32 លើកុំព្យូទ័រ Windows នេះសិន!'})
-                
-            devManager = win32com.client.Dispatch("WIA.DeviceManager")
-            scanner = None
-            for info in devManager.DeviceInfos:
-                if info.Type == 1:
-                    scanner = info.Connect()
-                    break
-            if not scanner:
-                return jsonify({'status': 'error', 'message': 'រកមិនឃើញម៉ាស៊ីនស្កេន Windows ទេ!'})
-                
-            item = scanner.Items[1]
-            image = item.Transfer("{B96B3CAE-0728-11D3-9D7B-0000F81EF32E}") 
-            image.SaveFile(save_path)
-            pythoncom.CoUninitialize()    
+                import pythoncom # type: ignore
+                import win32com.client # type: ignore
+                pythoncom.CoInitialize()      
+                devManager = win32com.client.Dispatch("WIA.DeviceManager")
+                scanner = None
+                for info in devManager.DeviceInfos:
+                    if info.Type == 1:
+                        scanner = info.Connect()
+                        break
+                if scanner:
+                    item = scanner.Items[1]
+                    image = item.Transfer("{B96B3CAE-0728-11D3-9D7B-0000F81EF32E}") 
+                    image.SaveFile(temp_path)
+                    scan_success = True
+                else:
+                    error_msg = "រកមិនឃើញម៉ាស៊ីនស្កេន Windows ទេ!"
+                pythoncom.CoUninitialize()
+            except Exception as e:
+                error_msg = str(e)
 
         elif OS_TYPE == 'darwin':
-            # 🍏 កូដសម្រាប់ Mac
-            command = ['scanimage', '--format=jpeg', '--resolution', '300', '-o', save_path]
-            result = subprocess.run(command, capture_output=True, text=True)
-            if result.returncode != 0:
-                return jsonify({'status': 'error', 'message': f'ម៉ាស៊ីនស្កេន Mac មានបញ្ហា៖ {result.stderr}'})
+            try: # 🌟 (ជួសជុល) ត្រូវតែមាន Try Except នៅទីនេះទើបវាអត់គាំងលើ Mac
+                command = ['scanimage', '--format=jpeg', '--resolution', '300', '-o', temp_path]
+                result = subprocess.run(command, capture_output=True, text=True)
+                if result.returncode == 0:
+                    scan_success = True
+                else:
+                    error_msg = result.stderr
+            except Exception as e:
+                error_msg = str(e)
 
-        with open(save_path, "rb") as image_file:
+        # 🌟 ២. (SIMULATION MODE) បើគ្មានម៉ាស៊ីនស្កេនទេ បង្កើតរូបភាពតេស្តដោយស្វ័យប្រវត្តិ
+        if not scan_success:
+            print(f"⚠️ កំពុងដំណើរការ MOCK MODE ដោយសារ៖ {error_msg}")
+            # គូរក្រដាសពណ៌ស ទំហំ A4 (បញ្ឈរ)
+            img = Image.new('RGB', (800, 1130), color='white')
+            d = ImageDraw.Draw(img)
+            # គូសប្រអប់ព័ទ្ធជុំវិញ
+            d.rectangle([(20, 20), (780, 1110)], outline="#0d6efd", width=5)
+            d.rectangle([(40, 40), (760, 1090)], outline="#6c757d", width=2)
+            
+            # សរសេរព័ត៌មានក្លែងបន្លំ (ដើម្បីឱ្យដឹងថាវាជារូបតេស្ត)
+            d.text((100, 100), "=== TEST SCANNED DOCUMENT ===", fill="red")
+            d.text((100, 150), f"CANDIDATE ID : {app_no}", fill="black")
+            d.text((100, 200), f"SCAN TIME    : {time.ctime()}", fill="blue")
+            d.text((100, 300), "This is a simulated document generated by Python", fill="gray")
+            d.text((100, 320), "because no physical scanner was connected.", fill="gray")
+            
+            img.save(temp_path, format='JPEG', quality=90)
+
+        # ៣. អានរូបភាពពី Temp File រួចបម្លែងជា Base64 បញ្ជូនទៅកាន់ Web
+        with open(temp_path, "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
             base64_image = f"data:image/jpeg;base64,{encoded_string}"
 
-        return jsonify({'status': 'success', 'file_path': save_path, 'image_base64': base64_image})
+        # លុបរូបបណ្តោះអាសន្នចោលវិញ
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+        return jsonify({'status': 'success', 'image_base64': base64_image})
 
     except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)})
+        return jsonify({'status': 'error', 'message': f"System Error: {str(e)}"})
+
+
+# ==========================================
+# 💾 ២. មុខងាររក្សាទុករូបភាពជាផ្លូវការ (Save + Dynamic Compression)
+# ==========================================
+@app.route('/save', methods=['POST'])
+def save_document():
+    data = request.json
+    app_no = data.get('application_no')
+    save_dir = data.get('save_dir')
+    base64_data = data.get('image_base64')
+    
+    # 🌟 DYNAMIC SIZE: ទទួលយកទំហំកំណត់ពី Web គិតជា KB (បើអត់បោះមក យក Default 1000 KB ស្មើ 1MB)
+    max_size_kb = int(data.get('max_size_kb', 1000)) 
+    
+    if not app_no or not save_dir or not base64_data:
+        return jsonify({'status': 'error', 'message': 'ទិន្នន័យមិនគ្រប់គ្រាន់សម្រាប់ការរក្សាទុក!'})
+        
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+        
+    filename = f"{app_no}.jpg"
+    final_save_path = os.path.join(save_dir, filename)
+    
+    try:
+        # កាត់ក្បាល "data:image/jpeg;base64," ចេញពីរូបភាព
+        if "," in base64_data:
+            base64_data = base64_data.split(",")[1]
+            
+        image_bytes = base64.b64decode(base64_data)
+        image = Image.open(io.BytesIO(image_bytes))
+        
+        # បំប្លែងទៅជា RGB បើវាជា PNG/RGBA
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+
+        # 🌟 ក្បួនដោះស្រាយបង្រួមទំហំឆ្លាតវៃ (Smart Compression Loop) 🌟
+        quality = 95
+        min_quality = 30 # កុំឱ្យគុណភាពអន់ជាង ៣០% ព្រោះវានឹងព្រិលមើលលែងយល់
+        step = 5         # បន្ថយម្តង ៥%
+        
+        while True:
+            img_byte_arr = io.BytesIO()
+            # សាកល្បង Save រូបចូល Memory (RAM) សិន ដើម្បីឆែកទំហំ
+            image.save(img_byte_arr, format='JPEG', quality=quality)
+            size_kb = len(img_byte_arr.getvalue()) / 1024
+            
+            # បើទំហំតូចជាងអ្វីដែលបានកំណត់ (ឧ. < 1000KB) ឬ ក៏ធ្លាក់ដល់កម្រិតព្រិលបំផុតហើយ
+            if size_kb <= max_size_kb or quality <= min_quality:
+                # គឺយល់ព្រមសរសេរចូល Hard Disk តែម្តង
+                with open(final_save_path, 'wb') as f:
+                    f.write(img_byte_arr.getvalue())
+                break
+            
+            quality -= step # បើនៅធំជាង 1MB ទៀត គឺបន្ថយគុណភាពបន្តបន្ទាប់
+            
+        # ទាញយកទំហំ File ជាក់ស្តែងនៅលើកុំព្យូទ័រ
+        final_size_kb = round(os.path.getsize(final_save_path) / 1024, 2)
+        final_size_mb = round(final_size_kb / 1024, 2)
+        
+        return jsonify({
+            'status': 'success', 
+            'message': 'រក្សាទុកជោគជ័យ', 
+            'file_path': final_save_path,
+            'final_size': f"{final_size_mb} MB"
+        })
+        
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': f"បញ្ហាក្នុងការរក្សាទុក៖ {str(e)}"})
+
 
 if __name__ == '__main__':
     print("="*60)
@@ -118,6 +212,5 @@ if __name__ == '__main__':
     print("🌐 Port ទំនាក់ទំនង៖ http://127.0.0.1:5005")
     print("="*60)
     
-    # 💡 គន្លឹះសំខាន់៖ បើលើ Mac ប្រើ threaded=False ដើម្បីការពារការ Crash
     is_threaded = False if OS_TYPE == 'darwin' else True
     app.run(host='127.0.0.1', port=5005, threaded=is_threaded)

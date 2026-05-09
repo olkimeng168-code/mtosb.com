@@ -11,62 +11,51 @@
 
     <div class="row g-4">
         <div class="col-md-7">
-            
-            <div class="alert alert-info d-flex justify-content-between align-items-center shadow-sm mb-4" style="border-radius: 10px;">
+            <div class="alert alert-info d-flex justify-content-between align-items-center shadow-sm mb-4" style="border-radius: 12px; border-left: 5px solid #0dcaf0;">
                 <div>
                     <i class="fas fa-folder-open text-primary me-2 fs-5"></i> 
                     <span class="text-dark fw-bold">ទីតាំងរក្សាទុក៖</span> 
                     <strong id="disp_save_dir" class="ms-2 text-primary" style="word-break: break-all;">កំពុងស្វែងរក...</strong>
                 </div>
-                <button class="btn btn-sm btn-primary fw-bold text-nowrap ms-3" id="btn_change_dir_main">
+                <button class="btn btn-sm btn-primary fw-bold text-nowrap ms-3 rounded-pill px-3" id="btn_change_dir_main">
                     <i class="fas fa-edit me-1"></i> ប្តូរទីតាំង
                 </button>
             </div>
             
-            <div class="card shadow border-0" style="border-radius: 15px;">
-                <div class="card-header bg-primary text-white py-3" style="border-radius: 15px 15px 0 0;">
-                    <h5 class="mb-0 fw-bold"><i class="fas fa-barcode me-2"></i> ជំហានទី ១៖ ស្វែងរកបេក្ខជន</h5>
+            <div class="card shadow border-0" style="border-radius: 15px; overflow: hidden;">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-barcode me-2"></i> ស្វែងរក និងស្កេនឯកសារ</h5>
                 </div>
                 <div class="card-body p-4">
                     <form id="scanForm" autocomplete="off">
-                        <div class="input-group input-group-lg mb-4 shadow-sm">
-                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
-                            <input type="text" id="barcode_input" class="form-control border-start-0" placeholder="សូមបាញ់ស្កេន ឬវាយលេខកូដ EPS-ID..." style="font-size: 1.2rem; font-weight: bold; background-color: #f8f9fa;">
-                            <button class="btn btn-primary px-4" type="submit" id="btn_search_submit"><i class="fas fa-arrow-right"></i></button>
+                        <div class="input-group input-group-lg mb-4 shadow-sm rounded-pill overflow-hidden border border-primary border-opacity-25">
+                            <span class="input-group-text bg-light border-0"><i class="fas fa-search text-primary"></i></span>
+                            <input type="text" id="barcode_input" class="form-control border-0" placeholder="សូមបាញ់ស្កេន ឬវាយលេខកូដ EPS-ID..." style="font-size: 1.2rem; font-weight: bold; background-color: #f8f9fa;">
+                            <button class="btn btn-primary px-4 fw-bold" type="submit" id="btn_search_submit">ស្វែងរក <i class="fas fa-arrow-right ms-1"></i></button>
                         </div>
                     </form>
 
-                    <div id="alert_box" class="alert d-none fw-bold fs-5 shadow-sm" role="alert"></div>
+                    <div id="alert_box" class="alert d-none fw-bold fs-5 shadow-sm rounded-4" role="alert"></div>
 
-                    <div id="candidate_info_card" class="card border-success mt-4 d-none shadow-sm" style="background-color: #f0fdf4;">
+                    <div id="candidate_info_card" class="card border-0 mt-4 d-none shadow-sm rounded-4" style="background: linear-gradient(to right, #f8fafc, #f1f5f9);">
                         <div class="card-body p-4 text-center">
                             
-                            <h4 class="fw-bold text-dark mb-1" id="disp_khmer_name">--</h4>
-                            <h6 class="text-secondary" id="disp_english_name">--</h6>
-                            <p class="text-muted mb-0">EPS-ID: <strong class="text-primary fs-5" id="disp_app_no">--</strong> | ភេទ: <strong id="disp_gender">--</strong></p>
-                            
-                            <hr class="my-4">
-
-                            <h5 class="fw-bold text-dark mb-3"><i class="fas fa-print text-primary me-2"></i> ជំហានទី ២៖ ដាក់ឯកសារចូលម៉ាស៊ីន រួចចុចប៊ូតុងខាងក្រោម</h5>
-                            
-                            <button type="button" id="btn_start_physical_scan" class="btn btn-outline-primary btn-lg w-100 fw-bold mb-3 shadow-sm border-2">
-                                <i class="fas fa-scanner me-2"></i> ចាប់ផ្តើមស្កេនពីម៉ាស៊ីន (Start Scan)
-                            </button>
-                            
-                            <div id="preview_container" class="d-none flex-column align-items-center mb-4 p-3 border rounded bg-white shadow-sm">
-                                <div class="d-flex justify-content-between w-100 mb-2 text-primary fw-bold">
-                                    <span><i class="fas fa-eye me-1"></i> រូបភាពស្កេនរួច (Preview)</span>
-                                    <span class="text-muted" style="cursor: pointer;" onclick="openFullImage()"><i class="fas fa-search-plus"></i> ចុចលើរូបដើម្បីពង្រីក</span>
-                                </div>
-                                <div id="img_wrapper" style="width: 100%; height: 400px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: zoom-in; border: 2px dashed #007bff;" onclick="openFullImage()">
-                                    <img id="preview_image" src="" alt="Preview" style="max-height: 100%; max-width: 100%; object-fit: contain;">
-                                </div>
+                            <h4 class="fw-bold text-dark mb-1" id="disp_khmer_name" style="font-family: 'Moul', sans-serif;">--</h4>
+                            <h6 class="text-secondary mb-3" id="disp_english_name">--</h6>
+                            <div class="d-inline-flex bg-white px-4 py-2 rounded-pill shadow-sm border mb-4">
+                                <span class="text-muted me-3">EPS-ID: <strong class="text-primary fs-5 ms-1" id="disp_app_no" style="font-family: 'Inter', monospace;">--</strong></span>
+                                <span class="text-muted border-start ps-3">ភេទ: <strong class="text-dark ms-1" id="disp_gender">--</strong></span>
                             </div>
+                            
+                            <hr class="my-2 opacity-25">
 
-                            <button type="button" id="btn_confirm_scan" class="btn btn-success btn-lg w-100 fw-bold shadow mt-2" disabled>
-                                <i class="fas fa-save me-2"></i> ជំហានទី ៣៖ បញ្ជាក់ការស្កេនរួចរាល់ 100%
-                            </button>
-
+                            <div class="p-4 rounded-4 mt-3" style="background-color: rgba(59, 130, 246, 0.05); border: 2px dashed rgba(59, 130, 246, 0.3);">
+                                <h5 class="fw-bold text-primary mb-3"><i class="fas fa-print me-2"></i> ដាក់ឯកសារចូលម៉ាស៊ីន រួចចុចប៊ូតុងខាងក្រោម</h5>
+                                <button type="button" id="btn_start_physical_scan" class="btn btn-primary btn-lg w-100 fw-bold shadow rounded-pill py-3" style="font-size: 1.2rem; transition: transform 0.2s;">
+                                    <i class="fas fa-scanner me-2 fs-4"></i> ចាប់ផ្តើមស្កេន (Start Scan)
+                                </button>
+                            </div>
+                            
                         </div>
                     </div>
                 </div>
@@ -74,18 +63,18 @@
         </div>
 
         <div class="col-md-5">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-list text-warning me-2"></i> បញ្ជីរង់ចាំស្កេន</h5>
-                    <span class="badge bg-warning text-dark rounded-pill" id="pending_count_badge">0 នាក់</span>
+            <div class="card shadow-sm border-0 h-100 rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                    <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-list-alt text-warning me-2"></i> បញ្ជីរង់ចាំស្កេន</h5>
+                    <span class="badge bg-warning text-dark rounded-pill fs-6 px-3" id="pending_count_badge">0 នាក់</span>
                 </div>
-                <div class="card-body p-0" style="max-height: 600px; overflow-y: auto;">
-                    <table class="table table-hover table-sm align-middle mb-0">
+                <div class="card-body p-0" style="max-height: 600px; overflow-y: auto; background-color: #f8fafc;">
+                    <table class="table table-hover align-middle mb-0">
                         <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
                             <tr>
-                                <th class="ps-3">លេខរង់ចាំ</th>
-                                <th>បញ្ជរ</th> <th>ឈ្មោះបេក្ខជន</th>
-                                <th class="text-end pe-4">សកម្មភាព</th> 
+                                <th class="ps-3 text-muted">ល.រ</th>
+                                <th class="text-muted">បេក្ខជន</th>
+                                <th class="text-end pe-4 text-muted">សកម្មភាព</th> 
                             </tr>
                         </thead>
                         <tbody id="pending_table_body"></tbody>
@@ -96,60 +85,64 @@
     </div>
 </div>
 
-<!-- 🌟 Modal តម្រូវឱ្យរើសទីតាំង (Force Setup Modal) 🌟 -->
-<div class="modal fade" id="setupDirModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="scanPreviewModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content bg-dark border-0">
+            
+            <div class="modal-header border-0 bg-dark text-white px-4 py-3 shadow" style="z-index: 10;">
+                <h4 class="modal-title fw-bold text-info"><i class="fas fa-check-circle me-2"></i> ពិនិត្យឯកសារមុននឹងរក្សាទុក (Preview)</h4>
+                <div class="d-flex align-items-center">
+                    <span class="text-white-50 me-4">EPS-ID: <strong class="text-warning font-monospace fs-5" id="preview_disp_app_no">---</strong></span>
+                </div>
+            </div>
+            
+            <div class="modal-body p-0 position-relative d-flex justify-content-center align-items-center" style="background-color: #1e293b; overflow: auto; height: calc(100vh - 140px);" id="imagePreviewContainer">
+                
+                <div class="position-fixed bottom-0 start-50 translate-middle-x mb-5 p-2 rounded-pill shadow-lg" style="background: rgba(0,0,0,0.7); z-index: 100; backdrop-filter: blur(5px);">
+                    <button class="btn btn-outline-light border-0 rounded-circle mx-1" onclick="zoomImg(0.2)" title="ពង្រីក (Zoom In)"><i class="fas fa-search-plus fs-5"></i></button>
+                    <button class="btn btn-outline-light border-0 rounded-circle mx-1" onclick="resetZoom()" title="ទំហំដើម (Reset)"><i class="fas fa-compress fs-5"></i></button>
+                    <button class="btn btn-outline-light border-0 rounded-circle mx-1" onclick="zoomImg(-0.2)" title="បង្រួម (Zoom Out)"><i class="fas fa-search-minus fs-5"></i></button>
+                </div>
+
+                <img id="scannedImagePreview" src="" alt="Scanned Document" class="shadow-lg" style="transition: transform 0.2s ease-out; transform-origin: center center; max-width: 90%; max-height: 90%; border: 4px solid white;">
+            </div>
+            
+            <div class="modal-footer border-0 p-3 shadow-lg d-flex justify-content-between" style="background-color: #0f172a;">
+                <button type="button" class="btn btn-outline-danger btn-lg rounded-pill px-5 fw-bold border-2" onclick="retakeScan()">
+                    <i class="fas fa-redo-alt me-2"></i> ស្កេនម្តងទៀត (Retake)
+                </button>
+                
+                <button type="button" class="btn btn-success btn-lg rounded-pill px-5 fw-bold shadow-lg" onclick="saveAndComplete()" id="btnConfirmSave">
+                    <i class="fas fa-save me-2 fs-5"></i> រក្សាទុក និងបញ្ចប់ (Save & Complete)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="setupDirModal" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header bg-warning border-0 rounded-top-4">
                 <h5 class="modal-title fw-bold text-dark"><i class="fas fa-exclamation-circle me-2"></i>ទាមទារការកំណត់ទីតាំង</h5>
             </div>
             <div class="modal-body p-4 text-center">
-                <div class="mb-4">
-                    <i class="fas fa-folder-plus text-primary" style="font-size: 4rem;"></i>
-                </div>
+                <i class="fas fa-folder-plus text-primary mb-3" style="font-size: 4rem;"></i>
                 <h5 class="fw-bold text-dark mb-3">សូមជ្រើសរើសទីតាំងរក្សាទុកឯកសារស្កេន</h5>
-                <p class="text-muted mb-4">លោកអ្នកត្រូវតែកំណត់ Folder សម្រាប់ផ្ទុកឯកសារ (ឧ. D:\Passports) ជាមុនសិន ទើបប្រព័ន្ធអនុញ្ញាតឱ្យដំណើរការស្កេនបាន។</p>
-                
+                <p class="text-muted mb-4">លោកអ្នកត្រូវតែកំណត់ Folder សម្រាប់ផ្ទុកឯកសារ (ឧ. D:\Passports) ជាមុនសិន។</p>
                 <div class="bg-light p-3 rounded-3 mb-4 text-start border border-info border-opacity-50">
                     <small class="text-muted d-block fw-bold mb-1">ទីតាំងបច្ចុប្បន្ន៖</small>
                     <code id="setup_modal_disp_dir" class="fs-6 text-dark fw-bold">មិនទាន់កំណត់...</code>
                 </div>
-
-                <button class="btn btn-primary btn-lg w-100 fw-bold shadow-sm" id="btn_modal_choose_dir">
-                    <i class="fas fa-search-folder me-2"></i> ជ្រើសរើសទីតាំង (Browse...)
-                </button>
+                <button class="btn btn-primary btn-lg w-100 fw-bold shadow-sm" id="btn_modal_choose_dir"><i class="fas fa-search-folder me-2"></i> ជ្រើសរើសទីតាំង (Browse...)</button>
             </div>
-            <div class="modal-footer bg-light border-0 rounded-bottom-4 d-flex justify-content-between align-items-center">
-                <span class="small text-muted"><i class="fas fa-info-circle me-1"></i> កម្មវិធីតម្រូវឱ្យកំណត់ជារៀងរាល់ថ្ងៃ</span>
-                <button type="button" class="btn btn-success fw-bold px-4" id="btn_confirm_setup" disabled>
-                    <i class="fas fa-check me-1"></i> យល់ព្រមចាប់ផ្តើម
-                </button>
+            <div class="modal-footer bg-light border-0 rounded-bottom-4 d-flex justify-content-between">
+                <span class="small text-muted"><i class="fas fa-info-circle me-1"></i> កំណត់ជារៀងរាល់ថ្ងៃ</span>
+                <button type="button" class="btn btn-success fw-bold px-4" id="btn_confirm_setup" disabled><i class="fas fa-check me-1"></i> យល់ព្រមចាប់ផ្តើម</button>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Modal សម្រាប់ពង្រីករូប -->
-<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content bg-transparent border-0">
-            <div class="modal-body p-0 text-center position-relative">
-                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close" style="z-index: 1050;"></button>
-                <img id="full_preview_img" src="" class="img-fluid rounded shadow-lg" style="max-height: 90vh; border: 5px solid white;">
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-    /* បង្ខំឱ្យបើកសិទ្ធិ Copy និង Select អក្សរឡើងវិញគ្រប់ទីកន្លែង */
-    body, .container-fluid, .card, table, tr, td, th, span, p, h1, h2, h3, h4, h5, h6 {
-        -webkit-user-select: text !important;
-        -moz-user-select: text !important;
-        -ms-user-select: text !important;
-        user-select: text !important;
-    }
-</style>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -158,172 +151,59 @@ document.addEventListener("DOMContentLoaded", function() {
     const form = document.getElementById('scanForm');
     const alertBox = document.getElementById('alert_box');
     const candidateCard = document.getElementById('candidate_info_card');
-    
     const btnStartScan = document.getElementById('btn_start_physical_scan');
-    const btnConfirm = document.getElementById('btn_confirm_scan');
-    const previewContainer = document.getElementById('preview_container');
-    const previewImage = document.getElementById('preview_image');
     
-    const LOCAL_BRIDGE_URL = 'http://127.0.0.1:5005/scan';
+    // UI ថ្មី
+    const scanPreviewModal = new bootstrap.Modal(document.getElementById('scanPreviewModal'));
+    const imgPreview = document.getElementById('scannedImagePreview');
+    const btnConfirmSave = document.getElementById('btnConfirmSave');
+    let currentZoom = 1;
+    let finalBase64Image = ""; // ទុកផ្ទុករូបភាពដែលបានបង្វិលរួច ដើម្បីបញ្ជូនទៅ Save
+    
+    // ⚠️ ចំណាំសំខាន់៖ ត្រូវប្រាកដថា Local Bridge របស់លោកអ្នក មាន Endpoint ថ្មីមួយឈ្មោះ /save 
+    const LOCAL_BRIDGE_SCAN_ONLY = 'http://127.0.0.1:5005/scan'; 
+    const LOCAL_BRIDGE_SAVE_IMAGE = 'http://127.0.0.1:5005/save'; 
     const LOCAL_BRIDGE_CHOOSE_DIR = 'http://127.0.0.1:5005/choose_folder';
     
     let currentAppNo = '';
     let currentSaveDir = ''; 
 
-    // 🌟 1. ដំណើរការ Setup Modal មុនពេលចាប់ផ្តើម 🌟
+    // Setup Dir Modal (ដូចកូដចាស់)
     const setupModal = new bootstrap.Modal(document.getElementById('setupDirModal'));
-    const btnModalChooseDir = document.getElementById('btn_modal_choose_dir');
-    const btnConfirmSetup = document.getElementById('btn_confirm_setup');
-    const setupModalDispDir = document.getElementById('setup_modal_disp_dir');
-    
-    // បង្ហាញ Modal ភ្លាមៗពេលចូល Page
     setupModal.show();
-
-    // មុខងារពេលចុចរើស Folder ក្នុង Modal
-    btnModalChooseDir.addEventListener('click', function() {
-        btnModalChooseDir.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> កំពុងបើក...';
-        btnModalChooseDir.disabled = true;
-
-        fetch(LOCAL_BRIDGE_CHOOSE_DIR)
-        .then(res => res.json())
-        .then(data => {
-            btnModalChooseDir.innerHTML = '<i class="fas fa-search-folder me-2"></i> ជ្រើសរើសទីតាំង (Browse...)';
-            btnModalChooseDir.disabled = false;
-            
+    document.getElementById('btn_modal_choose_dir').addEventListener('click', function() {
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> កំពុងបើក...'; this.disabled = true;
+        fetch(LOCAL_BRIDGE_CHOOSE_DIR).then(res => res.json()).then(data => {
+            this.innerHTML = '<i class="fas fa-search-folder me-2"></i> ជ្រើសរើសទីតាំង'; this.disabled = false;
             if(data.status === 'success' && data.path) {
                 currentSaveDir = data.path; 
-                localStorage.setItem('eps_scanner_save_dir', currentSaveDir); 
-                setupModalDispDir.innerText = currentSaveDir;
-                setupModalDispDir.classList.replace('text-dark', 'text-success');
-                
-                // បើករសោរប៊ូតុងយល់ព្រមចាប់ផ្តើម
-                btnConfirmSetup.disabled = false;
-                btnConfirmSetup.classList.replace('btn-secondary', 'btn-success');
-            } else if (data.status === 'error' && data.message !== 'បោះបង់ការជ្រើសរើស') {
-                alert(data.message);
+                document.getElementById('setup_modal_disp_dir').innerText = currentSaveDir;
+                document.getElementById('btn_confirm_setup').disabled = false;
             }
-        })
-        .catch(err => {
-            btnModalChooseDir.innerHTML = '<i class="fas fa-search-folder me-2"></i> ជ្រើសរើសទីតាំង (Browse...)';
-            btnModalChooseDir.disabled = false;
-            alert("❌ មិនអាចភ្ជាប់ទៅកាន់ Local Bridge ទេ! សូមបើកកម្មវិធីស្កេនក្នុងម៉ាស៊ីនសិន។");
-        });
+        }).catch(err => { this.disabled = false; alert("មិនអាចភ្ជាប់ទៅ Local Bridge ទេ!"); });
     });
-
-    // ពេលចុចយល់ព្រមចាប់ផ្តើមការងារ
-    btnConfirmSetup.addEventListener('click', function() {
+    document.getElementById('btn_confirm_setup').addEventListener('click', function() {
         document.getElementById('disp_save_dir').innerText = currentSaveDir;
-        
-        // ដក Blur និងអនុញ្ញាតឱ្យចុចលើផ្ទាំងធំបានវិញ
-        mainContent.style.filter = 'none';
-        mainContent.style.pointerEvents = 'auto';
-        
-        setupModal.hide();
-        inputBarcode.focus();
+        mainContent.style.filter = 'none'; mainContent.style.pointerEvents = 'auto';
+        setupModal.hide(); inputBarcode.focus();
     });
 
-    // មុខងារផ្លាស់ប្តូរទីតាំងពេលកំពុងដំណើរការងារ (ប៊ូតុងតូចខាងលើ)
-    document.getElementById('btn_change_dir_main').addEventListener('click', function() {
-        const btn = this;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> កំពុងបើកផ្ទាំង...';
-        btn.disabled = true;
-        
-        fetch(LOCAL_BRIDGE_CHOOSE_DIR)
-        .then(res => res.json())
-        .then(data => {
-            btn.innerHTML = '<i class="fas fa-edit me-1"></i> ប្តូរទីតាំង';
-            btn.disabled = false;
-            
-            if(data.status === 'success' && data.path) {
-                currentSaveDir = data.path; 
-                localStorage.setItem('eps_scanner_save_dir', currentSaveDir); 
-                document.getElementById('disp_save_dir').innerText = currentSaveDir;
-                inputBarcode.focus();
-            }
-        })
-        .catch(err => {
-            btn.innerHTML = '<i class="fas fa-edit me-1"></i> ប្តូរទីតាំង';
-            btn.disabled = false;
-            alert("❌ មិនអាចភ្ជាប់ទៅកាន់ Local Bridge ទេ!");
-        });
-    });
-
-    // ========================================================
-    // 🌟 កូដដំណើរការស្កេនចាស់ខាងក្រោមនេះ រក្សាទុកដដែល 🌟
-    // ========================================================
-
-    window.openFullImage = function() {
-        const src = previewImage.src;
-        if(src && src !== window.location.href) {
-            document.getElementById('full_preview_img').src = src;
-            const myModal = new bootstrap.Modal(document.getElementById('imageModal'));
-            myModal.show();
-        }
-    };
-
-    document.addEventListener('mouseup', function(e) {
-        let selection = window.getSelection();
-        if(selection.toString().length > 0) return; 
-        
-        if(!e.target.closest('#btn_confirm_scan') && 
-           !e.target.closest('#btn_start_physical_scan') && 
-           !e.target.closest('#btn_change_dir_main') &&
-           !e.target.closest('#img_wrapper') &&
-           !e.target.closest('.modal') &&
-           !e.target.closest('.btn-outline-danger') &&
-           e.target.tagName !== 'INPUT' && 
-           e.target.tagName !== 'TEXTAREA') { 
-            
-            // ឆែកមើលក្រែងលោ Modal កំពុងបើក
-            if(!document.getElementById('setupDirModal').classList.contains('show')) {
-                inputBarcode.focus();
-            }
-        }
-    });
-
-    function playSound(type) {
-        try {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain); gain.connect(ctx.destination);
-            if(type === 'success') {
-                osc.type = 'sine'; osc.frequency.setValueAtTime(800, ctx.currentTime);
-                gain.gain.setValueAtTime(0.1, ctx.currentTime); osc.start(); osc.stop(ctx.currentTime + 0.15); 
-            } else {
-                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(300, ctx.currentTime);
-                gain.gain.setValueAtTime(0.1, ctx.currentTime); osc.start(); 
-                osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.4); osc.stop(ctx.currentTime + 0.4); 
-            }
-        } catch (e) {}
-    }
-
+    // ចុចស្វែងរកបេក្ខជន
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         const appNo = inputBarcode.value.trim();
         if(!appNo) return;
-
-        alertBox.classList.add('d-none');
-        candidateCard.classList.add('d-none');
+        alertBox.classList.add('d-none'); candidateCard.classList.add('d-none');
         
-        previewContainer.classList.add('d-none');
-        previewContainer.classList.remove('d-flex');
-        previewImage.src = '';
-        btnConfirm.disabled = true;
-        btnStartScan.className = "btn btn-outline-primary btn-lg w-100 fw-bold mb-3 shadow-sm border-2";
-        btnStartScan.innerHTML = '<i class="fas fa-scanner me-2"></i> ចាប់ផ្តើមស្កេនពីម៉ាស៊ីន (Start Scan)';
+        btnStartScan.innerHTML = '<i class="fas fa-scanner me-2 fs-4"></i> ចាប់ផ្តើមស្កេន (Start Scan)';
         btnStartScan.disabled = false;
 
         fetch("{{ url_for('queue.verify_candidate_scan') }}", {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({application_no: appNo})
-        })
-        .then(res => res.json())
-        .then(data => {
+            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({application_no: appNo})
+        }).then(res => res.json()).then(data => {
             if(data.status === 'success') {
-                playSound('success');
                 currentAppNo = data.candidate.application_no;
+                document.getElementById('preview_disp_app_no').innerText = currentAppNo;
                 document.getElementById('disp_khmer_name').innerText = data.candidate.name_kh;
                 document.getElementById('disp_english_name').innerText = data.candidate.name_en;
                 document.getElementById('disp_app_no').innerText = data.candidate.application_no;
@@ -331,111 +211,162 @@ document.addEventListener("DOMContentLoaded", function() {
                 candidateCard.classList.remove('d-none');
                 btnStartScan.focus(); 
             } else {
-                playSound('error');
-                alertBox.className = 'alert alert-danger d-block fw-bold fs-5 shadow-sm';
+                alertBox.className = 'alert alert-danger d-block fw-bold fs-5 shadow-sm rounded-4';
                 alertBox.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i> ${data.message}`;
                 inputBarcode.value = '';
             }
         });
     });
 
+    // ==========================================
+    // 🌟 ដំណើរការស្កេន បង្វិលរូប និងលោត Preview 
+    // ==========================================
     btnStartScan.addEventListener('click', function() {
-        if(!currentAppNo) return;
-        if(!currentSaveDir) {
-            alert("សូមជ្រើសរើសទីតាំងរក្សាទុកឯកសារជាមុនសិន!");
-            return;
-        }
+        if(!currentAppNo || !currentSaveDir) return;
         
         btnStartScan.disabled = true;
-        btnStartScan.innerHTML = '<i class="fas fa-cog fa-spin me-2"></i> ម៉ាស៊ីនកំពុងដំណើរការស្កេន សូមរង់ចាំ...';
-        btnConfirm.disabled = true;
+        btnStartScan.innerHTML = '<i class="fas fa-cog fa-spin me-2 fs-4"></i> ម៉ាស៊ីនកំពុងដំណើរការ សូមរង់ចាំ...';
 
-        fetch(LOCAL_BRIDGE_URL, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ 
-                application_no: currentAppNo,
-                save_dir: currentSaveDir 
-            })
+        // ហៅ Local Bridge ឱ្យស្កេន (តែមិនទាន់ Save ទេ)
+        fetch(LOCAL_BRIDGE_SCAN_ONLY, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ application_no: currentAppNo, save_dir: currentSaveDir })
         })
         .then(res => res.json())
         .then(data => {
             if(data.status === 'success') {
-                playSound('success');
-                btnStartScan.className = "btn btn-outline-info btn-lg w-100 fw-bold mb-3 shadow-sm border-2";
-                btnStartScan.innerHTML = '<i class="fas fa-redo me-2"></i> ស្កេនម្តងទៀត (Scan Again)';
-                btnStartScan.disabled = false; 
+                btnStartScan.innerHTML = '<i class="fas fa-check-circle me-2 fs-4"></i> ស្កេនជោគជ័យ សូមពិនិត្យមើល';
                 
-                previewImage.src = data.image_base64;
-                previewContainer.classList.remove('d-none');
-                previewContainer.classList.add('d-flex');
-                
-                btnConfirm.disabled = false; 
-                btnConfirm.focus();
+                // 🌟 ប្រើ Canvas ដើម្បីបង្វិលរូបភាព ៩០ ដឺក្រេផ្តេក (Landscape) ដោយស្វ័យប្រវត្តិ
+                rotateImage90Degrees(data.image_base64, function(rotatedBase64) {
+                    finalBase64Image = rotatedBase64; // រក្សាទុករូបបង្វិលរួច
+                    imgPreview.src = finalBase64Image;
+                    resetZoom();
+                    scanPreviewModal.show(); // បើកផ្ទាំង Preview ធំ
+                });
+
             } else {
-                playSound('error');
-                btnStartScan.className = "btn btn-outline-danger btn-lg w-100 fw-bold mb-3 shadow-sm border-2";
-                btnStartScan.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i> ស្កេនបរាជ័យ សាកល្បងម្តងទៀត';
                 btnStartScan.disabled = false;
+                btnStartScan.innerHTML = '<i class="fas fa-scanner me-2 fs-4"></i> ចាប់ផ្តើមស្កេនម្តងទៀត';
                 alert("បញ្ហាម៉ាស៊ីនស្កេន៖ " + data.message);
             }
         })
         .catch(err => {
-            playSound('error');
-            btnStartScan.innerHTML = '<i class="fas fa-print me-2"></i> ចាប់ផ្តើមស្កេនពីម៉ាស៊ីន (Start Scan)';
             btnStartScan.disabled = false;
-            alert("❌ មិនអាចភ្ជាប់ទៅកាន់ម៉ាស៊ីនស្កេនបានទេ! សូមពិនិត្យមើលថាតើកម្មវិធី Local Bridge កំពុងបើកឬអត់។");
+            btnStartScan.innerHTML = '<i class="fas fa-scanner me-2 fs-4"></i> ចាប់ផ្តើមស្កេន (Start Scan)';
+            alert("❌ មិនអាចភ្ជាប់ទៅម៉ាស៊ីនស្កេនបានទេ!");
         });
     });
 
-    btnConfirm.addEventListener('click', function() {
-        if(!currentAppNo) return;
-        
-        btnConfirm.disabled = true;
-        btnConfirm.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> កំពុងរក្សាទុក...';
-        btnStartScan.disabled = true; 
+    // មុខងារបង្វិលរូបភាព (Auto-Rotate Engine)
+    function rotateImage90Degrees(base64Image, callback) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            // ប្តូរប្រវែង និងទទឹងគ្នា (Landscape)
+            canvas.width = img.height;
+            canvas.height = img.width;
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(-90 * Math.PI / 180); // បង្វិល -90 ដឺក្រេ (បញ្ឈរទៅផ្តេក)
+            ctx.drawImage(img, -img.width / 2, -img.height / 2);
+            // កំណត់ទំហំ File កុំឱ្យធំពេក (0.8 quality = ~2MB-3MB)
+            callback(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = base64Image;
+    }
 
-        fetch("{{ url_for('queue.confirm_candidate_scan') }}", {
-            method: 'POST',
+    // ឧបករណ៍ Zoom Preview
+    window.zoomImg = function(step) {
+        currentZoom += step;
+        if(currentZoom < 0.5) currentZoom = 0.5;
+        if(currentZoom > 4) currentZoom = 4;
+        imgPreview.style.transform = `scale(${currentZoom})`;
+    };
+    window.resetZoom = function() {
+        currentZoom = 1;
+        imgPreview.style.transform = `scale(${currentZoom})`;
+    };
+
+    // ពេលមន្ត្រីចុច "ស្កេនម្តងទៀត (Retake)"
+    window.retakeScan = function() {
+        scanPreviewModal.hide();
+        finalBase64Image = "";
+        imgPreview.src = "";
+        btnStartScan.disabled = false;
+        btnStartScan.innerHTML = '<i class="fas fa-redo me-2 fs-4"></i> ស្កេនម្តងទៀត (Retake)';
+    };
+
+    // ==========================================
+    // 🌟 ពេលមន្ត្រីចុច "រក្សាទុក និងបញ្ចប់"
+    // ==========================================
+    window.saveAndComplete = function() {
+        btnConfirmSave.disabled = true;
+        btnConfirmSave.innerHTML = '<i class="fas fa-spinner fa-spin me-2 fs-5"></i> កំពុងរក្សាទុកឯកសារ...';
+
+        // ១. ផ្ញើរូបភាពដែលបង្វិលរួច ទៅឱ្យ Local Bridge សរសេរចូល Folder ជាផ្លូវការ
+        fetch(LOCAL_BRIDGE_SAVE_IMAGE, {
+            method: 'POST', 
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({application_no: currentAppNo})
+            body: JSON.stringify({ 
+                application_no: currentAppNo, 
+                save_dir: currentSaveDir,
+                image_base64: finalBase64Image, // បោះរូបដែលវិលហើយទៅឱ្យ Python សរសេរចូលកុំព្យូទ័រ
+                max_size_kb: 1000 // 🌟 កំណត់ទំហំអតិបរមាត្រឹម 1MB (១០០០ KB)
+            })
         })
         .then(res => res.json())
         .then(data => {
-            btnConfirm.innerHTML = '<i class="fas fa-save me-2"></i> ជំហានទី ៣៖ បញ្ជាក់ការស្កេនរួចរាល់ 100%';
             if(data.status === 'success') {
-                playSound('success');
-                candidateCard.classList.add('d-none');
-                alertBox.className = 'alert alert-success d-block fw-bold fs-5 shadow-sm';
-                alertBox.innerHTML = `<i class="fas fa-check-circle me-2"></i> ${data.message}`;
-                
-                inputBarcode.value = ''; currentAppNo = ''; inputBarcode.focus();
-                loadPendingList(); 
-                setTimeout(() => alertBox.classList.add('d-none'), 3000);
+                // ២. បើ Save ចូលម៉ាស៊ីនជោគជ័យ ទើប Update Database លើ Web
+                fetch("{{ url_for('queue.confirm_candidate_scan') }}", {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({application_no: currentAppNo})
+                })
+                .then(res2 => res2.json())
+                .then(data2 => {
+                    scanPreviewModal.hide();
+                    btnConfirmSave.disabled = false;
+                    btnConfirmSave.innerHTML = '<i class="fas fa-save me-2 fs-5"></i> រក្សាទុក និងបញ្ចប់ (Save & Complete)';
+                    
+                    candidateCard.classList.add('d-none');
+                    alertBox.className = 'alert alert-success d-block fw-bold fs-5 shadow-sm rounded-4';
+                    
+                    // 🌟 បង្ហាញសារជោគជ័យ ដោយភ្ជាប់មកជាមួយទំហំ File ពិតប្រាកដដែលបាន Save
+                    alertBox.innerHTML = `<i class="fas fa-check-circle me-2"></i> រក្សាទុកជោគជ័យ! ទំហំឯកសារ៖ <span class="badge bg-success">${data.final_size}</span>`;
+                    
+                    inputBarcode.value = ''; currentAppNo = ''; inputBarcode.focus();
+                    loadPendingList();
+                    setTimeout(() => alertBox.classList.add('d-none'), 4000);
+                })
+                .catch(err => {
+                    alert("មានបញ្ហាក្នុងការ Update Database!");
+                    btnConfirmSave.disabled = false;
+                    btnConfirmSave.innerHTML = '<i class="fas fa-save me-2 fs-5"></i> រក្សាទុក និងបញ្ចប់';
+                });
             } else {
-                btnConfirm.disabled = false;
-                btnStartScan.disabled = false;
+                alert("មិនអាចរក្សាទុកចូលក្នុងកុំព្យូទ័របានទេ៖ " + data.message);
+                btnConfirmSave.disabled = false;
+                btnConfirmSave.innerHTML = '<i class="fas fa-save me-2 fs-5"></i> រក្សាទុក និងបញ្ចប់ (Save & Complete)';
             }
+        })
+        .catch(err => {
+            alert("ដាច់ការតភ្ជាប់ជាមួយ Local Bridge ពេលកំពុង Save!");
+            btnConfirmSave.disabled = false;
+            btnConfirmSave.innerHTML = '<i class="fas fa-save me-2 fs-5"></i> រក្សាទុក និងបញ្ចប់ (Save & Complete)';
         });
-    });
+    };
 
+    // Pending List Logic (ដូចកូដចាស់)
     window.skipCandidate = function(appNo, queueNum) {
         if(confirm(`តើអ្នកពិតជាចង់បោះបង់លេខ ${queueNum} នេះចេញពីបញ្ជីរង់ចាំមែនទេ (ដោយសារបេក្ខជនមិនមកស្កេន)?`)) {
             fetch("{{ url_for('queue.skip_candidate_scan') }}", {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({application_no: appNo})
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.status === 'success') {
-                    loadPendingList(); 
-                    inputBarcode.focus(); 
-                } else {
-                    alert("មានកំហុស៖ " + data.message);
-                }
-            })
-            .catch(err => console.error("Error skipping candidate:", err));
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({application_no: appNo})
+            }).then(res => res.json()).then(data => {
+                if(data.status === 'success') { loadPendingList(); inputBarcode.focus(); } 
+                else { alert("មានកំហុស៖ " + data.message); }
+            });
         }
     };
 
@@ -449,35 +380,29 @@ document.addEventListener("DOMContentLoaded", function() {
                 tbody.innerHTML = '';
                 if(data.count > 0) {
                     data.pending_list.forEach(p => {
-                        let counterBadge = p.counter_name 
-                            ? `<span class="badge bg-info text-dark shadow-sm"><i class="fas fa-desktop me-1"></i> ${p.counter_name}</span>` 
-                            : `<span class="badge bg-light text-muted border">-</span>`;
-
+                        let cBadge = p.counter_name ? `<span class="badge bg-info text-dark shadow-sm px-2 py-1"><i class="fas fa-desktop me-1"></i> ${p.counter_name}</span>` : `-`;
                         tbody.innerHTML += `
                             <tr>
                                 <td class="ps-3"><span class="badge bg-secondary fs-6">${p.queue_number}</span></td>
-                                <td>${counterBadge}</td>
                                 <td class="fw-bold text-dark">
                                     ${p.full_name_kh} <br>
-                                    <small class="text-muted fw-normal">${p.application_no}</small>
+                                    <span class="text-muted fw-normal" style="font-size:0.85rem;"><i class="fas fa-barcode"></i> ${p.application_no}</span><br>
+                                    ${cBadge}
                                 </td>
                                 <td class="text-end pe-3">
-                                    <button onclick="skipCandidate('${p.application_no}', '${p.queue_number}')" class="btn btn-sm btn-outline-danger shadow-sm" title="បោះបង់ (មិនមក)">
-                                        <i class="fas fa-user-times"></i>
+                                    <button onclick="skipCandidate('${p.application_no}', '${p.queue_number}')" class="btn btn-sm btn-outline-danger shadow-sm rounded-pill px-3 fw-bold">
+                                        <i class="fas fa-user-times me-1"></i> រំលង
                                     </button>
                                 </td>
-                            </tr>
-                        `;
+                            </tr>`;
                     });
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-success py-5"><i class="fas fa-check-circle fs-3 mb-2 d-block"></i> ស្កេនអស់ហើយ!</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-success py-5"><i class="fas fa-check-circle fs-2 mb-2 d-block"></i> ស្កេនអស់ហើយ!</td></tr>';
                 }
             }
         });
     }
-    
-    loadPendingList(); 
-    setInterval(loadPendingList, 5000);
+    loadPendingList(); setInterval(loadPendingList, 5000);
 });
 </script>
 {% endblock %}

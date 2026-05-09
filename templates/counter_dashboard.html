@@ -4,10 +4,9 @@
 {% block page_title %}ផ្ទាំងបញ្ជាហៅលេខ (Counter Control Panel){% endblock %}
 
 {% block head %}
-<!-- 🌟 បន្ថែម Google Web Fonts សម្រាប់អក្សរខ្មែរ -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Siemreap&family=Moul&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Siemreap&family=Moul&display=swap" rel="stylesheet">
 <style>
     /* General Background */
     body { 
@@ -17,13 +16,8 @@
     
     /* 🌟 0. Custom Toast Alert (សារអណ្តែតលើអេក្រង់) 🌟 */
     .custom-toast-alert {
-        position: fixed;
-        top: 30px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 9999;
-        min-width: 350px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
+        z-index: 9999; min-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         transition: opacity 0.3s ease-in-out;
     }
 
@@ -32,14 +26,8 @@
         background: #ffffff; border: none; border-radius: 16px;
         padding: 1.25rem; display: flex; align-items: center; justify-content: space-between;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
         height: 100%; border: 1px solid #e2e8f0;
     }
-    .stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    }
-    
     .stat-icon-box {
         width: 50px; height: 50px; border-radius: 12px;
         display: flex; justify-content: center; align-items: center; font-size: 1.5rem;
@@ -48,48 +36,33 @@
     .stat-green { background: #ecfdf5; color: #10b981; }
 
     /* 🌟 2. Main Control Dashboard 🌟 */
-    .control-dashboard {
-        background: #1e293b; border-radius: 24px; padding: 2.5rem; color: white;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        position: relative; overflow: hidden; min-height: 450px;
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-    }
-    
-    .dashboard-bg-glow {
-        position: absolute; width: 300px; height: 300px; background: rgba(56, 189, 248, 0.08);
-        filter: blur(60px); border-radius: 50%; top: -50px; right: -50px; pointer-events: none;
+    .ticket-display-container {
+        background-color: #1e293b; border-radius: 24px; min-height: 420px; 
+        display: flex; align-items: center; justify-content: center; padding: 2rem;
+        position: relative; overflow: hidden;
     }
 
     /* 🌟 3. Idle State 🌟 */
-    .idle-content { text-align: center; z-index: 2; transition: opacity 0.3s; width: 100%; max-width: 500px; }
-    
     .pulse-ring {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%;
-        border: 2px solid rgba(59, 130, 246, 0.4); animation: pulsing 2s infinite ease-out; z-index: 1;
+        width: 90px; height: 90px; background: rgba(59, 130, 246, 0.15); 
+        border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+        border: 2px solid rgba(59, 130, 246, 0.4); animation: pulsing 2s infinite ease-out;
     }
     @keyframes pulsing { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
 
     /* 🌟 4. Active State 🌟 */
-    .active-content { width: 100%; max-width: 650px; z-index: 2; animation: fadeIn 0.4s ease-out forwards; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-
     .ticket-display-number {
-        font-family: 'Inter', sans-serif; font-size: clamp(4rem, 8vw, 6.5rem); font-weight: 900; line-height: 1;
-        letter-spacing: -2px; margin-bottom: 2rem; color: #ffffff;
-        text-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); text-align: center;
+        font-family: 'Inter', sans-serif; font-size: clamp(4rem, 8vw, 6.5rem); 
+        font-weight: 900; line-height: 1; letter-spacing: -2px; margin-bottom: 2rem; 
+        color: #ffffff; text-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); text-align: center;
     }
 
     .info-glass-box {
-        background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px;
-        padding: 1.5rem 2rem; margin-bottom: 2.5rem; text-align: left;
+        background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); 
+        border-radius: 16px; padding: 1.5rem 2rem; margin-bottom: 2.5rem; text-align: left;
     }
-    .info-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-    .info-row:last-child { margin-bottom: 0; }
-    .info-label { color: #94a3b8; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;}
-    .info-value { color: #ffffff; font-size: 1.25rem; font-weight: 700; word-break: break-all;}
-    .info-value.highlight { color: #fde047; }
 
-   /* =========================================
+    /* =========================================
        🌟 5. 3D Hardware Switch Buttons 🌟
        ========================================= */
     .action-btn-group { 
@@ -106,87 +79,61 @@
     
     .hw-icon { font-size: 1.6rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); flex-shrink: 0; }
     .hw-text { display: flex; flex-direction: column; align-items: center; text-align: center; }
-    
-    .hw-title { 
-        font-family: 'Khmer OS Battambang', 'Siemreap', sans-serif; 
-        font-size: 1.15rem; font-weight: normal; line-height: 1.3; margin: 0; padding: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-    }
-    
+    .hw-title { font-family: 'Khmer OS Battambang', 'Siemreap', sans-serif; font-size: 1.15rem; font-weight: normal; line-height: 1.3; margin: 0; padding: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
     .hw-subtitle { font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 800; opacity: 0.85; letter-spacing: 1px; margin-top: 2px;}
 
+    /* 🟢 Approve Switch */
+    .btn-hw-accept { background: linear-gradient(180deg, #10b981 0%, #059669 100%); box-shadow: 0 8px 0 #065f46, 0 12px 15px rgba(0,0,0,0.2), inset 0 2px 0 rgba(255,255,255,0.2); }
+    .btn-hw-accept:active { transform: translateY(8px); box-shadow: 0 0px 0 #065f46; }
+
+    /* 🟡 Absent Switch */
+    .btn-hw-absent { background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 8px 0 #b45309, 0 12px 15px rgba(0,0,0,0.2), inset 0 2px 0 rgba(255,255,255,0.2); }
+    .btn-hw-absent:active { transform: translateY(8px); box-shadow: 0 0px 0 #b45309; }
+
     /* 🔴 Reject Switch */
-    .btn-hw-reject {
-        background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
-        box-shadow: 0 8px 0 #991b1b, 0 12px 15px rgba(0,0,0,0.2), inset 0 2px 0 rgba(255,255,255,0.2); 
-    }
-    .btn-hw-reject:hover { filter: brightness(1.05); transform: translateY(-1px); box-shadow: 0 9px 0 #991b1b, 0 15px 20px rgba(0,0,0,0.25), inset 0 2px 0 rgba(255,255,255,0.3); }
-    .btn-hw-reject:active { transform: translateY(8px); box-shadow: 0 0px 0 #991b1b, 0 4px 6px rgba(0,0,0,0.2), inset 0 4px 8px rgba(0,0,0,0.3); }
+    .btn-hw-reject { background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%); box-shadow: 0 8px 0 #991b1b, 0 12px 15px rgba(0,0,0,0.2), inset 0 2px 0 rgba(255,255,255,0.2); }
+    .btn-hw-reject:active { transform: translateY(8px); box-shadow: 0 0px 0 #991b1b; }
 
-    /* 🟠 Pause Switch */
-    .btn-hw-pause {
-        background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
-        box-shadow: 0 8px 0 #b45309, 0 12px 15px rgba(0,0,0,0.2), inset 0 2px 0 rgba(255,255,255,0.2);
-    }
-    .btn-hw-pause:hover { filter: brightness(1.05); transform: translateY(-1px); box-shadow: 0 9px 0 #b45309, 0 15px 20px rgba(0,0,0,0.25), inset 0 2px 0 rgba(255,255,255,0.3); }
-    .btn-hw-pause:active { transform: translateY(8px); box-shadow: 0 0px 0 #b45309, 0 2px 4px rgba(0,0,0,0.2), inset 0 4px 8px rgba(0,0,0,0.3); }
-
-    /* 🟢 Accept Switch */
-    .btn-hw-accept {
-        background: linear-gradient(180deg, #10b981 0%, #059669 100%);
-        box-shadow: 0 8px 0 #065f46, 0 12px 15px rgba(0,0,0,0.2), inset 0 2px 0 rgba(255,255,255,0.2);
-    }
-    .btn-hw-accept:hover { filter: brightness(1.05); transform: translateY(-1px); box-shadow: 0 9px 0 #065f46, 0 15px 20px rgba(0,0,0,0.25), inset 0 2px 0 rgba(255,255,255,0.3); }
-    .btn-hw-accept:active { transform: translateY(8px); box-shadow: 0 0px 0 #065f46, 0 2px 4px rgba(0,0,0,0.2), inset 0 4px 8px rgba(0,0,0,0.3); }
+    /* 🔘 Clear Screen Switch */
+    .btn-hw-clear { background: linear-gradient(180deg, #64748b 0%, #475569 100%); box-shadow: 0 8px 0 #334155, 0 12px 15px rgba(0,0,0,0.2), inset 0 2px 0 rgba(255,255,255,0.2); }
+    .btn-hw-clear:active { transform: translateY(8px); box-shadow: 0 0px 0 #334155; }
     
-    .btn-hw:disabled {
-        transform: translateY(8px); background: #64748b;
-        box-shadow: 0 0px 0 #334155, inset 0 4px 8px rgba(0,0,0,0.3); cursor: not-allowed; filter: none;
-    }
+    .btn-hw:disabled { transform: translateY(8px); background: #64748b; box-shadow: 0 0px 0 #334155; cursor: not-allowed; }
 
-    /* =========================================
-       📱 Responsive 
-       ========================================= */
     @media (max-width: 768px) {
-        .control-dashboard { padding: 1.5rem 1rem; min-height: auto; }
-        .action-btn-group { flex-direction: row; gap: 0.5rem; width: 100%; }
-        .btn-hw { padding: 0.5rem 0.3rem; border-radius: 10px; flex-direction: column; gap: 0.3rem; }
-        .hw-icon { font-size: 1.2rem; }
-        .hw-text { width: 100%; }
-        .hw-title { font-size: 0.85rem; line-height: 1.1; }
-        .hw-subtitle { font-size: 0.55rem; margin-top: 2px; }
-        .ticket-display-number { font-size: clamp(2.5rem, 8vw, 3.5rem); margin-bottom: 1rem; }
-        .info-glass-box { padding: 1rem 1.2rem; margin-bottom: 1.5rem; }
-        .info-value { font-size: 1.1rem; }
+        .action-btn-group { flex-direction: row; flex-wrap: wrap; }
+        .btn-hw { flex: 1 1 calc(50% - 0.5rem); flex-direction: column; padding: 0.5rem; }
     }
-    @media (max-width: 380px) {
-        .hw-title { font-size: 0.75rem; }
-        .hw-icon { font-size: 1rem; }
+    /* 🌟 ចលនាប្តូរផ្ទាំងស្ងាត់ៗ និងទន់ភ្លន់ (Smooth Fade-in Animation) 🌟 */
+    .fade-in-smooth {
+        animation: fadeInSmooth 0.4s ease-in-out forwards;
     }
-    
+    @keyframes fadeInSmooth {
+        0% { opacity: 0; transform: translateY(10px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- 🌟 ប្រអប់សារអណ្តែត -->
 <div id="statusAlert" class="custom-toast-alert d-none"></div>
 
 <div class="row g-3 mb-4 align-items-stretch">
-    <!-- កាតទី១៖ បង្ហាញបញ្ជរប្រចាំការ -->
     <div class="col-lg-4 col-md-12">
         {% if assigned_counter %}
-            <div class="stat-card h-100 border-start border-4 border-primary shadow-sm">
+            <div class="stat-card border-start border-4 border-primary shadow-sm">
                 <div>
                     <p class="text-muted fw-bold mb-1 small">អ្នកកំពុងប្រចាំការនៅ</p>
-                    <h3 class="mb-0 fw-bold text-dark" style="font-family: 'Siemreap', sans-serif;">{{ assigned_counter.counter_name_kh }}</h3>
+                    <h3 class="mb-0 fw-bold text-dark">{{ assigned_counter.counter_name_kh }}</h3>
                     <input type="hidden" id="counterSelect" value="{{ assigned_counter.id }}">
                 </div>
                 <div class="stat-icon-box stat-blue"><i class="fas fa-desktop"></i></div>
             </div>
         {% else %}
-            <div class="stat-card h-100 border-start border-4 border-danger shadow-sm">
+            <div class="stat-card border-start border-4 border-danger shadow-sm">
                 <div>
                     <p class="text-danger fw-bold mb-1 small"><i class="fas fa-lock me-1"></i> មិនទាន់មានការចាត់តាំង!</p>
-                    <h6 class="mb-0 text-dark fw-bold" style="font-family: 'Siemreap', sans-serif; font-size: 0.9rem;">សូមទាក់ទង Admin</h6>
+                    <h6 class="mb-0 text-dark fw-bold">សូមទាក់ទង Admin</h6>
                 </div>
                 <div class="stat-icon-box bg-danger bg-opacity-10 text-danger"><i class="fas fa-exclamation-triangle"></i></div>
             </div>
@@ -194,23 +141,21 @@
         {% endif %}
     </div>
 
-    <!-- កាតទី២៖ អ្នកកំពុងរង់ចាំ -->
     <div class="col-lg-4 col-md-6">
-        <div class="stat-card h-100 shadow-sm">
+        <div class="stat-card shadow-sm">
             <div>
                 <p class="text-muted fw-bold mb-1 small">អ្នកកំពុងរង់ចាំ</p>
-                <h3 class="mb-0 fw-bold text-dark" id="totalWaitingCount" style="font-family: 'Inter', sans-serif;">0</h3>
+                <h3 class="mb-0 fw-bold text-dark" id="totalWaitingCount">0</h3>
             </div>
             <div class="stat-icon-box stat-blue"><i class="fas fa-users"></i></div>
         </div>
     </div>
 
-    <!-- កាតទី៣៖ លេខរង់ចាំចុងក្រោយ -->
     <div class="col-lg-4 col-md-6">
-        <div class="stat-card h-100 shadow-sm">
+        <div class="stat-card shadow-sm">
             <div>
                 <p class="text-muted fw-bold mb-1 small">លេខរង់ចាំចុងក្រោយ</p>
-                <h3 class="mb-0 fw-bold text-dark" id="lastQueueNumber" style="font-family: 'Inter', sans-serif;">---</h3>
+                <h3 class="mb-0 fw-bold text-dark" id="lastQueueNumber">---</h3>
             </div>
             <div class="stat-icon-box stat-green"><i class="fas fa-ticket-alt"></i></div>
         </div>
@@ -218,60 +163,66 @@
 </div>
 
 {% if assigned_counter %}
-<div class="ticket-display-container card border-0 shadow-lg mt-3" style="background-color: #1e293b; border-radius: 24px; min-height: 420px; display: flex; align-items: center; justify-content: center; padding: 2rem;">
+<div class="ticket-display-container card border-0 shadow-lg mt-3">
     
-    <!-- ផ្ទាំង Idle -->
     <div id="idleView" class="text-center w-100">
-        <div class="pulse-ring mb-4 mx-auto" style="width: 90px; height: 90px; background: rgba(59, 130, 246, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(59, 130, 246, 0.5);">
+        <div class="pulse-ring mb-4 mx-auto">
             <i class="fas fa-bullhorn text-white fs-1"></i>
         </div>
         <h4 class="fw-bold text-white mb-2">រួចរាល់សម្រាប់ទទួលពាក្យ</h4>
         <p class="text-white-50 mb-4">សូមចុចប៊ូតុងខាងក្រោមដើម្បីហៅបេក្ខជនបន្ទាប់</p>
         
-        <!-- 🚀 កន្លែងកែប្រែដ៏សំខាន់៖ ប្តូរពី 'complete' ទៅជា 'call_next_new' -->
-        <button class="btn btn-light btn-lg px-5 rounded-pill shadow fw-bold text-primary mb-4" onclick="processTicket('call_next_new')" id="btnCallNext">
-            <i class="fas fa-bullhorn me-2"></i> <span>ហៅអ្នកបន្ទាប់</span>
-        </button>
+        <div id="idle-buttons-group" class="d-flex justify-content-center align-items-center mt-4">
+            <button class="btn btn-primary btn-lg px-5 py-3 rounded-pill shadow-lg fw-bold" onclick="processTicket('call_next_new')" id="btnCallNext" style="font-size: 1.15rem; transition: transform 0.2s;">
+                <i class="fas fa-bullhorn me-2 fs-5"></i> ហៅអ្នកបន្ទាប់
+            </button>
+        </div>
 
-        <!-- 🌟 មុខងារពិសេសសម្រាប់តែ Admin ប៉ុណ្ណោះ (កែតម្រូវបេក្ខជនបដិសេធ) 🌟 -->
         {% if session.get('role_name') in ['Admin', 'Super Admin'] %}
-        <div class="card bg-dark border-warning mt-4 mx-auto text-start" style="max-width: 500px; border-width: 2px;">
-            <div class="card-header bg-warning text-dark fw-bold py-2">
-                <i class="fas fa-user-shield me-2"></i> មុខងារ Admin៖ ដោះស្រាយបេក្ខជនខ្វះឯកសារ
-            </div>
-            <div class="card-body p-3">
-                <div class="input-group mb-3">
-                    <input type="text" id="adminSearchInput" class="form-control bg-light text-dark fw-bold" placeholder="វាយបញ្ចូល EPS-ID (ឧ. 0022...)">
-                    <button class="btn btn-warning fw-bold text-dark" onclick="searchRejectedCandidate()">
-                        <i class="fas fa-search"></i> ស្វែងរក
+        <div class="admin-search-box mt-5 mx-auto text-start" style="max-width: 600px;">
+            <div class="p-4 rounded-4 shadow" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 193, 7, 0.25); backdrop-filter: blur(10px);">
+                
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h6 class="text-warning fw-bold mb-0" style="letter-spacing: 0.5px;"><i class="fas fa-user-shield me-2 fs-5"></i> មុខងារ Admin</h6>
+                    <button class="btn btn-sm btn-outline-warning fw-bold rounded-pill" onclick="recallLastTicket()">
+                        <i class="fas fa-undo-alt me-1"></i> ហៅលេខមុនមកវិញ
                     </button>
                 </div>
                 
-                <!-- កន្លែងបង្ហាញលទ្ធផល -->
-                <div id="adminSearchResult" class="d-none rounded p-3" style="background-color: rgba(255, 255, 255, 0.1);">
-                    <p class="mb-1 text-white-50 small">ឈ្មោះបេក្ខជន៖ <span id="resName" class="text-white fw-bold fs-6"></span></p>
-                    <p class="mb-3 text-white-50 small">EPS-ID៖ <span id="resAppNo" class="text-warning fw-bold fs-6 font-monospace"></span></p>
-                    <button class="btn btn-success btn-sm w-100 fw-bold shadow-sm" onclick="reviveToScanner()">
-                        <i class="fas fa-paper-plane me-1"></i> យល់ព្រម & បញ្ជូនត្រង់ទៅម៉ាស៊ីនស្កេនវិញ
+                <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border border-secondary border-opacity-25">
+                    <input type="text" id="adminSearchInput" class="form-control bg-dark text-white border-0 px-4" placeholder="វាយបញ្ចូល EPS-ID (ឧ. 0022...)">
+                    <button class="btn btn-warning fw-bold px-4 text-dark shadow-none" onclick="searchRejectedCandidate()">
+                        <i class="fas fa-search me-1"></i> ស្វែងរក
                     </button>
                 </div>
+                
+                <div id="adminSearchResult" class="d-none mt-4 p-3 rounded-4" style="background: rgba(16, 185, 129, 0.08); border: 1px dashed rgba(16, 185, 129, 0.4);">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div>
+                            <p class="mb-1 text-white-50 small">ឈ្មោះបេក្ខជន៖ <span id="resName" class="text-white fw-bold fs-6 ms-1"></span></p>
+                            <p class="mb-0 text-white-50 small">EPS-ID៖ <span id="resAppNo" class="text-warning fw-bold font-monospace ms-1"></span></p>
+                        </div>
+                        <button class="btn btn-success px-4 py-2 fw-bold shadow-sm rounded-pill" onclick="reviveToScanner()">
+                            <i class="fas fa-paper-plane me-1"></i> បញ្ជូនទៅម៉ាស៊ីនស្កេន
+                        </button>
+                    </div>
+                </div>
+                
             </div>
         </div>
         {% endif %}
-        <!-- បញ្ចប់មុខងារ Admin -->
-
     </div>
 
-    <!-- ផ្ទាំង Active -->
     <div id="activeView" class="d-none w-100 text-center">
-        <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-25 text-white px-4 py-2 rounded-pill mb-3 border border-danger border-opacity-50">
+        
+        <div class="d-inline-flex align-items-center justify-content-center px-4 py-2 rounded-pill mb-3 border border-danger border-opacity-50" style="background-color: rgba(220, 38, 38, 0.2);">
             <div class="spinner-grow spinner-grow-sm text-danger me-2" role="status"></div>
-            <span class="fw-bold small tracking-wide">កំពុងពិនិត្យឯកសារ</span>
+            <span class="text-white fw-bold small tracking-wide">កំពុងពិនិត្យឯកសារ</span>
         </div>
         
-        <div class="ticket-display-number text-white fw-bold" id="ticketNumberDisplay" style="font-size: 5rem; text-shadow: 0 4px 6px rgba(0,0,0,0.3); margin-bottom: 1.5rem;">---</div>
+        <div class="ticket-display-number" id="ticketNumberDisplay">---</div>
         
-        <div class="info-glass-box mx-auto text-start p-4 rounded-4 mb-4" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); max-width: 500px;">
+        <div class="info-glass-box mx-auto text-start p-4 rounded-4 mb-4" style="max-width: 500px;">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <span class="text-white-50"><i class="fas fa-user me-2"></i> ឈ្មោះបេក្ខជន៖</span>
                 <span class="text-white fw-bold fs-5" id="disp_candidate_name">---</span>
@@ -283,30 +234,25 @@
             </div>
         </div>
 
-        <div class="action-btn-group">
-            <button class="btn-hw btn-hw-reject" onclick="openRejectModal()">
-                <div class="hw-text">
-                    <span class="hw-title">បដិសេធ</span><span class="hw-subtitle">REJECT</span>
-                </div>
-            </button>
-            <button class="btn-hw btn-hw-pause" onclick="processTicket('clear_only')" id="btnFinishAndRest">
-                <i class="fas fa-coffee hw-icon"></i>
-                <div class="hw-text">
-                    <span class="hw-title">បញ្ចប់ & សម្រាក</span><span class="hw-subtitle">FINISH & REST</span>
-                </div>
-            </button>
-            <button class="btn-hw btn-hw-accept" onclick="processTicket('complete')" id="btnAcceptCallNext">
+        <div class="action-btn-group flex-wrap justify-content-center mt-4">
+            <button type="button" class="btn-hw btn-hw-accept mx-2" onclick="approveCandidateSmart(event)" id="btnApprove">
                 <i class="fas fa-check-circle hw-icon"></i>
-                <div class="hw-text">
-                    <span class="hw-title">ហៅបន្ទាប់</span><span class="hw-subtitle">CALL NEXT</span>
-                </div>
+                <div class="hw-text"><span class="hw-title">យល់ព្រម</span><span class="hw-subtitle">APPROVE</span></div>
+            </button>
+            <button type="button" class="btn-hw btn-hw-absent mx-2" onclick="markAbsent(event)" id="btnAbsent">
+                <i class="fas fa-user-clock hw-icon"></i>
+                <div class="hw-text"><span class="hw-title">អវត្តមាន</span><span class="hw-subtitle">ABSENT</span></div>
+            </button>
+            <button type="button" class="btn-hw btn-hw-reject mx-2" onclick="openRejectModal(event)" id="btnReject">
+                <i class="fas fa-times-circle hw-icon"></i>
+                <div class="hw-text"><span class="hw-title">បដិសេធ</span><span class="hw-subtitle">REJECT</span></div>
             </button>
         </div>
+        
     </div>
 </div>
 {% endif %}
 
-<!-- Modal បដិសេធ -->
 <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 rounded-4 shadow-lg bg-white">
@@ -319,15 +265,15 @@
                     <label class="form-label fw-bold text-dark small mb-2">សូមជ្រើសរើសប្រភេទមូលហេតុ៖ <span class="text-danger">*</span></label>
                     <div class="dropdown w-100">
                         <button class="btn btn-custom-dropdown dropdown-toggle w-100 border-danger d-flex justify-content-between align-items-center" type="button" id="counterRejectDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span id="selectedReasonText" class="text-truncate pe-2" style="max-width: 90%;">-- ជ្រើសរើសមូលហេតុ --</span>
+                            <span id="selectedReasonText" class="text-truncate pe-2">-- ជ្រើសរើសមូលហេតុ --</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-custom w-100 shadow-lg" aria-labelledby="counterRejectDropdown">
-                            <li><a class="dropdown-item dropdown-item-custom" href="#" onclick="selectReason('', '-- ជ្រើសរើសមូលហេតុ --'); return false;">-- ជ្រើសរើសមូលហេតុ --</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="selectReason('', '-- ជ្រើសរើសមូលហេតុ --'); return false;">-- ជ្រើសរើសមូលហេតុ --</a></li>
                             {% for reason in reject_reasons %}
-                                <li><a class="dropdown-item dropdown-item-custom" href="#" onclick="selectReason('{{ reason.reason_kh }}', '{{ reason.reason_kh }}'); return false;">{{ reason.reason_kh }}</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="selectReason('{{ reason.reason_kh }}', '{{ reason.reason_kh }}'); return false;">{{ reason.reason_kh }}</a></li>
                             {% endfor %}
                             <li><hr class="dropdown-divider m-0"></li>
-                            <li><a class="dropdown-item dropdown-item-custom" href="#" onclick="selectReason('ផ្សេងៗ', 'ផ្សេងៗ (សូមបញ្ជាក់ខាងក្រោម)'); return false;">ផ្សេងៗ (សូមបញ្ជាក់ខាងក្រោម)</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="selectReason('ផ្សេងៗ', 'ផ្សេងៗ (សូមបញ្ជាក់ខាងក្រោម)'); return false;">ផ្សេងៗ (សូមបញ្ជាក់ខាងក្រោម)</a></li>
                         </ul>
                     </div>
                     <input type="hidden" id="rejectReasonType" value="">
@@ -349,18 +295,23 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    let currentProcessingTicketNum = null; 
+    let ticketLoadedTime = 0; 
     const idleView = document.getElementById('idleView');
     const activeView = document.getElementById('activeView');
     const btnCallNext = document.getElementById('btnCallNext');
-    const btnAcceptCallNext = document.getElementById('btnAcceptCallNext');
-    const btnFinishAndRest = document.getElementById('btnFinishAndRest'); 
+    
+    const btnApprove = document.getElementById('btnApprove');
+    const btnAbsent = document.getElementById('btnAbsent');
+    const btnReject = document.getElementById('btnReject');
+    
     
     const ticketNumberDisplay = document.getElementById('ticketNumberDisplay');
     const dispCandidateName = document.getElementById('disp_candidate_name');
     const dispExamCode = document.getElementById('disp_exam_code');
     const rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
-    let currentProcessingTicketNum = null; 
 
     document.body.insertAdjacentHTML('beforeend', `<audio id="notificationSound" preload="auto"><source src="{{ url_for('static', filename='sounds/newticket.mp3') }}" type="audio/mpeg"></audio>`);
     let previousWaitingCount = 0;
@@ -385,27 +336,105 @@
     fetchQueueStats();
     setInterval(fetchQueueStats, 3000);
 
-    function processTicket(actionType, isAuto = false, rejectReason = null) {
+    // ==========================================
+    // មុខងារឆ្លាតវៃ "យល់ព្រម" (ការពារការចុចខុស)
+    // ==========================================
+    function approveCandidateSmart(e) {
+        if(e) e.preventDefault(); // 🌟 ទប់ស្កាត់ដាច់ខាតកុំឱ្យ Browser លួច Submit អ្វីផ្សេង
+
+        let currentTime = Date.now();
+        let timeElapsed = currentTime - ticketLoadedTime; 
+
+        if (timeElapsed < 3000) {
+            Swal.fire({
+                title: 'ចុចលឿនពេក!',
+                text: 'ដើម្បីការពារការច្រឡំដៃ សូមបាញ់ Barcode ឬវាយ EPS-ID បេក្ខជនជាមុនសិន៖',
+                icon: 'warning',
+                input: 'text',
+                inputAttributes: { autocapitalize: 'off', autocomplete: 'off', id: 'swal-barcode-input' },
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'ផ្ទៀងផ្ទាត់ (Verify)',
+                cancelButtonText: 'បោះបង់',
+                didOpen: () => { setTimeout(() => document.getElementById('swal-barcode-input').focus(), 200); },
+                preConfirm: (barcode) => {
+                    if (!barcode || barcode.trim() === "") {
+                        Swal.showValidationMessage('សូមបញ្ចូល Barcode ឬ EPS-ID!');
+                        return false;
+                    }
+                    return barcode.trim();
+                }
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    processTicket('complete', false, null, result.value);
+                }
+                // បើគាត់ចុច 'បោះបង់' (Cancel) កូដនឹងនៅស្ងៀម មិនធ្វើអ្វីទាំងអស់!
+            });
+        } else {
+            // បើលើស ៣ វិនាទី អនុញ្ញាតឱ្យយល់ព្រមធម្មតា
+            processTicket('complete', false, null, ""); 
+        }
+    }
+
+    // ==========================================
+    // មុខងារអវត្តមាន
+    // ==========================================
+    function markAbsent(e) {
+        if(e) e.preventDefault();
+        Swal.fire({
+            title: 'បញ្ជាក់អវត្តមាន?',
+            text: "តើបេក្ខជននេះពិតជាហៅមិនមក ហើយមិនមានវត្តមាននៅមុខបញ្ជរមែនទេ?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#f59e0b',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'បាទ/ចាស អវត្តមាន',
+            cancelButtonText: 'បោះបង់'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                processTicket('reject', false, 'អវត្តមាន (ហៅមិនមក)');
+            }
+        });
+    }
+
+    // ==========================================
+    // ២. មុខងារស្នូលបញ្ជូនទិន្នន័យទៅ Server (Main Processing)
+    // ==========================================
+    function processTicket(actionType, isAuto = false, rejectReason = null, scannedBarcode = "") {
         const counterSelectEl = document.getElementById('counterSelect');
         if (!counterSelectEl) return; 
         const selectedCounter = counterSelectEl.value;
         if (!selectedCounter) { showAlert('មិនមានការចាត់តាំងបញ្ជរទេ!', 'danger'); return; }
 
-        if((actionType === 'complete' || actionType === 'call_next_new') && btnCallNext && idleView && !idleView.classList.contains('d-none')) {
+        // 🌟 បង្ហាញសញ្ញា Loading វិលៗ លើប៊ូតុងដែលមន្ត្រីកំពុងចុច
+        if(actionType === 'call_next_new' && btnCallNext) {
             btnCallNext.disabled = true;
-            btnCallNext.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> <span>កំពុងហៅ...</span>';
-        } else if (actionType === 'complete' && btnAcceptCallNext) {
-            btnAcceptCallNext.disabled = true;
-            let hwText = btnAcceptCallNext.querySelector('.hw-text');
-            if (hwText) { hwText.querySelector('.hw-title').innerText = 'ដំណើរការ...'; btnAcceptCallNext.querySelector('.hw-icon').className = 'fas fa-circle-notch fa-spin hw-icon'; }
-        } else if (actionType === 'clear_only' && btnFinishAndRest) { 
-            btnFinishAndRest.disabled = true;
-            let hwText = btnFinishAndRest.querySelector('.hw-text');
-            if (hwText) { hwText.querySelector('.hw-title').innerText = 'ដំណើរការ...'; btnFinishAndRest.querySelector('.hw-icon').className = 'fas fa-circle-notch fa-spin hw-icon'; }
+            btnCallNext.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2 fs-5"></i> កំពុងហៅ...';
+        } else if (actionType === 'complete' && btnApprove) {
+            btnApprove.disabled = true;
+            btnApprove.querySelector('.hw-title').innerText = 'ដំណើរការ...';
+            btnApprove.querySelector('i').className = 'fas fa-circle-notch fa-spin hw-icon';
+        } else if (actionType === 'reject' && rejectReason === 'អវត្តមាន (ហៅមិនមក)' && btnAbsent) {
+            btnAbsent.disabled = true;
+            btnAbsent.querySelector('.hw-title').innerText = 'ដំណើរការ...';
+            btnAbsent.querySelector('i').className = 'fas fa-circle-notch fa-spin hw-icon';
+        } else if (actionType === 'reject' && rejectReason !== 'អវត្តមាន (ហៅមិនមក)' && btnReject) {
+            btnReject.disabled = true;
+            btnReject.querySelector('.hw-title').innerText = 'ដំណើរការ...';
+            btnReject.querySelector('i').className = 'fas fa-circle-notch fa-spin hw-icon';
         }
 
-        const payload = { counter_no: selectedCounter, action_type: actionType };
-        if(actionType === 'reject') payload.reject_reason = rejectReason;
+        // 🌟 រៀបចំកញ្ចប់ទិន្នន័យ (Payload) បញ្ជូនទៅ Python
+        const payload = { 
+            counter_no: selectedCounter, 
+            action_type: actionType,
+            scanned_barcode: scannedBarcode
+        };
+        // បើចុច អវត្តមាន ឬ បដិសេធ ត្រូវភ្ជាប់មូលហេតុទៅជាមួយផង
+        if(actionType === 'reject') {
+            payload.reject_reason = rejectReason;
+        }
 
         fetch('/api/call_next', {
             method: 'POST',
@@ -418,22 +447,23 @@
 
             if (data.status === 'success') {
                 updateDisplay(data.ticket);
-                // បង្ហាញ Message ប្រាប់ថាបន្តការងារចាស់ បើគាត់ចុចហៅលេខថ្មីតែមានលេខចាស់ជាប់
                 showAlert(data.message, 'success');
                 currentProcessingTicketNum = data.ticket.queue_number;
-                showActiveView(currentProcessingTicketNum);
+                showActiveView();
                 fetchQueueStats();
+                ticketLoadedTime = Date.now();
             } else if (data.status === 'empty') {
+                // 🌟 បង្ហាញសារពេលចុច អវត្តមាន / បដិសេធ / យល់ព្រម រួចរាល់
                 let msg = data.message;
-                if(actionType === 'complete' || actionType === 'call_next_new') msg = 'បានទទួលយកជោគជ័យ។ មិនមានអ្នករង់ចាំបន្តទេ!';
-                if(actionType === 'reject') msg = 'បានបដិសេធជោគជ័យ។ មិនមានអ្នករង់ចាំបន្តទេ!';
-                if(actionType === 'clear_only') msg = 'បានបញ្ចប់ការងារ។ សម្រាកសិនចុះ!'; 
+                if(actionType === 'complete') msg = 'បានយល់ព្រមជោគជ័យ។';
+                if(actionType === 'reject' && rejectReason === 'អវត្តមាន (ហៅមិនមក)') msg = 'បានកត់ត្រាអវត្តមានជោគជ័យ។';
+                if(actionType === 'reject' && rejectReason !== 'អវត្តមាន (ហៅមិនមក)') msg = 'បានបដិសេធជោគជ័យ។';
                 
                 showAlert(msg, 'warning');
-                showIdleView();
+                showIdleView(); // លោតត្រឡប់ទៅផ្ទាំងទំនេរវិញ
                 currentProcessingTicketNum = null;
             } else {
-                showAlert(data.message, 'danger');
+                Swal.fire('បរាជ័យ!', data.message, 'error');
             }
         })
         .catch(error => {
@@ -443,24 +473,28 @@
         });
     }
 
+    // ==========================================
+    // ៣. មុខងារ Reset ប៊ូតុងឱ្យត្រឡប់មកធម្មតាវិញ
+    // ==========================================
     function resetButtons() {
         if(btnCallNext) {
             btnCallNext.disabled = false;
-            btnCallNext.innerHTML = '<i class="fas fa-bullhorn me-2"></i> <span>ហៅអ្នកបន្ទាប់</span>';
+            btnCallNext.innerHTML = '<i class="fas fa-bullhorn me-2 fs-5"></i> ហៅអ្នកបន្ទាប់';
         }
-        if(btnAcceptCallNext) {
-            btnAcceptCallNext.disabled = false;
-            let hwText1 = btnAcceptCallNext.querySelector('.hw-text');
-            if (hwText1) hwText1.querySelector('.hw-title').innerText = 'ហៅបន្ទាប់';
-            let icon1 = btnAcceptCallNext.querySelector('i');
-            if (icon1) icon1.className = 'fas fa-check-circle hw-icon';
+        if(btnApprove) {
+            btnApprove.disabled = false;
+            btnApprove.querySelector('.hw-title').innerText = 'យល់ព្រម';
+            btnApprove.querySelector('i').className = 'fas fa-check-circle hw-icon';
         }
-        if(btnFinishAndRest) {
-            btnFinishAndRest.disabled = false;
-            let hwText2 = btnFinishAndRest.querySelector('.hw-text');
-            if (hwText2) hwText2.querySelector('.hw-title').innerText = 'បញ្ចប់ & សម្រាក';
-            let icon2 = btnFinishAndRest.querySelector('i');
-            if (icon2) icon2.className = 'fas fa-coffee hw-icon';
+        if(btnAbsent) {
+            btnAbsent.disabled = false;
+            btnAbsent.querySelector('.hw-title').innerText = 'អវត្តមាន';
+            btnAbsent.querySelector('i').className = 'fas fa-user-clock hw-icon';
+        }
+        if(btnReject) {
+            btnReject.disabled = false;
+            btnReject.querySelector('.hw-title').innerText = 'បដិសេធ';
+            btnReject.querySelector('i').className = 'fas fa-times-circle hw-icon';
         }
     }
 
@@ -483,7 +517,11 @@
         }
     }
 
-    function openRejectModal() {
+    // ==========================================
+    // មុខងារបើក Modal បដិសេធ
+    // ==========================================
+    function openRejectModal(e) {
+        if(e) e.preventDefault();
         document.getElementById('rejectTicketNumberDisplay').innerText = currentProcessingTicketNum;
         document.getElementById('rejectReasonType').value = '';
         document.getElementById('selectedReasonText').innerText = '-- ជ្រើសរើសមូលហេតុ --';
@@ -506,6 +544,7 @@
         const btnConfirm = document.getElementById('btnConfirmReject');
         btnConfirm.disabled = true; 
         btnConfirm.innerHTML = '<i class="fas fa-circle-notch fa-spin me-1"></i> កំពុងដំណើរការ...';
+        
         processTicket('reject', false, finalReason);
         
         setTimeout(() => {
@@ -515,18 +554,29 @@
         }, 500);
     }
 
+    // ==========================================
+    // មុខងារប្តូរផ្ទាំងយ៉ាងទន់ភ្លន់ (Smooth UI Transition)
+    // ==========================================
     function showIdleView() {
         if(activeView) activeView.classList.add('d-none');
-        if(idleView) idleView.classList.remove('d-none');
+        if(idleView) {
+            idleView.classList.remove('d-none');
+            // បញ្ជាឱ្យលោតមកយ៉ាងស្ងាត់ៗ និងទន់ភ្លន់
+            idleView.classList.add('fade-in-smooth'); 
+        }
     }
 
-    function showActiveView(ticketNumber) {
+    function showActiveView() {
         if(idleView) idleView.classList.add('d-none');
-        if(activeView) activeView.classList.remove('d-none');
-        if(ticketNumberDisplay) ticketNumberDisplay.innerText = ticketNumber;
+        if(activeView) {
+            activeView.classList.remove('d-none');
+            // បញ្ជាឱ្យលោតមកយ៉ាងស្ងាត់ៗ និងទន់ភ្លន់
+            activeView.classList.add('fade-in-smooth');
+        }
     }
 
     function updateDisplay(ticketData) {
+        if(ticketNumberDisplay) ticketNumberDisplay.innerText = ticketData.queue_number || '---';
         if(dispCandidateName) dispCandidateName.innerText = ticketData.candidate_name || '---';
         if(dispExamCode) dispExamCode.innerText = ticketData.exam_code || ticketData.application_no || '---';
     }
@@ -543,9 +593,6 @@
         setTimeout(() => { statusAlert.classList.add('d-none'); }, 3000);
     }
 
-    // ==========================================
-    // 🌟 មុខងារ Admin ស្វែងរក និងបញ្ជូនទៅ Scanner 🌟
-    // ==========================================
     let reviveAppNo = '';
 
     function searchRejectedCandidate() {
@@ -597,5 +644,68 @@
             showAlert("មានបញ្ហាក្នុងការភ្ជាប់ទៅប្រព័ន្ធ!", 'danger');
         });
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        fetch('/api/recover_ticket')
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                updateDisplay(data.ticket);
+                currentProcessingTicketNum = data.ticket.queue_number;
+                showActiveView();
+                showAlert('បានសង្គ្រោះលេខដែលគាំងមកវិញ!', 'success');
+            }
+        }).catch(err => console.error(err));
+    }); 
+
+    function recallLastTicket() {
+        const counterSelectEl = document.getElementById('counterSelect');
+        if (!counterSelectEl || !counterSelectEl.value) { showAlert('មិនមានការចាត់តាំងបញ្ជរទេ!', 'danger'); return; }
+
+        Swal.fire({
+            title: 'បញ្ជាក់សិទ្ធិ Admin',
+            text: "ដើម្បីទាញយកសំបុត្រដែលកត់ត្រារួចមកវិញ សូមបាញ់ Barcode ឬវាយលេខ EPS-ID របស់បេក្ខជននោះ៖",
+            icon: 'warning',
+            input: 'text',
+            inputAttributes: { autocapitalize: 'off', autocomplete: 'off', id: 'swal-undo-barcode' },
+            showCancelButton: true,
+            confirmButtonColor: '#f59e0b',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'ផ្ទៀងផ្ទាត់ & ទាញមកវិញ',
+            cancelButtonText: 'បោះបង់',
+            didOpen: () => { setTimeout(() => document.getElementById('swal-undo-barcode').focus(), 200); },
+            preConfirm: (barcode) => {
+                if (!barcode || barcode.trim() === "") {
+                    Swal.showValidationMessage('សូមបញ្ចូលលេខ EPS-ID ជាមុនសិន!');
+                    return false;
+                }
+                return barcode.trim();
+            }
+        }).then((result) => {
+            if (result.isConfirmed && result.value) {
+                Swal.fire({ title: 'កំពុងផ្ទៀងផ្ទាត់...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
+                
+                fetch('/api/recall_last_ticket', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        counter_no: counterSelectEl.value,
+                        scanned_barcode: result.value 
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        updateDisplay(data.ticket);
+                        currentProcessingTicketNum = data.ticket.queue_number;
+                        showActiveView(); 
+                        Swal.fire('ជោគជ័យ!', data.message, 'success');
+                    } else {
+                        Swal.fire('បរាជ័យ', data.message, 'error');
+                    }
+                }).catch(err => Swal.fire('កំហុស', 'មិនអាចភ្ជាប់ទៅ Server បានទេ', 'error'));
+            }
+        });
+    }  
 </script>
 {% endblock %}

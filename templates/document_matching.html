@@ -3,129 +3,415 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ប្រព័ន្ធផ្ទៀងផ្ទាត់ឯកសារ - EPS Smart Exam</title>
+    <title>MTOSB Smart OCR | Enterprise</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; }
-        .container { max-width: 700px; margin: 50px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; }
-        input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
-        .btn-submit { background-color: #28a745; color: white; padding: 12px; border: none; border-radius: 6px; width: 100%; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
-        .btn-submit:hover { background-color: #218838; }
-        
-        /* រចនាប័ទ្មប្រអប់លទ្ធផល */
-        #resultBox { margin-top: 25px; padding: 20px; border-radius: 8px; display: none; border: 1px solid #eee; }
-        .match-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
-        .match-item:last-child { border-bottom: none; }
-        .status-icon { font-size: 20px; }
-        .success-text { color: #28a745; font-weight: bold; }
-        .error-text { color: #dc3545; font-weight: bold; }
-        .loading { text-align: center; display: none; color: #007bff; font-weight: bold; }
+        @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;700&display=swap');
+        body { background-color: #f8f9fa; font-family: 'Kantumruy Pro', 'Segoe UI', sans-serif; }
+        .navbar-brand { font-weight: bold; color: #0d6efd !important; }
+        .drop-zone { border: 3px dashed #0d6efd; border-radius: 10px; padding: 25px; text-align: center; cursor: pointer; color: #0d6efd; background-color: #f1f8ff; transition: 0.3s;}
+        .drop-zone:hover { background-color: #e2f0ff; }
+        .drop-zone.dragover { background-color: #d1e7ff; border-color: #0056b3; }
+        .table-wrapper { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .mismatch-text { color: #dc3545; font-weight: bold; font-size: 0.85em; display: block; margin-top: 5px; background: #ffe6e6; padding: 2px 5px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2 style="text-align: center; color: #0056b3;">🔍 ផ្ទៀងផ្ទាត់ទិន្នន័យបេក្ខជន</h2>
-    <hr>
-
-    <form id="matchingForm">
-        <div class="form-group">
-            <label>១. ឯកសារ Excel បេក្ខជន (.xlsx, .csv)</label>
-            <input type="file" id="excel_file" name="excel_file" required>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"><i class="fas fa-id-card me-2"></i>MTOSB Smart OCR | <span class="text-danger">Cross-Verification Engine</span></a>
+            <span class="navbar-text text-muted d-none d-md-inline">System Architect: <strong>OL KIM ENG</strong></span>
         </div>
+    </nav>
 
-        <div class="form-group">
-            <label>២. រូបថត Passport / ID Card</label>
-            <input type="file" id="id_image" name="id_image" accept="image/*" required>
-        </div>
+    <div class="container-fluid px-4">
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card border-primary shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary"><i class="fas fa-file-excel me-2"></i>ជំហានទី១៖ បញ្ចូលទិន្នន័យ Excel ដើម</h5>
+                        <p class="text-muted small">សូមបញ្ចូល File Excel បេក្ខជន ដើម្បីឱ្យប្រព័ន្ធធ្វើការផ្ទៀងផ្ទាត់ខ្វែង។</p>
+                        <input type="file" id="excelInput" class="form-control mb-3" accept=".xlsx, .xls, .csv">
+                        <button id="btnUploadExcel" class="btn btn-primary w-100"><i class="fas fa-upload me-2"></i>បញ្ចូល Excel ទៅកាន់ប្រព័ន្ធ</button>
+                        <div id="excelStatus" class="mt-3 text-success fw-bold text-center" style="display:none; font-size: 0.9em;"></div>
+                    </div>
+                </div>
+            </div>
 
-        <div class="form-group">
-            <label>៣. ជ្រើសរើសប្រព័ន្ធ OCR</label>
-            <select name="ocr_option" id="ocr_option" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
-                <option value="free">Tesseract (Free - ល្បឿនលឿន)</option>
-                <option value="google">Google Cloud Vision (AI - ត្រឹមត្រូវខ្ពស់)</option>
-            </select>
-        </div>
+            <div class="col-md-8 mb-4">
+                <div class="card border-success shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-success"><i class="fas fa-camera me-2"></i>ជំហានទី២៖ បញ្ចូលរូបភាពស្កេន (Batch Upload)</h5>
+                        <div class="drop-zone" id="dropZone">
+                            <span class="fs-5"><i class="fas fa-images fs-2 d-block mb-2"></i> ទាញទម្លាក់រូបភាព (ID Card / Passport) ទីនេះ</span>
+                            <input type="file" id="fileInput" style="display:none;" accept="image/*" multiple>
+                        </div>
+                        <div id="progressContainer" class="mt-3" style="display: none;">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span id="progressText" class="small fw-bold">កំពុងដំណើរការ...</span>
+                                <span id="progressPercent" class="small fw-bold">0%</span>
+                            </div>
+                            <div class="progress" style="height: 12px;">
+                                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        <button type="submit" class="btn-submit" id="submitBtn">ចាប់ផ្តើមផ្ទៀងផ្ទាត់</button>
-    </form>
-
-    <div id="loading" class="loading">⏳ កំពុងពិនិត្យ និងស្កេនឯកសារ សូមរង់ចាំ...</div>
-
-    <div id="resultBox">
-        <h3 id="overallStatus" style="text-align: center;"></h3>
-        <div class="match-item">
-            <span>ឈ្មោះបេក្ខជន (Name):</span>
-            <span id="nameStatus" class="status-icon"></span>
-        </div>
-        <div class="match-item">
-            <span>លេខអត្តសញ្ញាណ (ID Number):</span>
-            <span id="idStatus" class="status-icon"></span>
-        </div>
-        <div style="margin-top: 15px; font-size: 12px; color: #777;">
-            <b>ទិន្នន័យ OCR ចាប់បានខ្លះៗ៖</b> <span id="rawOcrText"></span>
+            <div class="col-md-12">
+                <div class="table-wrapper">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="fas fa-table text-dark me-2"></i>លទ្ធផលនៃការផ្ទៀងផ្ទាត់ (OCR ទល់នឹង Excel)</h5>
+                        <div>
+                            <button id="btnClear" class="btn btn-danger btn-sm me-2"><i class="fas fa-trash-alt me-2"></i>សម្អាតតារាង</button>
+                            <button id="btnExport" class="btn btn-success btn-sm"><i class="fas fa-download me-2"></i>ទាញយករបាយការណ៍</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered align-middle" style="font-size: 13px;">
+                            <thead class="table-dark text-center">
+                                <tr>
+                                    <th>#</th>
+                                    <th>ឈ្មោះរូបភាព</th>
+                                    <th>ពិនិត្យ</th>
+                                    <th>លេខឯកសារ</th>
+                                    <th>ឈ្មោះពេញ</th>
+                                    <th>ភេទ</th>
+                                    <th>ថ្ងៃខែឆ្នាំកំណើត</th>
+                                    <th>ស្ថានភាពធៀប Excel</th>
+                                    <th>លុប</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <tr><td colspan="9" class="text-center text-muted py-4">សូមអនុវត្តជំហានទី១ និងទី២ ដើម្បីចាប់ផ្តើម...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    document.getElementById('matchingForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const form = e.target;
-        const formData = new FormData(form);
-        const submitBtn = document.getElementById('submitBtn');
-        const loading = document.getElementById('loading');
-        const resultBox = document.getElementById('resultBox');
+    <div class="modal fade" id="editModal" tabindex="-1" data-bs-backdrop="static">
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-dark text-white py-2">
+            <h5 class="modal-title"><i class="fas fa-balance-scale me-2"></i>ផ្ទៀងផ្ទាត់ទិន្នន័យ (OCR vs Excel)</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body bg-light">
+            <div class="row">
+                <div class="col-md-6 text-center">
+                    <img id="modalPreviewImage" src="" class="img-fluid border rounded shadow-sm mb-2" style="max-height: 450px;">
+                </div>
+                <div class="col-md-6">
+                    <div id="modalAlert" class="alert alert-danger py-2 fw-bold mb-2" style="display:none; font-size: 0.9em;"></div>
+                    
+                    <div class="card shadow-sm mb-3">
+                        <div class="card-header bg-primary text-white py-1 fw-bold small"><i class="fas fa-database me-2"></i>ទិន្នន័យដើមពីប្រព័ន្ធ (Excel Reference)</div>
+                        <div class="card-body py-2 bg-white" style="font-size:13px;" id="excelDataView"></div>
+                    </div>
 
-        // បង្ហាញ Loading និងលាក់ប៊ូតុង
-        submitBtn.disabled = true;
-        loading.style.display = 'block';
-        resultBox.style.display = 'none';
+                    <div class="card shadow-sm border-success">
+                        <div class="card-header bg-success text-white py-1 fw-bold small"><i class="fas fa-edit me-2"></i>ទិន្នន័យដែលនឹងត្រូវរក្សាទុកចុងក្រោយ</div>
+                        <div class="card-body py-2 bg-white">
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold mb-0">លេខឯកសារ</label>
+                                <input type="text" class="form-control form-control-sm text-uppercase" id="modalDocNum">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold mb-0">ឈ្មោះពេញ</label>
+                                <input type="text" class="form-control form-control-sm text-uppercase fw-bold text-primary" id="modalFullName">
+                            </div>
+                            <div class="row">
+                                <div class="col-6 mb-2">
+                                    <label class="form-label small fw-bold mb-0">ភេទ</label>
+                                    <select class="form-select form-select-sm" id="modalGender">
+                                        <option value="M">M</option>
+                                        <option value="F">F</option>
+                                    </select>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <label class="form-label small fw-bold mb-0">ថ្ងៃខែឆ្នាំកំណើត</label>
+                                    <input type="date" class="form-control form-control-sm" id="modalDob">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+          </div>
+          <div class="modal-footer py-1">
+            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">បិទ</button>
+            <button type="button" class="btn btn-sm btn-success" onclick="saveModalData()"><i class="fas fa-check-circle me-2"></i>បញ្ជាក់ភាពត្រឹមត្រូវ ១០០%</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        try {
-            const response = await fetch('/document-matching', {
-                method: 'POST',
-                body: formData
-            });
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // --- ១. Upload Excel ---
+        document.getElementById('btnUploadExcel').addEventListener('click', async () => {
+            let fileInput = document.getElementById('excelInput');
+            if(fileInput.files.length === 0) { alert("សូមជ្រើសរើស File Excel ជាមុនសិន!"); return; }
+            
+            let formData = new FormData();
+            formData.append('excel_file', fileInput.files[0]);
+            
+            let btn = document.getElementById('btnUploadExcel');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> កំពុងទាញទិន្នន័យ...';
+            btn.disabled = true;
 
-            const data = await response.json();
+            try {
+                let res = await fetch('/api/upload_excel', { method: 'POST', body: formData });
+                let result = await res.json();
+                if(result.status === 'success') {
+                    let statusDiv = document.getElementById('excelStatus');
+                    statusDiv.innerHTML = `<i class="fas fa-check-circle"></i> ជោគជ័យ! ទាញបាន ${result.total_records} នាក់។`;
+                    statusDiv.style.display = 'block';
+                } else { alert("បញ្ហា: " + result.message); }
+            } catch (e) { alert("Server Connection Error!"); }
+            
+            btn.innerHTML = '<i class="fas fa-upload me-2"></i>បញ្ចូល Excel ទៅកាន់ប្រព័ន្ធ';
+            btn.disabled = false;
+        });
 
-            if (data.status === 'success') {
-                // បង្ហាញលទ្ធផលឈ្មោះ
-                document.getElementById('nameStatus').innerHTML = data.matching_result.name_verified 
-                    ? '<span class="success-text">✅ ត្រឹមត្រូវ</span>' 
-                    : '<span class="error-text">❌ មិនត្រូវគ្នា</span>';
+        // --- ២. OCR Processing ---
+        const dropZoneElement = document.getElementById("dropZone");
+        const inputElement = document.getElementById("fileInput");
+        const tableBody = document.getElementById("tableBody");
+        const progressContainer = document.getElementById("progressContainer");
+        const progressBar = document.getElementById("progressBar");
 
-                // បង្ហាញលទ្ធផល ID
-                document.getElementById('idStatus').innerHTML = data.matching_result.id_verified 
-                    ? '<span class="success-text">✅ ត្រឹមត្រូវ</span>' 
-                    : '<span class="error-text">❌ មិនត្រូវគ្នា</span>';
+        let scannedDataList = [];
+        let pendingFilesQueue = [];
+        let isProcessing = false;
+        let globalCompletedCount = 0;
+        let globalTotalCount = 0;
+        let knownFilenames = new Set();
 
-                // បង្ហាញស្ថានភាពរួម
-                const overall = document.getElementById('overallStatus');
-                if (data.matching_result.is_all_correct) {
-                    overall.innerHTML = "🎉 ទិន្នន័យត្រឹមត្រូវ ១០០%";
-                    overall.style.color = "#28a745";
-                } else {
-                    overall.innerHTML = "⚠️ ទិន្នន័យមានចំណុចខុសគ្នា";
-                    overall.style.color = "#dc3545";
+        dropZoneElement.addEventListener("click", () => inputElement.click());
+        dropZoneElement.addEventListener("dragover", e => { e.preventDefault(); dropZoneElement.classList.add("dragover"); });
+        ["dragleave", "dragend"].forEach(type => dropZoneElement.addEventListener(type, () => dropZoneElement.classList.remove("dragover")));
+        dropZoneElement.addEventListener("drop", e => { 
+            e.preventDefault(); 
+            dropZoneElement.classList.remove("dragover"); 
+            if (e.dataTransfer.files.length) enqueueFiles(e.dataTransfer.files); 
+        });
+        inputElement.addEventListener("change", e => { if (inputElement.files.length) enqueueFiles(inputElement.files); });
+
+        function enqueueFiles(files) {
+            let added = 0;
+            for (let i = 0; i < files.length; i++) {
+                if (!knownFilenames.has(files[i].name)) {
+                    knownFilenames.add(files[i].name);
+                    pendingFilesQueue.push(files[i]);
+                    added++;
+                }
+            }
+            if (added > 0) {
+                globalTotalCount += added;
+                if (!isProcessing) processQueue();
+            }
+            inputElement.value = ""; 
+        }
+
+        async function processQueue() {
+            isProcessing = true;
+            progressContainer.style.display = "block";
+
+            while (pendingFilesQueue.length > 0) {
+                let file = pendingFilesQueue.shift();
+                let formData = new FormData();
+                formData.append("document_images", file);
+                let localImageUrl = URL.createObjectURL(file);
+
+                try {
+                    let response = await fetch('/api/scan', { method: 'POST', body: formData });
+                    let result = await response.json();
+                    if (result.status === 'success' && result.data.length > 0) {
+                        let data = result.data[0];
+                        data.localImageUrl = localImageUrl;
+                        data.originalFilename = file.name;
+                        scannedDataList.push(data);
+                    }
+                } catch (error) {
+                    scannedDataList.push({ Filename: file.name, Status: 'Failed', 'Error': 'Server Error', localImageUrl: localImageUrl });
                 }
 
-                document.getElementById('rawOcrText').innerText = data.raw_ocr;
-                resultBox.style.display = 'block';
-            } else {
-                alert("មានបញ្ហា៖ " + data.message);
+                renderTable();
+                globalCompletedCount++;
+                let percent = Math.round((globalCompletedCount / globalTotalCount) * 100);
+                progressBar.style.width = percent + "%";
+                document.getElementById("progressPercent").innerText = percent + "%";
+                document.getElementById("progressText").innerText = `កំពុងស្កេន ${globalCompletedCount} / ${globalTotalCount}`;
             }
-        } catch (error) {
-            alert("កំហុសក្នុងការតភ្ជាប់ទៅកាន់ Server");
-        } finally {
-            submitBtn.disabled = false;
-            loading.style.display = 'none';
+            
+            isProcessing = false;
+            setTimeout(() => { 
+                progressContainer.style.display = "none"; 
+                progressBar.style.width = "0%"; 
+                globalCompletedCount=0; globalTotalCount=0;
+            }, 1500);
         }
-    });
-</script>
 
+        function renderTable() {
+            tableBody.innerHTML = "";
+            if (scannedDataList.length === 0) { 
+                tableBody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">គ្មានទិន្នន័យ</td></tr>'; 
+                return; 
+            }
+
+            scannedDataList.forEach((data, index) => {
+                let tr = document.createElement("tr");
+                tr.className = "text-center align-middle";
+                
+                let editBtn = `<button class="btn btn-sm btn-outline-primary" onclick="openEditModal(${index})"><i class="fas fa-search"></i></button>`;
+                let delBtn = `<button class="btn btn-sm btn-link text-danger" onclick="deleteRow(${index})"><i class="fas fa-trash-alt"></i></button>`;
+
+                let docNum = data['Document Number'] || "-";
+                let fullName = data['Full Name'] || "-";
+                
+                if(data.Status === 'Mismatch') {
+                    if (data.Excel_Data) {
+                        let exID = data.Excel_Data['ID Number'] || data.Excel_Data['ID_Number'] || '';
+                        let exName = data.Excel_Data['Name'] || '';
+                        if(data['Document Number'] !== exID) docNum = `<del class="text-muted small">${docNum}</del> <span class="mismatch-text">${exID}</span>`;
+                        if(data['Full Name'] !== exName) fullName = `<del class="text-muted small">${fullName}</del> <span class="mismatch-text">${exName}</span>`;
+                    }
+                    tr.classList.add("table-danger");
+                } 
+                else if (data.Status === 'Warning') tr.classList.add("table-warning");
+                else if (data.Status === 'Success') tr.classList.add("table-success-light");
+
+                let statusBadge = `<span class="badge ${data.Status==='Success'?'bg-success':data.Status==='Mismatch'?'bg-danger':'bg-warning'}">
+                    ${data.Status==='Success'?'ត្រូវគ្នា':'ឆែកឡើងវិញ'}</span>`;
+
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td class="text-start small">${data.Filename}</td>
+                    <td>${editBtn}</td>
+                    <td>${docNum}</td>
+                    <td class="text-start fw-bold">${fullName}</td>
+                    <td>${data['Gender'] || '-'}</td>
+                    <td>${data['Date of Birth'] || '-'}</td>
+                    <td>${statusBadge}</td>
+                    <td>${delBtn}</td>`;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // --- ៣. Modal Logic ---
+        let editModal;
+        let currentIndex = -1;
+        document.addEventListener("DOMContentLoaded", () => editModal = new bootstrap.Modal(document.getElementById('editModal')));
+
+        window.openEditModal = function(index) {
+            currentIndex = index;
+            let data = scannedDataList[index];
+            document.getElementById('modalPreviewImage').src = data.localImageUrl || '';
+            
+            let excelView = document.getElementById('excelDataView');
+            if (data.Excel_Data) {
+                excelView.innerHTML = `
+                    <div class="row">
+                        <div class="col-12 text-primary fw-bold mb-1 border-bottom pb-1">${data.Excel_Data['Name'] || 'N/A'}</div>
+                        <div class="col-6">លេខកាត: <span class="fw-bold">${data.Excel_Data['ID Number'] || data.Excel_Data['ID_Number'] || '-'}</span></div>
+                        <div class="col-6">ភេទ: <span class="fw-bold">${data.Excel_Data['Sex'] || data.Excel_Data['Gender'] || '-'}</span></div>
+                        <div class="col-6">ថ្ងៃខែ: <span class="fw-bold">${data.Excel_Data['DOB'] || '-'}</span></div>
+                    </div>`;
+            } else { excelView.innerHTML = `<span class="text-danger fst-italic">រកមិនឃើញទិន្នន័យក្នុង Excel ទេ!</span>`; }
+
+            document.getElementById('modalDocNum').value = data['Document Number'] || '';
+            document.getElementById('modalFullName').value = data['Full Name'] || '';
+            
+            // ផ្ទៀងផ្ទាត់ Gender ឱ្យលោត M/F
+            let gender = (data['Gender'] || 'M').trim().toUpperCase();
+            document.getElementById('modalGender').value = gender.startsWith('F') ? 'F' : 'M';
+            
+            document.getElementById('modalDob').value = data['Date of Birth'] || '';
+            
+            let alertBox = document.getElementById('modalAlert');
+            if (data.Status !== 'Success') {
+                alertBox.style.display = 'block';
+                alertBox.innerHTML = `<i class="fas fa-exclamation-triangle"></i> បញ្ហា: ${data.Error || 'ទិន្នន័យមិនត្រូវគ្នា'}`;
+            } else { alertBox.style.display = 'none'; }
+
+            editModal.show();
+        };
+
+        window.saveModalData = function() {
+            if (currentIndex > -1) {
+                let data = scannedDataList[currentIndex];
+                data['Document Number'] = document.getElementById('modalDocNum').value.trim().toUpperCase();
+                data['Full Name'] = document.getElementById('modalFullName').value.trim().toUpperCase();
+                data['Gender'] = document.getElementById('modalGender').value;
+                data['Date of Birth'] = document.getElementById('modalDob').value;
+                data.Status = 'Success';
+                data.Error = '';
+                renderTable();
+                editModal.hide();
+            }
+        };
+
+        window.deleteRow = function(index) { 
+            let d = scannedDataList.splice(index, 1)[0]; 
+            if(d && d.originalFilename) knownFilenames.delete(d.originalFilename); 
+            renderTable(); 
+        };
+        document.getElementById('btnClear').addEventListener("click", () => { 
+            if(confirm("តើអ្នកប្រាកដជាចង់សម្អាតតារាងទាំងមូល?")) { 
+                scannedDataList = []; knownFilenames.clear(); renderTable(); 
+            }
+        });
+        // បន្ថែមក្នុង <script> នៃ document_matching.html
+
+document.getElementById('btnExport').addEventListener('click', async () => {
+    if (scannedDataList.length === 0) {
+        alert("មិនមានទិន្នន័យក្នុងតារាងសម្រាប់ទាញយកទេ!");
+        return;
+    }
+
+    // រៀបចំទិន្នន័យសម្រាប់ Export (យកតែ Column ចាំបាច់)
+    const reportData = scannedDataList.map(item => ({
+        "Filename": item.Filename,
+        "Document Number": item['Document Number'],
+        "Full Name": item['Full Name'],
+        "Gender": item['Gender'],
+        "Date of Birth": item['Date of Birth'],
+        "Status": item.Status === 'Success' ? 'ត្រឹមត្រូវ' : 'មានបញ្ហា/កែសម្រួលរួច'
+    }));
+
+    try {
+        const response = await fetch('/api/export_report', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ report_data: reportData })
+        });
+
+        if (response.ok) {
+            // បង្កើត Link សម្រាប់ Download File
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `OCR_Report_${new Date().getTime()}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+        } else {
+            alert("ការទាញយករបាយការណ៍មានបញ្ហា!");
+        }
+    } catch (error) {
+        console.error("Export Error:", error);
+        alert("មិនអាចតភ្ជាប់ទៅកាន់ Server!");
+    }
+});
+    </script>
 </body>
 </html>

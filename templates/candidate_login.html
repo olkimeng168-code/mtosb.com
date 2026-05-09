@@ -182,22 +182,24 @@
                         <i class="fas fa-fingerprint me-2"></i> ស្កេនផ្ទៀងផ្ទាត់
                     </button>
 
-                    <!-- 🔴 Comment បិទមុខងារ Manual Fallback សិន
-                    <div id="manual_fallback_link" class="d-none mt-3">
-                        <a href="#" class="fallback-link text-danger" onclick="switchView('manual')">
-                            <i class="fas fa-keyboard me-2"></i> បញ្ចូលទិន្នន័យដោយផ្ទាល់ (Manual Login)
+                    {% if session.get('role_name') in ['Admin', 'Super Admin'] %}
+                    <div id="manual_fallback_link" class="mt-3">
+                        <a href="#" class="fallback-link text-danger fw-bold" onclick="switchView('manual')">
+                            <i class="fas fa-user-shield me-2"></i> បញ្ចូលទិន្នន័យដោយផ្ទាល់ (សម្រាប់តែ Admin)
                         </a>
                     </div>
-                    -->
+                    {% endif %}
+                  
                 </div>
                 <canvas id="canvasElement" style="display:none;"></canvas>
             </div>
 
-            <!-- 🔴 Comment បិទផ្នែកទម្រង់ Manual Login ទាំងមូលសិន
+
+            {% if session.get('role_name') in ['Admin', 'Super Admin'] %}
             <div id="manualLoginSection">
                 <div class="text-center mb-4">
-                    <h6 class="fw-bold text-primary">ទម្រង់ចូលប្រព័ន្ធដោយផ្ទាល់</h6>
-                    <p class="text-muted small">សូមបញ្ចូលព័ត៌មានខាងក្រោមឲ្យបានត្រឹមត្រូវ</p>
+                    <h6 class="fw-bold text-danger"><i class="fas fa-shield-alt me-1"></i> សិទ្ធិពិសេស (Admin Override)</h6>
+                    <p class="text-muted small">ទម្រង់នេះប្រើប្រាស់សម្រាប់តែមន្ត្រីជាន់ខ្ពស់ប៉ុណ្ណោះ</p>
                 </div>
 
                 <form action="/candidate/manual_login" method="POST">
@@ -223,14 +225,17 @@
                         </div>
                     </div>
                     
-                    <button type="submit" class="btn w-100 btn-modern btn-blue mb-3">ចូលប្រព័ន្ធ</button>
+                    <button type="submit" class="btn w-100 btn-modern btn-danger mb-3">
+                        <i class="fas fa-sign-in-alt me-1"></i> បញ្ជាក់ការចូលដោយផ្ទាល់
+                    </button>
 
                     <a href="#" class="fallback-link" style="margin-top: 5px;" onclick="switchView('face')">
                         <i class="fas fa-expand me-2"></i> ត្រឡប់ទៅស្កេនមុខវិញ
                     </a>
                 </form>
             </div>
-            -->
+            {% endif %}
+            
 
         </div>
     </div>
@@ -252,10 +257,9 @@
 
         // ២. គ្រប់គ្រងការប្តូរ View
         const faceSection = document.getElementById('faceScanSection');
-        // const manualSection = document.getElementById('manualLoginSection'); // 🔴 Comment បិទសិនការពារ JS Error
+        const manualSection = document.getElementById('manualLoginSection'); // 🟢 បានដក Comment បើកដំណើរការវិញ
 
         function switchView(viewName) {
-            /* 🔴 Comment បិទមុខងារ Switch View នេះសិន
             if (viewName === 'manual') {
                 faceSection.style.display = 'none';
                 manualSection.style.display = 'block';
@@ -265,7 +269,6 @@
                 manualSection.style.display = 'none';
                 faceSection.style.display = 'block';
             }
-            */
         }
 
         // ៣. មុខងារកាមេរ៉ាស្កេនមុខ និង រាប់ចំនួនបរាជ័យ
@@ -372,13 +375,8 @@
                         failedAttempts++;
                         showErrorState(data.message + ` (បរាជ័យ ${failedAttempts} ដង)`);
                         
-                        // 🔴 ពេលបរាជ័យ ៣ដង ខ្ញុំបាន Comment បិទមិនឱ្យលោតផ្ទាំង Manual Login ទេ
-                        /* 
-                        if (failedAttempts >= 3) {
-                            let fallbackLink = document.getElementById('manual_fallback_link');
-                            if(fallbackLink) fallbackLink.classList.remove('d-none');
-                        }
-                        */
+                        // 🟢 ដោយសារយើងបើក Manual Login ឱ្យឃើញស្រាប់ អញ្ចឹងមិនចាំបាច់មានលក្ខខណ្ឌបើកវាទៀតទេ
+                        // if (failedAttempts >= 3) { ... } 
                     }
                 })
                 .catch(err => {
