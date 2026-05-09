@@ -1,8 +1,21 @@
+# --- Core Web Framework ---
 Flask
+Flask-Bcrypt
+Flask-Cors
+Flask-Limiter
+
+# --- Database & Time ---
 mysql-connector-python
+pytz
+
+# --- Image Processing & AI ---
 face_recognition
 opencv-python-headless
 numpy
 Pillow
+
+# --- Excel Export ---
+openpyxl
+
+# --- Deployment ---
 gunicorn
-Flask-Limiter
