@@ -5141,23 +5141,19 @@ from flask import render_template, request, session, redirect, url_for
 # ==============================================================================
 # Admin Route: បង្ហាញទំព័រគ្រប់គ្រងការដាក់ពាក្យ និង ការកំណត់ប្រព័ន្ធ (Settings)
 # ==============================================================================
+# ==============================================================================
+# Admin Route: បង្ហាញទំព័រគ្រប់គ្រងការដាក់ពាក្យ និង ការកំណត់ប្រព័ន្ធ (Settings)
+# ==============================================================================
 @app.route('/admin/manage_applications', methods=['GET'])
 def admin_manage_applications():
     if 'loggedin' not in session:
         return redirect(url_for('login'))
     
-    # ចាប់យកថ្ងៃបច្ចុប្បន្ន
-    today_str = date.today().strftime('%Y-%m-%d')
-    
-    # ១. ចាប់យកតម្លៃពី Form ស្វែងរក (GET requests)
-    # ១. ចាប់យកតម្លៃពី Form ស្វែងរក
+    # ចាប់យកតម្លៃពី Form ស្វែងរក
     search_query = request.args.get('search_query', '').strip()
-    
-    # 🔴 កែសម្រួល៖ បើ apply_date គ្មានតម្លៃ ឱ្យវាស្មើនឹងថ្ងៃបច្ចុប្បន្ន
-    # ចាប់យកតម្លៃកាលបរិច្ឆេទពី Form
     selected_date = request.args.get('apply_date', '').strip()
     
-    # 🔴 បើ request.args គ្មានទិន្នន័យអ្វីទាំងអស់ (មានន័យថាទើបតែចុចពី Sidebar ចូលមកដំបូងគេ) ទើបដាក់ថ្ងៃបច្ចុប្បន្ន
+    # បើ request.args គ្មានទិន្នន័យអ្វីទាំងអស់ ទើបដាក់ថ្ងៃបច្ចុប្បន្នជា Default
     if len(request.args) == 0:
         selected_date = date.today().strftime('%Y-%m-%d')
         
@@ -5198,27 +5194,39 @@ def admin_manage_applications():
         # ផ្នែកខ៖ សាងសង់លក្ខខណ្ឌស្វែងរក (Dynamic WHERE Clauses)
         # =======================================================
         where_clauses = []
+        stats_where_clauses = []  # 🌟 [វះកាត់] បង្កើត Where ដាច់ឡែកសម្រាប់តែរាប់ស្ថិតិ
         params = []
+        stats_params = []
         
         # ក. ស្វែងរកតាមពាក្យ (Keyword)
         if search_query:
-            where_clauses.append("""
+            kw_sql = """
                 (c.application_no LIKE %s OR 
                  c.name_en LIKE %s OR 
                  a.last_name_kh LIKE %s OR 
                  a.first_name_kh LIKE %s OR 
                  a.id_card_no LIKE %s OR 
                  a.phone_number LIKE %s)
-            """)
+            """
             search_term = f"%{search_query}%"
-            params.extend([search_term] * 6) 
+            
+            where_clauses.append(kw_sql)
+            stats_where_clauses.append(kw_sql)
+            
+            params.extend([search_term] * 6)
+            stats_params.extend([search_term] * 6)
             
         # ខ. ស្វែងរកតាមកាលបរិច្ឆេទ
         if selected_date:
-            where_clauses.append("DATE(q.created_at) = %s")
-            params.append(selected_date)
+            dt_sql = "DATE(q.created_at) = %s"
             
-        # គ. ស្វែងរកតាមស្ថានភាព (ស្វែងរកតាម a.status_id)
+            where_clauses.append(dt_sql)
+            stats_where_clauses.append(dt_sql)
+            
+            params.append(selected_date)
+            stats_params.append(selected_date)
+            
+        # គ. ស្វែងរកតាមស្ថានភាព (ដាក់តែក្នុង Main Query មិនដាក់ក្នុង Stats Query ទេ)
         if selected_status:
             where_clauses.append("a.status_id = %s") 
             params.append(selected_status)
@@ -5226,27 +5234,59 @@ def admin_manage_applications():
         where_sql = ""
         if where_clauses:
             where_sql = " AND " + " AND ".join(where_clauses)
+
+        stats_where_sql = ""
+        if stats_where_clauses:
+            stats_where_sql = " AND " + " AND ".join(stats_where_clauses)
             
         # =======================================================
-        # ផ្នែកគ៖ ទាញយកស្ថិតិរួម (Stats Card ខាងលើតារាង)
+        # ផ្នែកគ៖ ទាញយកស្ថិតិរួម (Stats Card ខាងលើតារាង + ស្ថិតិចម្រាញ់)
         # =======================================================
+        # ១. ស្ថិតិសរុបប្រចាំប្រព័ន្ធទាំងមូល (កាតធំទាំង ៤ ខាងលើ)
         stats_sql = """
             SELECT 
                 COUNT(*) as total_records,
+                SUM(CASE WHEN c.gender = 'F' THEN 1 ELSE 0 END) as total_records_female,
+                
                 SUM(CASE WHEN a.status_id = 1 OR a.status_id IS NULL THEN 1 ELSE 0 END) as total_pending,
+                SUM(CASE WHEN (a.status_id = 1 OR a.status_id IS NULL) AND c.gender = 'F' THEN 1 ELSE 0 END) as total_pending_female,
+                
                 SUM(CASE WHEN a.status_id = 2 THEN 1 ELSE 0 END) as total_approved,
-                SUM(CASE WHEN a.status_id = 3 THEN 1 ELSE 0 END) as total_rejected
+                SUM(CASE WHEN a.status_id = 2 AND c.gender = 'F' THEN 1 ELSE 0 END) as total_approved_female,
+                
+                SUM(CASE WHEN a.status_id = 3 THEN 1 ELSE 0 END) as total_rejected,
+                SUM(CASE WHEN a.status_id = 3 AND c.gender = 'F' THEN 1 ELSE 0 END) as total_rejected_female
             FROM candidates c
             INNER JOIN application_details a ON c.application_no = a.application_no
         """
         cursor.execute(stats_sql)
         stats = cursor.fetchone()
+
+        # ២. 🌟 ស្ថិតិចម្រាញ់ជាក់ស្តែង (Dynamic Stats សម្រាប់ Master Checkbox)
+        # រាប់តែអ្នក Pending និង ស្រី ទៅតាមថ្ងៃខែ ឬពាក្យស្វែងរក ដោយមិនខ្វល់ពី Dropdown ស្ថានភាព
+        filtered_stats_sql = f"""
+            SELECT 
+                COUNT(DISTINCT c.application_no) as real_pending_total,
+                SUM(CASE WHEN c.gender = 'F' THEN 1 ELSE 0 END) as real_pending_female
+            FROM candidates c
+            INNER JOIN application_details a ON c.application_no = a.application_no
+            LEFT JOIN queue_tickets q ON c.application_no = q.application_no 
+                 AND q.id = (SELECT MAX(id) FROM queue_tickets WHERE application_no = c.application_no)
+            WHERE (a.status_id = 1 OR a.status_id IS NULL) {stats_where_sql}
+        """
+        cursor.execute(filtered_stats_sql, stats_params)
+        filtered_stats = cursor.fetchone()
         
         # =======================================================
         # ផ្នែកឃ៖ រាប់ចំនួនទិន្នន័យ (Count) សម្រាប់ធ្វើ Pagination
         # =======================================================
+        # =======================================================
+        # ផ្នែកឃ៖ រាប់ចំនួនទិន្នន័យ (Count) និងចំនួនស្រី តាមតម្រងបច្ចុប្បន្ន
+        # =======================================================
         count_sql = f"""
-            SELECT COUNT(DISTINCT c.application_no) as total
+            SELECT 
+                COUNT(DISTINCT c.application_no) as total,
+                SUM(CASE WHEN c.gender = 'F' THEN 1 ELSE 0 END) as total_female
             FROM candidates c
             INNER JOIN application_details a ON c.application_no = a.application_no
             LEFT JOIN queue_tickets q ON c.application_no = q.application_no 
@@ -5254,7 +5294,10 @@ def admin_manage_applications():
             WHERE 1=1 {where_sql}
         """
         cursor.execute(count_sql, params)
-        total_filtered = cursor.fetchone()['total']
+        count_row = cursor.fetchone()
+        
+        total_filtered = count_row['total'] or 0
+        total_filtered_female = int(count_row['total_female']) if count_row['total_female'] is not None else 0
         total_pages = math.ceil(total_filtered / limit) if total_filtered > 0 else 1
         
         # =======================================================
@@ -5281,11 +5324,9 @@ def admin_manage_applications():
         # =======================================================
         # ផ្នែកច៖ ទាញយកបញ្ជីយោង (Reference Data) សម្រាប់ Dropdowns
         # =======================================================
-        # ១. ទាញយកមូលហេតុបដិសេធ
         cursor.execute("SELECT * FROM ref_app_reject_reasons WHERE is_active = 1 ORDER BY id ASC")
         reject_reasons = cursor.fetchall()
 
-        # ២. 🔴 ទាញយកបញ្ជី "ស្ថានភាពពាក្យសុំ" (ថ្មី)
         cursor.execute("SELECT id, status_name_kh, status_name_en FROM ref_app_status ORDER BY id ASC")
         app_statuses = cursor.fetchall()
 
@@ -5297,12 +5338,26 @@ def admin_manage_applications():
                                total_pending=stats['total_pending'] or 0,
                                total_approved=stats['total_approved'] or 0,
                                total_rejected=stats['total_rejected'] or 0,
+                               #total_records=stats['total_records'] or 0,
+                               total_records_female=stats['total_records_female'] or 0,
+                               #total_pending=stats['total_pending'] or 0,
+                               total_pending_female=stats['total_pending_female'] or 0,
+                               #total_approved=stats['total_approved'] or 0,
+                               total_approved_female=stats['total_approved_female'] or 0,
+                               #total_rejected=stats['total_rejected'] or 0,
+                               total_rejected_female=stats['total_rejected_female'] or 0,
+                               
+                               # 🌟 បញ្ជូនទិន្នន័យពិតប្រាកដប្រចាំតម្រង ទៅឱ្យ Frontend ប្រើប្រាស់
+                               real_pending_total=filtered_stats['real_pending_total'] or 0,
+                               real_pending_female=filtered_stats['real_pending_female'] or 0,
+                               current_total=total_filtered,
+                               current_female=total_filtered_female,
                                selected_date=selected_date,
                                selected_status=selected_status,
                                search_query=search_query,
                                settings=settings,
                                reject_reasons=reject_reasons,
-                               app_statuses=app_statuses) # 🔴 បានបញ្ជូនទិន្នន័យស្ថានភាពទីនេះ
+                               app_statuses=app_statuses)
     except Exception as e:
         import traceback
         print(f"Error fetching applications: {e}")
@@ -5465,7 +5520,7 @@ def update_application_status():
         conn.close()
 
 # ====================================================================
-# API សម្រាប់ផ្លាស់ប្តូរស្ថានភាពបេក្ខជនច្រើននាក់ព្រមគ្នា (Bulk Update)
+# API សម្រាប់ផ្លាស់ប្តូរស្ថានភាព (ទាញថ្ងៃខែពី queue_tickets + Auto Sync)
 # ====================================================================
 @app.route('/admin/bulk_update_status', methods=['POST'])
 def bulk_update_status():
@@ -5474,19 +5529,20 @@ def bulk_update_status():
 
     data = request.json
     application_nos = data.get('application_nos', [])
+    target_date = data.get('target_date')  # ទាញយកថ្ងៃខែដែលអ្នកគ្រប់គ្រងបានជ្រើសរើស
     status = data.get('status')
     remark = data.get('remark', '')
 
-    if not application_nos or not status:
+    if not status:
         return jsonify({'status': 'error', 'message': 'ទិន្នន័យមិនត្រឹមត្រូវ'})
 
-    # កំណត់ status_id ទៅតាមស្ថានភាពនីមួយៗ
+    # កំណត់ status_id
     if status == 'Approved':
         status_id = 2
     elif status == 'Rejected':
         status_id = 3
     elif status == 'Pending':
-        status_id = 1  # 👈 លេខ 1 គឺតំណាងឱ្យស្ថានភាពរង់ចាំ (Pending)
+        status_id = 1
     else:
         return jsonify({'status': 'error', 'message': 'ទិន្នន័យមិនត្រឹមត្រូវ'})
 
@@ -5494,23 +5550,75 @@ def bulk_update_status():
     cursor = conn.cursor()
 
     try:
-        for app_no in application_nos:
-            # បើត្រឡប់ទៅ Pending ត្រូវលុបមូលហេតុបដិសេធ (remark) ចោលវិញ
-            if status == 'Pending':
-                cursor.execute("""
-                    UPDATE application_details 
-                    SET status_id = %s, remark = NULL 
-                    WHERE application_no = %s
-                """, (status_id, app_no))
-            else:
-                cursor.execute("""
-                    UPDATE application_details 
-                    SET status_id = %s, remark = %s 
-                    WHERE application_no = %s
-                """, (status_id, remark, app_no))
-                
+        # ----------------------------------------------------------------
+        # ជម្រើសទី ១៖ អនុម័តម្តងមួយថ្ងៃពេញ (JOIN ជាមួយ queue_tickets)
+        # ----------------------------------------------------------------
+        if target_date:
+            # ១. ស្វែងរក application_no ទាំងអស់ដែលបានបង្កើត Queue ក្នុងថ្ងៃនោះ ហើយនៅ Pending (1)
+            cursor.execute("""
+                SELECT a.application_no 
+                FROM application_details a
+                INNER JOIN queue_tickets q ON a.application_no = q.application_no
+                WHERE DATE(q.created_at) = %s AND a.status_id = 1
+            """, (target_date,))
+            
+            rows = cursor.fetchall()
+            apps_to_update = [row[0] for row in rows]
+
+            if not apps_to_update:
+                return jsonify({'status': 'error', 'message': f'មិនមានពាក្យស្នើសុំរង់ចាំ (Pending) ក្នុងថ្ងៃ {target_date} ទេ'})
+
+            # ២. អាប់ដេត status_id ក្នុង application_details សម្រាប់បញ្ជីឈ្មោះទាំងនោះ
+            format_strings = ','.join(['%s'] * len(apps_to_update))
+            cursor.execute(f"""
+                UPDATE application_details 
+                SET status_id = %s, remark = %s 
+                WHERE application_no IN ({format_strings})
+            """, [status_id, remark] + apps_to_update)
+
+            # ៣. [វះកាត់ទី ១] AUTO-SYNC បាញ់វត្តមានចូលតារាង candidates ស្វ័យប្រវត្តិ
+            if status == 'Approved':
+                cursor.execute(f"""
+                    UPDATE candidates 
+                    SET job_app_present = 1, 
+                        job_app_status = 'APPROVED', 
+                        job_app_time = NOW() 
+                    WHERE application_no IN ({format_strings})
+                """, tuple(apps_to_update))
+
+        # ----------------------------------------------------------------
+        # ជម្រើសទី ២៖ អនុម័តតាម Checkbox ធម្មតា
+        # ----------------------------------------------------------------
+        elif application_nos:
+            for app_no in application_nos:
+                if status == 'Pending':
+                    cursor.execute("""
+                        UPDATE application_details 
+                        SET status_id = %s, remark = NULL 
+                        WHERE application_no = %s
+                    """, (status_id, app_no))
+                else:
+                    cursor.execute("""
+                        UPDATE application_details 
+                        SET status_id = %s, remark = %s 
+                        WHERE application_no = %s
+                    """, (status_id, remark, app_no))
+
+                # AUTO-SYNC សម្រាប់បេក្ខជននីមួយៗ
+                if status == 'Approved':
+                    cursor.execute("""
+                        UPDATE candidates 
+                        SET job_app_present = 1, 
+                            job_app_status = 'APPROVED', 
+                            job_app_time = NOW() 
+                        WHERE application_no = %s
+                    """, (app_no,))
+        else:
+            return jsonify({'status': 'error', 'message': 'សូមជ្រើសរើសបេក្ខជន ឬ កាលបរិច្ឆេទ'})
+
         conn.commit()
-        return jsonify({'status': 'success', 'message': 'បានកែប្រែស្ថានភាពជោគជ័យ'})
+        return jsonify({'status': 'success', 'message': f'បានអនុម័ត និងធ្វើសមកាលកម្មវត្តមានជោគជ័យ ១០០%'})
+    
     except Exception as e:
         conn.rollback()
         return jsonify({'status': 'error', 'message': str(e)})
@@ -5529,7 +5637,7 @@ import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 
 
-# 💡 ១. ប្តូរឈ្មោះ Route ឱ្យចំគោលដៅ ឈប់ឱ្យច្រឡំនឹង Skill Test
+
 # 💡 ១. ប្តូរឈ្មោះ Route ឱ្យចំគោលដៅ ឈប់ឱ្យច្រឡំនឹង Skill Test
 @app.route('/download_application_report', methods=['POST'])
 def download_application_report(): 
@@ -5540,7 +5648,7 @@ def download_application_report():
     from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
     from openpyxl.utils import get_column_letter
     import io
-    from datetime import datetime, date
+    from datetime import datetime, date, timedelta
 
     # ==============================================================
     # 🔒 [ជាន់ទី ២] កូដការពារសុវត្ថិភាព: ឆែកមើលថាតើគាត់មានសិទ្ធិទាញយកទេ?
@@ -5571,12 +5679,19 @@ def download_application_report():
     report_format = request.form.get('report_format')
     custom_title = request.form.get('custom_title', 'របាយការណ៍បេក្ខជនបានដាក់ពាក្យស្វែងរកការងារ')
     
+    # 🌟 ចាប់យកតម្រងពី UI (Filter Context)
+    ui_status = request.form.get('ui_status', '').strip()
+    ui_search = request.form.get('ui_search', '').strip()
+    
     conditions = []
     params = []
 
+    # ១. លក្ខខណ្ឌកាលបរិច្ឆេទ
     if export_type == 'today':
+        # ប្រើប្រាស់ថ្ងៃខែពី UI ផ្ទាល់ ជំនួសឱ្យ date.today() ដែលចាក់សោរ
+        target_date = request.form.get('start_date') or date.today().strftime('%Y-%m-%d')
         conditions.append("DATE(q.created_at) = %s")
-        params.append(date.today().strftime('%Y-%m-%d'))
+        params.append(target_date)
     elif export_type == 'custom':
         start_date = request.form.get('start_date')
         end_date = request.form.get('end_date')
@@ -5584,8 +5699,28 @@ def download_application_report():
             conditions.append("DATE(q.created_at) BETWEEN %s AND %s")
             params.extend([start_date, end_date])
 
-    where_clause = " AND ".join(conditions) if conditions else "1=1"
-    where_clause = " AND " + where_clause if where_clause != "1=1" else ""
+    # ២. 🌟 លក្ខខណ្ឌស្ថានភាព (Status Filter)
+    if ui_status:
+        conditions.append("a.status_id = %s")
+        params.append(ui_status)
+    else:
+        # បើមិនបានរើសស្ថានភាពទេ ទើបយើងទាញយកតែអ្នក Approved និង Pending ធម្មតា
+        conditions.append("c.job_app_status IN ('Approved', 'APPROVED', 'Pending', 'PENDING')")
+
+    # ៣. 🌟 លក្ខខណ្ឌស្វែងរក (Search Query Filter)
+    if ui_search:
+        conditions.append("""
+            (c.application_no LIKE %s OR 
+             c.name_en LIKE %s OR 
+             a.last_name_kh LIKE %s OR 
+             a.first_name_kh LIKE %s OR 
+             a.id_card_no LIKE %s OR 
+             a.phone_number LIKE %s)
+        """)
+        search_term = f"%{ui_search}%"
+        params.extend([search_term] * 6)
+
+    where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
 
     from app import get_db_connection
     conn = get_db_connection()
@@ -5614,33 +5749,27 @@ def download_application_report():
                 MAX(rb.swift_code) as swift_code,
                 MAX(rb.bank_full_name) as bank_full_name,
                 
-                -- អាសយដ្ឋានបេក្ខជន (Khmer និង English)
                 MAX(rp.name_kh) AS prov_name_kh, MAX(rd.name_kh) AS dist_name_kh, 
                 MAX(rc.name_kh) AS comm_name_kh, MAX(rv.name_kh) AS vill_name_kh,
                 MAX(rp.name_en) AS prov_name_en,
                 
-                -- ឪពុក 
                 MAX(fd.last_name_kh) AS f_last_kh, MAX(fd.first_name_kh) AS f_first_kh, 
                 MAX(fd.phone_number) AS f_phone, MAX(fd.status) AS f_status,
                 MAX(f_occ.job_name_kh) AS f_job_kh, MAX(f_occ.job_name_en) AS f_job_en,
 
-                -- អាសយដ្ឋានឪពុកម្តាយ (Khmer និង English)
                 MAX(f_rp.name_kh) AS p_prov_kh, MAX(f_rd.name_kh) AS p_dist_kh, 
                 MAX(f_rc.name_kh) AS p_comm_kh, MAX(f_rv.name_kh) AS p_vill_kh,
                 MAX(f_rp.name_en) AS p_prov_en, MAX(f_rd.name_en) AS p_dist_en, 
                 MAX(f_rc.name_en) AS p_comm_en, MAX(f_rv.name_en) AS p_vill_en,
                 
-                -- ម្តាយ
                 MAX(fm.last_name_kh) AS m_last_kh, MAX(fm.first_name_kh) AS m_first_kh, 
                 MAX(fm.phone_number) AS m_phone, MAX(fm.status) AS m_status,
                 MAX(m_occ.job_name_kh) AS m_job_kh, MAX(m_occ.job_name_en) AS m_job_en,
                 
-                -- ប្តី/ប្រពន្ធ (Spouse) 
                 MAX(fs.last_name_en) AS s_last_en, MAX(fs.first_name_en) AS s_first_en, 
                 MAX(fs.dob) AS s_dob, MAX(fs.phone_number) AS s_phone,
                 MAX(s_occ.job_name_kh) AS s_job_kh, MAX(s_occ.job_name_en) AS s_job_en,
                 
-                -- អ្នកធានា 
                 MAX(fg.last_name_en) AS g_last_en, MAX(fg.first_name_en) AS g_first_en, MAX(fg.phone_number) AS g_phone,
                 MAX(gr.relation_name_en) AS g_relation_en, 
                 MAX(gp.name_en) AS g_prov_name, 
@@ -5657,7 +5786,6 @@ def download_application_report():
             LEFT JOIN ref_provinces ksp ON a.khmer_school_province_id = ksp.id 
             LEFT JOIN ref_provinces kosp ON a.korean_school_province_id = kosp.id 
             
-            -- ឪពុក
             LEFT JOIN family_members fd ON c.application_no = fd.application_no 
                  AND fd.relationship_id = (SELECT id FROM ref_relationships WHERE relation_name_en = 'Father' LIMIT 1)
                  AND fd.guarantor_role IS NULL
@@ -5667,24 +5795,21 @@ def download_application_report():
             LEFT JOIN ref_communes f_rc ON fd.commune_id = f_rc.id
             LEFT JOIN ref_villages f_rv ON fd.village_id = f_rv.id
             
-            -- ម្តាយ
             LEFT JOIN family_members fm ON c.application_no = fm.application_no 
                  AND fm.relationship_id = (SELECT id FROM ref_relationships WHERE relation_name_en = 'Mother' LIMIT 1)
                  AND fm.guarantor_role IS NULL
             LEFT JOIN ref_occupations m_occ ON fm.occupation_id = m_occ.id
             
-            -- ប្តី/ប្រពន្ធ 
             LEFT JOIN family_members fs ON c.application_no = fs.application_no 
                  AND fs.relationship_id IN (SELECT id FROM ref_relationships WHERE relation_name_en IN ('Husband', 'Wife'))
                  AND fs.guarantor_role IS NULL
             LEFT JOIN ref_occupations s_occ ON fs.occupation_id = s_occ.id
             
-            -- អ្នកធានា 
             LEFT JOIN family_members fg ON c.application_no = fg.application_no AND fg.guarantor_role = 'Guarantor'
             LEFT JOIN ref_relationships gr ON fg.relationship_id = gr.id 
             LEFT JOIN ref_provinces gp ON fg.province_id = gp.id 
             
-            WHERE c.job_app_status IN ('Approved', 'APPROVED', 'Pending', 'PENDING') {where_clause}
+            {where_clause}
             GROUP BY c.application_no, c.name_en, c.gender, c.dob, c.job_app_status
             ORDER BY MAX(q.created_at) ASC
         """
@@ -5737,8 +5862,9 @@ def download_application_report():
 
                 cand_province_kh = f"{row['prov_name_kh']}" if row.get('prov_name_kh') else ""
 
-                # 💡 បង្កើតអាសយដ្ឋានលម្អិតជាភាសាខ្មែរ (យក Address Detail បូកជាមួយ ភូមិ ឃុំ ស្រុក)
+                # 🌟 វះកាត់ជួសជុល៖ បូកបញ្ចូលលេខផ្ទះ/ផ្លូវ (address_detail) មុនឈ្មោះភូមិ ឃុំ ស្រុក
                 cand_addr_kh_parts = []
+                #if row.get('address_detail'): cand_addr_kh_parts.append(f"{row['address_detail']},")
                 if row.get('vill_name_kh'): cand_addr_kh_parts.append(f"ភូមិ{row['vill_name_kh']}")
                 if row.get('comm_name_kh'): cand_addr_kh_parts.append(f"ឃុំ/សង្កាត់{row['comm_name_kh']}")
                 if row.get('dist_name_kh'): cand_addr_kh_parts.append(f"ស្រុក/ខណ្ឌ{row['dist_name_kh']}")
@@ -5802,10 +5928,16 @@ def download_application_report():
                 if passport_issue:
                     try:
                         p_date = datetime.strptime(passport_issue, '%Y/%m/%d')
-                        expiry_date = p_date.replace(year=p_date.year + 10).strftime('%Y/%m/%d')
+                        # 🌟 វះកាត់ជួសជុល៖ ការពារកំហុសថ្ងៃទី ២៩ កុម្ភៈ (Leap Year Crash Fix)
+                        try:
+                            exp_date_obj = p_date.replace(year=p_date.year + 10)
+                        except ValueError:
+                            # បើថ្ងៃ ២៩ កុម្ភៈ ហើយ ១០ ឆ្នាំក្រោយមិនមែនឆ្នាំបន្តុប វារុញមកថ្ងៃ ២៨ កុម្ភៈ វិញ
+                            exp_date_obj = p_date + timedelta(days=365 * 10 + 2)
+                            
+                        expiry_date = exp_date_obj.strftime('%Y/%m/%d')
                     except: pass
 
-                # 💡 ប្តូរទៅអក្សរធំ
                 f_status_en = str(row['f_status'] or '')
                 if f_status_en == 'នៅរស់' or f_status_en.lower() == 'alive': f_status_en = 'ALIVE'
                 elif f_status_en == 'ស្លាប់' or f_status_en.lower() == 'deceased': f_status_en = 'DECEASED'

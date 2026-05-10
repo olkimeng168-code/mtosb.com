@@ -159,27 +159,54 @@
     </div>
 
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card border-0 shadow-sm text-white" style="background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 12px;">
-                <div class="card-body d-flex align-items-center justify-content-between p-4">
-                    <div><h6 class="mb-1 opacity-75 fw-bold">ពាក្យសុំសរុប (ដែលបានរើស)</h6><h2 class="mb-0 fw-bold" id="stat-total">{{ total_records }}</h2></div>
-                    <div class="bg-white bg-opacity-25 rounded-circle p-3"><i class="fas fa-users fa-2x"></i></div>
+                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                    <div>
+                        <h6 class="mb-1 opacity-75 fw-bold small text-uppercase">ពាក្យសុំសរុប</h6>
+                        <h2 class="mb-0 fw-bold">{{ total_records }}</h2>
+                        <div class="small mt-1 fw-bold text-white-50">ស្រី: {{ total_records_female }} នាក់</div>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded-circle p-3"><i class="fas fa-users fa-lg"></i></div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        
+        <div class="col-md-3">
             <div class="card border-0 shadow-sm text-white" style="background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 12px;">
-                <div class="card-body d-flex align-items-center justify-content-between p-4">
-                    <div><h6 class="mb-1 opacity-75 fw-bold">កំពុងរង់ចាំ (Pending)</h6><h2 class="mb-0 fw-bold" id="stat-pending">{{ total_pending }}</h2></div>
-                    <div class="bg-white bg-opacity-25 rounded-circle p-3"><i class="fas fa-hourglass-half fa-2x"></i></div>
+                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                    <div>
+                        <h6 class="mb-1 opacity-75 fw-bold small text-uppercase">កំពុងរង់ចាំ</h6>
+                        <h2 class="mb-0 fw-bold">{{ total_pending }}</h2>
+                        <div class="small mt-1 fw-bold text-white-50">ស្រី: {{ total_pending_female }} នាក់</div>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded-circle p-3"><i class="fas fa-hourglass-half fa-lg"></i></div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        
+        <div class="col-md-3">
             <div class="card border-0 shadow-sm text-white" style="background: linear-gradient(135deg, #10b981, #059669); border-radius: 12px;">
-                <div class="card-body d-flex align-items-center justify-content-between p-4">
-                    <div><h6 class="mb-1 opacity-75 fw-bold">អនុម័តរួច (Approved)</h6><h2 class="mb-0 fw-bold" id="stat-approved">{{ total_approved }}</h2></div>
-                    <div class="bg-white bg-opacity-25 rounded-circle p-3"><i class="fas fa-check-circle fa-2x"></i></div>
+                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                    <div>
+                        <h6 class="mb-1 opacity-75 fw-bold small text-uppercase">អនុម័តរួច</h6>
+                        <h2 class="mb-0 fw-bold">{{ total_approved }}</h2>
+                        <div class="small mt-1 fw-bold text-white-50">ស្រី: {{ total_approved_female }} នាក់</div>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded-circle p-3"><i class="fas fa-check-circle fa-lg"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-white" style="background: linear-gradient(135deg, #ef4444, #b91c1c); border-radius: 12px;">
+                <div class="card-body d-flex align-items-center justify-content-between p-3">
+                    <div>
+                        <h6 class="mb-1 opacity-75 fw-bold small text-uppercase">បដិសេធ</h6>
+                        <h2 class="mb-0 fw-bold">{{ total_rejected }}</h2>
+                        <div class="small mt-1 fw-bold text-white-50">ស្រី: {{ total_rejected_female }} នាក់</div>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded-circle p-3"><i class="fas fa-times-circle fa-lg"></i></div>
                 </div>
             </div>
         </div>
@@ -188,13 +215,15 @@
     <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
         <div class="card-body p-4">
             <form method="GET" action="/admin/manage_applications" class="row g-3 align-items-end" id="filterForm" onsubmit="showGlobalLoading()">
+                
                 <div class="col-md-3">
-                    <label class="form-label fw-bold text-secondary small text-uppercase">កាលបរិច្ឆេទ</label>
-                    <input type="date" name="apply_date" class="form-control" value="{{ selected_date }}" onchange="showGlobalLoading(); document.getElementById('filterForm').submit();">
+                    <label class="form-label fw-bold text-secondary small text-uppercase mb-2 d-block">កាលបរិច្ឆេទ</label>
+                    <input type="date" name="apply_date" class="form-control shadow-sm" style="height: 45px; border-radius: 8px;" value="{{ selected_date }}" onchange="showGlobalLoading(); document.getElementById('filterForm').submit();">
                 </div>
+                
                 <div class="col-md-3">
-                    <label class="form-label fw-bold text-secondary small text-uppercase">ស្ថានភាពពាក្យសុំ</label>
-                    <select name="status" class="form-select" onchange="showGlobalLoading(); document.getElementById('filterForm').submit();">
+                    <label class="form-label fw-bold text-secondary small text-uppercase mb-2 d-block">ស្ថានភាពពាក្យសុំ</label>
+                    <select name="status" class="form-select shadow-sm" style="height: 45px; border-radius: 8px;" onchange="showGlobalLoading(); document.getElementById('filterForm').submit();">
                         <option value="">-- ទាំងអស់ --</option>
                         {% for st in app_statuses %}
                             <option value="{{ st.id }}" {% if selected_status|string == st.id|string %}selected{% endif %}>
@@ -203,21 +232,34 @@
                         {% endfor %}
                     </select>
                 </div>
+                
                 <div class="col-md-6">
-                    <label class="form-label fw-bold text-secondary small text-uppercase">ស្វែងរកបេក្ខជន</label>
-                    <div class="input-group shadow-sm" style="border-radius: 8px; overflow: hidden;">
-                        <input type="text" name="search_query" class="form-control border-end-0" placeholder="វាយលេខកូដ ឈ្មោះ ឬលេខទូរស័ព្ទ..." value="{{ search_query }}">
-                        <button type="submit" class="btn btn-primary px-4 fw-bold"><i class="fas fa-search me-1"></i> ស្វែងរក</button>
-                        <a href="/admin/manage_applications" class="btn btn-light border text-secondary px-3" onclick="showGlobalLoading()" title="លុបតម្រង (Reset)"><i class="fas fa-sync-alt"></i></a>
+                    <label class="form-label fw-bold text-secondary small text-uppercase mb-2 d-block">ស្វែងរកបេក្ខជន</label>
+                    <div class="input-group shadow-sm" style="border-radius: 8px; overflow: hidden; height: 45px;">
+                        <input type="text" name="search_query" class="form-control border-end-0 h-100" placeholder="វាយលេខកូដ ឈ្មោះ ឬលេខទូរស័ព្ទ..." value="{{ search_query }}">
+                        <button type="submit" class="btn btn-primary px-4 fw-bold h-100"><i class="fas fa-search me-1"></i> ស្វែងរក</button>
+                        <a href="/admin/manage_applications" class="btn btn-light border text-secondary px-3 d-flex align-items-center justify-content-center h-100" onclick="showGlobalLoading()" title="លុបតម្រង (Reset)"><i class="fas fa-sync-alt"></i></a>
                     </div>
                 </div>
+
             </form>
         </div>
     </div>
 
     <div class="card border-0 shadow-sm mb-5" style="border-radius: 12px; background: transparent; box-shadow: none !important;">
         <div class="bg-white rounded-top p-3 d-flex justify-content-between align-items-center gap-2 border shadow-sm flex-wrap">
-            <div class="text-secondary small fw-bold ms-2" id="selectionCounter">មិនទាន់មានការជ្រើសរើសទេ</div>
+            
+            <div class="d-flex align-items-center flex-wrap">
+                <div class="text-secondary small fw-bold ms-2 me-3" id="selectionCounter">មិនទាន់មានការជ្រើសរើសទេ</div>
+                
+                <div class="border-start ps-3 d-flex align-items-center" style="height: 20px;">
+                    <span class="text-secondary small fw-bold">
+                        <i class="fas fa-filter text-primary me-1"></i> លទ្ធផលតម្រង៖ <b class="text-primary" style="font-size: 0.95rem;">{{ current_total }}</b> នាក់ 
+                        <span class="text-muted mx-1">|</span> ស្រី <b class="text-danger" style="font-size: 0.95rem;">{{ current_female }}</b> នាក់
+                    </span>
+                </div>
+            </div>
+
             <div class="d-flex gap-2 flex-wrap">
                 <button type="button" class="btn btn-warning fw-bold shadow-sm px-4 rounded-3 text-dark" id="btnBulkUndo" onclick="bulkUpdate('Pending')" disabled>
                     <i class="fas fa-undo me-1"></i> ត្រឡប់ទៅរង់ចាំ
@@ -341,15 +383,36 @@
         
         <div class="bg-white p-3 border rounded-bottom shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
             <span class="text-muted small fw-bold">កំពុងបង្ហាញទំព័រ {{ page }} នៃ {{ total_pages }}</span>
+            
             <nav aria-label="Page navigation">
                 <ul class="pagination pagination-sm mb-0">
+                    
                     <li class="page-item {% if page <= 1 %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('admin_manage_applications', page=page-1, apply_date=selected_date, status=selected_status, search_query=search_query) }}" onclick="showGlobalLoading()"><i class="fas fa-chevron-left me-1"></i> មុន</a>
+                        <a class="page-link px-3 fw-bold" href="{{ url_for('admin_manage_applications', page=page-1, apply_date=selected_date, status=selected_status, search_query=search_query) }}" onclick="showGlobalLoading()">
+                            <i class="fas fa-chevron-left me-1"></i> មុន
+                        </a>
                     </li>
-                    <li class="page-item disabled"><span class="page-link bg-light px-4 fw-bold">ទំព័រ {{ page | default('1') }}</span></li>
+
+                    {% for p in range(1, total_pages + 1) %}
+                        {% if p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                            <li class="page-item {% if p == page %}active{% endif %}">
+                                <a class="page-link fw-bold px-3" href="{{ url_for('admin_manage_applications', page=p, apply_date=selected_date, status=selected_status, search_query=search_query) }}" onclick="showGlobalLoading()">
+                                    {{ p }}
+                                </a>
+                            </li>
+                        {% elif p == page - 3 or p == page + 3 %}
+                            <li class="page-item disabled">
+                                <span class="page-link text-muted px-2 border-0" style="background: transparent;">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
                     <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('admin_manage_applications', page=page+1, apply_date=selected_date, status=selected_status, search_query=search_query) }}" onclick="showGlobalLoading()">បន្ទាប់ <i class="fas fa-chevron-right ms-1"></i></a>
+                        <a class="page-link px-3 fw-bold" href="{{ url_for('admin_manage_applications', page=page+1, apply_date=selected_date, status=selected_status, search_query=search_query) }}" onclick="showGlobalLoading()">
+                            បន្ទាប់ <i class="fas fa-chevron-right ms-1"></i>
+                        </a>
                     </li>
+                    
                 </ul>
             </nav>
         </div>
@@ -938,24 +1001,55 @@
         if(type === 'custom') dateDiv.classList.remove('d-none'); else dateDiv.classList.add('d-none');
     }
 
+    // 🌟 វះកាត់ទី ១៖ កែសម្រួលការចុច Checkbox ធំ ឱ្យរំលងអ្នកដែលត្រូវ "បដិសេធ"
     function toggleAllCheckboxes(source) {
         let checkboxes = document.querySelectorAll('.row-checkbox');
-        checkboxes.forEach(cb => { if (!cb.disabled) cb.checked = source.checked; });
+        checkboxes.forEach(cb => { 
+            // ស្វែងរកមើលថាតើជួរ (Row) របស់បេក្ខជននោះ មានផ្ទុកផ្លាកសញ្ញា "បដិសេធ" ពណ៌ក្រហម (bg-danger) ដែរឬទេ
+            let row = document.getElementById(`row-${cb.value}`);
+            let isRejected = row ? row.querySelector('.bg-danger') !== null : false;
+
+            // Tick តែអ្នកដែលមិនទាន់ត្រូវបានបិទ (disabled) និង មិនមែនជាអ្នក "បដិសេធ"
+            if (!cb.disabled && !isRejected) {
+                cb.checked = source.checked; 
+            } else if (isRejected) {
+                cb.checked = false; // ដកសញ្ញា Tick ចោលជានិច្ចចំពោះអ្នកបដិសេធ
+            }
+        });
         syncMasterCheckbox(); 
     }
     
+    // 🌟 វះកាត់ទី ២៖ ធ្វើសមកាលកម្មការរាប់ចំនួន ដោយមិនរាប់បញ្ចូលអ្នក "បដិសេធ" ដែលអត់បាន Tick
     function syncMasterCheckbox() {
-        let total = document.querySelectorAll('.row-checkbox').length;
+        // រាប់តែ Checkbox ណាដែលមិនមែនជារបស់អ្នកបដិសេធ
+        let allValidCheckboxes = Array.from(document.querySelectorAll('.row-checkbox')).filter(cb => {
+            let row = document.getElementById(`row-${cb.value}`);
+            return row ? row.querySelector('.bg-danger') === null : true;
+        });
+
+        let totalValid = allValidCheckboxes.length;
         let checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
         let checkedCount = checkedBoxes.length;
         let master = document.getElementById('selectAllMaster');
         let counterText = document.getElementById('selectionCounter');
         
-        if (master) master.checked = (total > 0 && total === checkedCount);
+        let realTotal = parseInt("{{ real_pending_total | default(0) }}", 10);
+        let realFemale = parseInt("{{ real_pending_female | default(0) }}", 10);
+        
+        // Master Checkbox លោត Tick ស្វ័យប្រវត្តិ លុះត្រាតែអ្នក Valid ទាំងអស់ត្រូវបាន Tick
+        if (master) master.checked = (totalValid > 0 && totalValid === checkedCount);
         
         if (counterText) {
-            if (checkedCount > 0) counterText.innerHTML = `<span class="text-primary"><i class="fas fa-check-square me-1"></i> បានជ្រើសរើស <b>${checkedCount}</b> នាក់</span>`;
-            else counterText.innerHTML = `មិនទាន់មានការជ្រើសរើសទេ`;
+            let applyDateInput = document.querySelector('input[name="apply_date"]');
+            let targetDate = applyDateInput ? applyDateInput.value : '';
+
+            if (master && master.checked && targetDate && realTotal > 0) {
+                counterText.innerHTML = `<span class="text-success fw-bold" style="font-size: 0.95rem;"><i class="fas fa-check-double me-1"></i> បានជ្រើសរើសទាំងអស់ប្រចាំថ្ងៃ៖ <b>${realTotal}</b> នាក់ (ស្រី <b>${realFemale}</b> នាក់)</span>`;
+            } else if (checkedCount > 0) {
+                counterText.innerHTML = `<span class="text-primary"><i class="fas fa-check-square me-1"></i> បានជ្រើសរើស <b>${checkedCount}</b> នាក់ (ទំព័រនេះ)</span>`;
+            } else {
+                counterText.innerHTML = `មិនទាន់មានការជ្រើសរើសទេ`;
+            }
         }
         
         let btnApprove = document.getElementById('btnBulkApprove');
@@ -996,6 +1090,14 @@
         let selected = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
         if(selected.length === 0) { alert("សូមជ្រើសរើសបេក្ខជនយ៉ាងហោចណាស់ម្នាក់!"); return; }
         
+        let applyDateInput = document.querySelector('input[name="apply_date"]');
+        let targetDate = applyDateInput ? applyDateInput.value : '';
+        let master = document.getElementById('selectAllMaster');
+        
+        // ទាញយកទិន្នន័យដោយសុវត្ថិភាពដូចគ្នា
+        let realTotal = parseInt("{{ real_pending_total | default(0) }}", 10);
+        let realFemale = parseInt("{{ real_pending_female | default(0) }}", 10);
+        
         if(newStatus === 'Rejected') {
             document.getElementById('rejectTargetAppNo').value = 'BULK'; 
             document.getElementById('adminRejectRemark').value = '';
@@ -1004,14 +1106,55 @@
         }
         
         if(newStatus === 'Pending') {
-            if(confirm(`តើអ្នកពិតជាចង់កំណត់បេក្ខជនទាំង ${selected.length} នាក់នេះ ឱ្យត្រឡប់ទៅស្ថានភាព "រង់ចាំ (Pending)" វិញមែនទេ?`)) {
+            if(confirm(`តើអ្នកពិតជាចង់កំណត់បេក្ខជនទាំងនេះ ឱ្យត្រឡប់ទៅស្ថានភាព "រង់ចាំ (Pending)" វិញមែនទេ?`)) {
                 executeStatusUpdate(selected, newStatus, '');
             }
             return;
         }
 
-        if(confirm(`តើអ្នកពិតជាចង់ អនុម័ត (Approve) បេក្ខជនទាំង ${selected.length} នាក់នេះមែនទេ?`)) {
-            executeStatusUpdate(selected, newStatus, '');
+        if(newStatus === 'Approved') {
+            if(!targetDate) {
+                alert("សូមជ្រើសរើស 'កាលបរិច្ឆេទ' នៅប្រអប់ស្វែងរកខាងលើជាមុនសិន ទើបប្រព័ន្ធអាចអនុម័តមួយថ្ងៃពេញបាន!");
+                return;
+            }
+
+            // កំណត់អត្ថបទ Confirm ឱ្យត្រូវនឹងចំនួនពិតប្រាកដ
+            let confirmMessage = '';
+            if (master && master.checked && realTotal > 0) {
+                confirmMessage = `⚠️ បញ្ជាក់៖ តើលោកអ្នកពិតជាចង់ អនុម័ត (Approve) បេក្ខជនទាំងអស់ប្រចាំថ្ងៃទី ${targetDate} សរុបចំនួន ${realTotal} នាក់ (ស្រី ${realFemale} នាក់) នេះមែនទេ?\n\n(ប្រព័ន្ធនឹងធ្វើសមកាលកម្មវត្តមាន និងអនុម័តទាំងអស់ស្វ័យប្រវត្តិ)`;
+            } else {
+                confirmMessage = `តើអ្នកពិតជាចង់ អនុម័ត (Approve) បេក្ខជនចំនួន ${selected.length} នាក់នេះមែនទេ?`;
+            }
+
+            if(confirm(confirmMessage)) {
+                showGlobalLoading();
+                try {
+                    let res = await fetch('/admin/bulk_update_status', {
+                        method: 'POST', 
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ 
+                            target_date: (master && master.checked) ? targetDate : null, 
+                            application_nos: (master && master.checked) ? [] : selected,
+                            status: 'Approved', 
+                            remark: 'Auto Approved by Date' 
+                        })
+                    });
+                    
+                    let result = await res.json();
+                    if(result.status === 'success') {
+                        hideGlobalLoading();
+                        const toastHtml = `<div class="alert alert-success rounded-4 shadow-lg mb-4 fw-bold border-0 position-fixed top-0 end-0 m-4" style="z-index: 1060; animation: fadeIn 0.3s;"><i class="fas fa-check-circle me-2"></i>${result.message}</div>`;
+                        document.body.insertAdjacentHTML('beforeend', toastHtml);
+                        setTimeout(() => { window.location.reload(); }, 1500);
+                    } else {
+                        hideGlobalLoading();
+                        alert('⚠️ បរាជ័យ៖ ' + result.message);
+                    }
+                } catch(e) {
+                    hideGlobalLoading();
+                    alert('មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ប្រព័ន្ធ Backend!');
+                }
+            }
         }
     }
 
