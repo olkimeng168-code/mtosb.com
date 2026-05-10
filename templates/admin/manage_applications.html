@@ -29,13 +29,20 @@
     .modern-table thead th:first-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
     .modern-table thead th:last-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
     
-    .modern-table thead th input[type="checkbox"] {
-        margin-top: 0 !important;
-        transform: scale(1.1); 
-    }
+    .modern-table thead th input[type="checkbox"] { margin-top: 0 !important; transform: scale(1.1); }
     
-    .modern-table tbody tr { background-color: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.03); transition: all 0.2s ease; }
-    .modern-table tbody tr:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.08); z-index: 10; position: relative;}
+    /* 🌟 វះកាត់ទី៣៖ ដក transition: all ចោល ដាក់តែ GPU props ដើម្បីកុំឱ្យគាំងពេល Scroll */
+    .modern-table tbody tr { 
+        background-color: #ffffff; 
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03); 
+        transition: transform 0.2s ease, box-shadow 0.2s ease; 
+    }
+    .modern-table tbody tr:hover { 
+        transform: translateY(-2px); 
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08); 
+        z-index: 10; 
+        position: relative; 
+    }
     
     .modern-table tbody td { padding: 18px 15px; border: none; border-top: 1px solid #f8fafc; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
     .modern-table tbody td:first-child { border-left: 1px solid #f8fafc; border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
@@ -51,13 +58,10 @@
     .btn-icon-warning { background-color: #fef3c7; color: #d97706; }
     .btn-icon-warning:hover { background-color: #d97706; color: #ffffff; transform: translateY(-2px); }
     
-    .status-badge { padding: 6px 14px; border-radius: 30px; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap;}
-    .status-pending { background-color: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
-    .status-approved { background-color: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-    .status-rejected { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
-
+    .status-badge { padding: 6px 14px; border-radius: 30px; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; }
+    
     /* Modal Styling */
-    .settings-modal-content { border-radius: 12px; border: none; background-color: #f8fafc;}
+    .settings-modal-content { border-radius: 12px; border: none; background-color: #f8fafc; }
     .settings-modal-header { background-color: #ffffff; border-bottom: 1px solid #e2e8f0; border-radius: 12px 12px 0 0; padding: 15px 20px; }
     .custom-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
     .custom-switch input { opacity: 0; width: 0; height: 0; }
@@ -71,116 +75,70 @@
     .master-switch input:checked + .slider { background-color: #10b981; }
     .time-input-group { margin-bottom: 25px; }
     .time-label { font-size: 0.85rem; color: #475569; margin-bottom: 6px; display: block; font-weight: 600; }
-    .time-input { display: flex; align-items: center; background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition: border-color 0.2s;}
-    .time-input input { border: none; outline: none; background: transparent; width: 100%; font-family: monospace; font-size: 1rem; color: #1e293b; font-weight: bold;}
+    .time-input { display: flex; align-items: center; background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition: border-color 0.2s; }
+    .time-input input { border: none; outline: none; background: transparent; width: 100%; font-family: monospace; font-size: 1rem; color: #1e293b; font-weight: bold; }
     .setting-block { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 18px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden; transition: all 0.3s; }
     .setting-header { background-color: #f8fafc; padding: 12px 18px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; }
     .setting-header-title { font-weight: 700; color: #1e293b; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; }
     .setting-body { padding: 18px; transition: opacity 0.3s ease; }
     .granular-item { display: flex; align-items: center; padding: 6px 0; cursor: pointer; transition: opacity 0.2s; }
     .granular-checkbox { width: 1.15rem; height: 1.15rem; cursor: pointer; accent-color: #0d6efd; margin-top: 0; }
-    .granular-label { font-size: 0.9rem; color: #334155; margin-left: 8px; user-select: none; font-weight: 500;}
+    .granular-label { font-size: 0.9rem; color: #334155; margin-left: 8px; user-select: none; font-weight: 500; }
+    
+    /* 🌟 វះកាត់ទី២៖ ប្រើ Pure CSS hover និង will-change ជំនួស inline JS */
     .candidate-photo { 
-        width: 40px; 
-        height: 50px; 
-        object-fit: cover; 
-        border-radius: 4px; 
-        border: 1px solid #dee2e6; 
-        cursor: pointer; 
-        transition: transform 0.2s ease; 
+        width: 40px; height: 50px; object-fit: cover; border-radius: 4px; 
+        border: 1px solid #dee2e6; cursor: pointer; 
+        transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); 
         background: #fff; 
+        will-change: transform; 
     }
+    .candidate-photo:hover {
+        transform: scale(1.25);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
     .btn-custom-dropdown {
-        font-family: 'Khmer OS Siemreap', sans-serif; 
-        font-size: 1rem; 
-        border: 1px solid #dc3545; 
-        border-radius: 8px; 
-        padding: 0.6rem 1rem; 
-        color: #1e293b;
-        background-color: #f8fafc; 
-        transition: all 0.2s;
-        text-align: left; 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center;
-        width: 100%;
+        font-family: 'Khmer OS Siemreap', sans-serif; font-size: 1rem; border: 1px solid #dc3545; 
+        border-radius: 8px; padding: 0.6rem 1rem; color: #1e293b; background-color: #f8fafc; 
+        transition: all 0.2s; text-align: left; display: flex; justify-content: space-between; align-items: center; width: 100%;
     }
     .btn-custom-dropdown:hover, .btn-custom-dropdown:focus, .btn-custom-dropdown[aria-expanded="true"] { 
-        border-color: #dc3545; 
-        box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.15); 
-        background-color: #ffffff;
+        border-color: #dc3545; box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.15); background-color: #ffffff;
     }
-    
     .dropdown-menu-custom {
-        border: 1px solid #e2e8f0; 
-        border-radius: 12px; 
-        box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-        padding: 0.5rem 0; 
-        overflow-y: auto; 
-        max-height: 300px; 
-        width: 100%;
+        border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        padding: 0.5rem 0; overflow-y: auto; max-height: 300px; width: 100%;
     }
-    
     .dropdown-item-custom {
-        font-family: 'Khmer OS Siemreap', sans-serif; 
-        font-size: 0.95rem; 
-        padding: 0.7rem 1.2rem; 
-        line-height: 1.8; 
-        color: #334155; 
-        border-bottom: 1px solid #f8fafc;
-        white-space: normal; 
-        transition: background 0.2s;
+        font-family: 'Khmer OS Siemreap', sans-serif; font-size: 0.95rem; padding: 0.7rem 1.2rem; 
+        line-height: 1.8; color: #334155; border-bottom: 1px solid #f8fafc; white-space: normal; transition: background 0.2s;
     }
     .dropdown-item-custom:last-child { border-bottom: none; }
     .dropdown-item-custom:hover { background-color: #fef2f2; color: #dc3545; } 
-    .pro-modal-content {
-        border-radius: 12px;
-        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
-        border: 1px solid #e2e8f0;
-        overflow: hidden;
-    }
     
-    .pro-icon-box {
-        width: 45px;
-        height: 45px;
-        border-radius: 10px;
-        background-color: #fef2f2;
-        color: #dc2626;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        margin-right: 15px;
-        border: 1px solid #fee2e2;
-    }
-    
-    .pro-reason-block {
-        background-color: #f8fafc;
-        border-left: 4px solid #ef4444; 
-        border-radius: 0 8px 8px 0;
-        padding: 18px 20px;
-        text-align: left;
-    }
-    
-    .btn-close-pro {
-        background-color: #ffffff;
-        color: #475569;
-        border-radius: 6px;
-        padding: 0.5rem 1.5rem;
-        font-weight: 600;
-        border: 1px solid #cbd5e1;
-        transition: all 0.2s ease;
-    }
-    
-    .btn-close-pro:hover {
-        background-color: #f1f5f9;
-        color: #0f172a;
-        border-color: #94a3b8;
+    .pro-modal-content { border-radius: 12px; box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2); border: 1px solid #e2e8f0; overflow: hidden; }
+    .pro-icon-box { width: 45px; height: 45px; border-radius: 10px; background-color: #fef2f2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-right: 15px; border: 1px solid #fee2e2; }
+    .pro-reason-block { background-color: #f8fafc; border-left: 4px solid #ef4444; border-radius: 0 8px 8px 0; padding: 18px 20px; text-align: left; }
+    .btn-close-pro { background-color: #ffffff; color: #475569; border-radius: 6px; padding: 0.5rem 1.5rem; font-weight: 600; border: 1px solid #cbd5e1; transition: all 0.2s ease; }
+    .btn-close-pro:hover { background-color: #f1f5f9; color: #0f172a; border-color: #94a3b8; }
+
+    .global-loading-overlay {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+        z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;
+        transition: opacity 0.3s ease;
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<div id="globalLoadingOverlay" class="global-loading-overlay d-none">
+    <div class="spinner-border text-primary shadow-sm mb-3" style="width: 3.5rem; height: 3.5rem; border-width: 0.35rem;" role="status"></div>
+    <h5 class="fw-bold text-dark" style="font-family: 'Khmer OS Siemreap', sans-serif;">ប្រព័ន្ធកំពុងដំណើរការ...</h5>
+    <small class="text-muted fw-semibold">សូមមេត្តារង់ចាំបន្តិច</small>
+</div>
+
 <div class="container-fluid px-0">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div class="d-flex flex-column">
@@ -204,7 +162,7 @@
         <div class="col-md-4">
             <div class="card border-0 shadow-sm text-white" style="background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 12px;">
                 <div class="card-body d-flex align-items-center justify-content-between p-4">
-                    <div><h6 class="mb-1 opacity-75 fw-bold">ពាក្យសុំសរុប (ដែលបានរើស)</h6><h2 class="mb-0 fw-bold">{{ total_records }}</h2></div>
+                    <div><h6 class="mb-1 opacity-75 fw-bold">ពាក្យសុំសរុប (ដែលបានរើស)</h6><h2 class="mb-0 fw-bold" id="stat-total">{{ total_records }}</h2></div>
                     <div class="bg-white bg-opacity-25 rounded-circle p-3"><i class="fas fa-users fa-2x"></i></div>
                 </div>
             </div>
@@ -212,7 +170,7 @@
         <div class="col-md-4">
             <div class="card border-0 shadow-sm text-white" style="background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 12px;">
                 <div class="card-body d-flex align-items-center justify-content-between p-4">
-                    <div><h6 class="mb-1 opacity-75 fw-bold">កំពុងរង់ចាំ (Pending)</h6><h2 class="mb-0 fw-bold">{{ total_pending }}</h2></div>
+                    <div><h6 class="mb-1 opacity-75 fw-bold">កំពុងរង់ចាំ (Pending)</h6><h2 class="mb-0 fw-bold" id="stat-pending">{{ total_pending }}</h2></div>
                     <div class="bg-white bg-opacity-25 rounded-circle p-3"><i class="fas fa-hourglass-half fa-2x"></i></div>
                 </div>
             </div>
@@ -220,7 +178,7 @@
         <div class="col-md-4">
             <div class="card border-0 shadow-sm text-white" style="background: linear-gradient(135deg, #10b981, #059669); border-radius: 12px;">
                 <div class="card-body d-flex align-items-center justify-content-between p-4">
-                    <div><h6 class="mb-1 opacity-75 fw-bold">អនុម័តរួច (Approved)</h6><h2 class="mb-0 fw-bold">{{ total_approved }}</h2></div>
+                    <div><h6 class="mb-1 opacity-75 fw-bold">អនុម័តរួច (Approved)</h6><h2 class="mb-0 fw-bold" id="stat-approved">{{ total_approved }}</h2></div>
                     <div class="bg-white bg-opacity-25 rounded-circle p-3"><i class="fas fa-check-circle fa-2x"></i></div>
                 </div>
             </div>
@@ -229,42 +187,35 @@
 
     <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
         <div class="card-body p-4">
-            <form method="GET" action="/admin/manage_applications" class="row g-3 align-items-end" id="filterForm">
-                
+            <form method="GET" action="/admin/manage_applications" class="row g-3 align-items-end" id="filterForm" onsubmit="showGlobalLoading()">
                 <div class="col-md-3">
                     <label class="form-label fw-bold text-secondary small text-uppercase">កាលបរិច្ឆេទ</label>
-                    <input type="date" name="apply_date" class="form-control" value="{{ selected_date }}" onchange="document.getElementById('filterForm').submit();">
+                    <input type="date" name="apply_date" class="form-control" value="{{ selected_date }}" onchange="showGlobalLoading(); document.getElementById('filterForm').submit();">
                 </div>
-                
                 <div class="col-md-3">
                     <label class="form-label fw-bold text-secondary small text-uppercase">ស្ថានភាពពាក្យសុំ</label>
-                    <select name="status" class="form-select" onchange="document.getElementById('filterForm').submit();">
+                    <select name="status" class="form-select" onchange="showGlobalLoading(); document.getElementById('filterForm').submit();">
                         <option value="">-- ទាំងអស់ --</option>
-                        
                         {% for st in app_statuses %}
                             <option value="{{ st.id }}" {% if selected_status|string == st.id|string %}selected{% endif %}>
                                 {{ st.status_name_kh }} ({{ st.status_name_en }})
                             </option>
                         {% endfor %}
-                        
                     </select>
                 </div>
-                
                 <div class="col-md-6">
                     <label class="form-label fw-bold text-secondary small text-uppercase">ស្វែងរកបេក្ខជន</label>
                     <div class="input-group shadow-sm" style="border-radius: 8px; overflow: hidden;">
                         <input type="text" name="search_query" class="form-control border-end-0" placeholder="វាយលេខកូដ ឈ្មោះ ឬលេខទូរស័ព្ទ..." value="{{ search_query }}">
                         <button type="submit" class="btn btn-primary px-4 fw-bold"><i class="fas fa-search me-1"></i> ស្វែងរក</button>
-                        <a href="/admin/manage_applications" class="btn btn-light border text-secondary px-3" title="លុបតម្រង (Reset)"><i class="fas fa-sync-alt"></i></a>
+                        <a href="/admin/manage_applications" class="btn btn-light border text-secondary px-3" onclick="showGlobalLoading()" title="លុបតម្រង (Reset)"><i class="fas fa-sync-alt"></i></a>
                     </div>
                 </div>
-                
             </form>
         </div>
     </div>
 
     <div class="card border-0 shadow-sm mb-5" style="border-radius: 12px; background: transparent; box-shadow: none !important;">
-        
         <div class="bg-white rounded-top p-3 d-flex justify-content-between align-items-center gap-2 border shadow-sm flex-wrap">
             <div class="text-secondary small fw-bold ms-2" id="selectionCounter">មិនទាន់មានការជ្រើសរើសទេ</div>
             <div class="d-flex gap-2 flex-wrap">
@@ -302,15 +253,14 @@
                 </thead>
                 <tbody>
                     {% for app in applications %}
-                    <tr>
+                    <tr id="row-{{ app.application_no }}">
                         <td class="text-center align-middle">
                             <input type="checkbox" class="row-checkbox" value="{{ app.application_no }}" onclick="syncMasterCheckbox()" style="width: 20px; height: 20px; cursor: pointer; accent-color: #0d6efd; margin-top: 5px;">
                         </td>
-                        
                         <td class="text-center text-secondary fw-bold">{{ loop.index + ((page - 1) * 20) }}</td>
                         
                         <td class="text-center">
-                            {% set photo_src = '/static/images/default_avatar.png' %}
+                            {% set photo_src = '/static/uploads/reference_photos/default.png' %}
                             {% if app.latest_scan_photo %}
                                 {% set photo_src = '/static/latest_scans/' ~ app.latest_scan_photo %}
                             {% elif app.original_photo_path %}
@@ -318,30 +268,23 @@
                             {% endif %}
                             
                             <img src="{{ photo_src }}" 
+                                 loading="lazy"
+                                 decoding="async"
                                  class="candidate-photo shadow-sm" 
                                  alt="Photo"
                                  onclick="showPhotoPreview('{{ photo_src }}', '{{ app.name_en }}')"
-                                 onerror="this.src='/static/images/default_avatar.png'"
-                                 onmouseover="this.style.transform='scale(1.15)'"
-                                 onmouseout="this.style.transform='scale(1)'"
+                                 onerror="this.onerror=null; this.src='/static/uploads/reference_photos/default.png';"
                                  title="ចុចដើម្បីមើលរូបធំ">
                         </td>
                         
                         <td class="text-start text-primary fw-bold font-monospace">{{ app.application_no }}</td>
-                        
                         <td class="text-start">
                             <div class="fw-bold text-dark">{{ app.last_name_kh }} {{ app.first_name_kh }}</div>
                             <div class="small text-muted fw-semibold text-uppercase">{{ app.name_en }}</div>
                         </td>
-                        
-                        <td class="text-center">
-                            <span class="badge bg-light text-secondary border px-2 py-1">{{ app.gender }}</span>
-                        </td>
-                        
+                        <td class="text-center"><span class="badge bg-light text-secondary border px-2 py-1">{{ app.gender }}</span></td>
                         <td class="text-start text-dark fw-semibold font-monospace"><i class="fas fa-id-card text-black-50 me-2"></i>{{ app.id_card_no }}</td>
-                        
                         <td class="text-start text-dark fw-semibold font-monospace"><i class="fas fa-phone-alt text-black-50 me-2"></i>{{ app.phone_number }}</td>
-                        
                         <td class="text-center">
                             {% if app.job_app_present == 1 %}
                                 <i class="fas fa-check-circle text-success fs-5"></i>
@@ -349,31 +292,19 @@
                                 <i class="fas fa-times-circle text-danger fs-5 opacity-25"></i>
                             {% endif %}
                         </td>
-
                         <td class="text-center text-secondary small fw-semibold">{{ app.created_at.strftime('%Y-%m-%d') if app.created_at else '-' }}</td>
                         
-                        <td class="text-center">
+                        <td class="text-center" id="status-cell-{{ app.application_no }}">
                             {% if app.status_id == 3 %}
                                 <span class="badge bg-danger text-white px-3 py-2 rounded-pill shadow-sm" 
-                                      {% if app.remark %} 
-                                      data-reason="{{ app.remark }}" 
-                                      onclick="showRejectReason(this)" 
-                                      style="cursor: pointer; transition: transform 0.2s;" 
-                                      onmouseover="this.style.transform='scale(1.05)'" 
-                                      onmouseout="this.style.transform='scale(1)'" 
-                                      title="ចុចដើម្បីមើលមូលហេតុ" 
-                                      {% endif %}>
+                                      {% if app.remark %} data-reason="{{ app.remark }}" onclick="showRejectReason(this)" style="cursor: pointer;" title="ចុចដើម្បីមើលមូលហេតុ" {% endif %}>
                                     <i class="fas fa-times-circle me-1"></i> បដិសេធ
-                                    {% if app.remark %}
-                                        <span class="ms-1 border-start border-white border-opacity-25 ps-2"><i class="fas fa-eye"></i></span>
-                                    {% endif %}
+                                    {% if app.remark %}<span class="ms-1 border-start border-white border-opacity-25 ps-2"><i class="fas fa-eye"></i></span>{% endif %}
                                 </span>
-
                             {% elif app.status_id == 2 %}
                                 <span class="badge bg-success text-white px-3 py-2 rounded-pill shadow-sm">
                                     <i class="fas fa-check-circle me-1"></i> អនុម័ត
                                 </span>
-
                             {% else %}
                                 <span class="badge bg-warning text-dark px-3 py-2 rounded-pill shadow-sm">
                                     <i class="fas fa-hourglass-half me-1"></i> រង់ចាំ
@@ -381,10 +312,9 @@
                             {% endif %}
                         </td>
                         
-                        <td class="text-center">
+                        <td class="text-center" id="action-cell-{{ app.application_no }}">
                             <div class="d-flex justify-content-center gap-1">
                                 <a href="/admin/view_application/{{ app.application_no }}" class="btn-icon btn-icon-primary" title="មើលលម្អិត"><i class="fas fa-eye"></i></a>
-                                
                                 {% if app.status_id == 1 or not app.status_id %}
                                     <button class="btn-icon btn-icon-success" onclick="quickUpdateStatus('{{ app.application_no }}', 'Approved')" title="អនុម័ត"><i class="fas fa-check"></i></button>
                                     <button class="btn-icon btn-icon-danger" onclick="quickUpdateStatus('{{ app.application_no }}', 'Rejected')" title="បដិសេធ"><i class="fas fa-times"></i></button>
@@ -396,7 +326,8 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="12" class="text-center py-5 text-muted bg-white rounded-3 border-0"> <div class="d-flex flex-column align-items-center justify-content-center my-4">
+                        <td colspan="12" class="text-center py-5 text-muted bg-white rounded-3 border-0"> 
+                            <div class="d-flex flex-column align-items-center justify-content-center my-4">
                                 <i class="fas fa-box-open fa-4x mb-3" style="color: #cbd5e1;"></i>
                                 <h5 class="fw-bold text-secondary">មិនមានទិន្នន័យឡើយ</h5>
                                 <p class="small mb-0 text-black-50">សូមសាកល្បងផ្លាស់ប្តូរលក្ខខណ្ឌស្វែងរក</p>
@@ -413,11 +344,11 @@
             <nav aria-label="Page navigation">
                 <ul class="pagination pagination-sm mb-0">
                     <li class="page-item {% if page <= 1 %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('admin_manage_applications', page=page-1, apply_date=selected_date, status=selected_status, search_query=search_query) }}"><i class="fas fa-chevron-left me-1"></i> មុន</a>
+                        <a class="page-link" href="{{ url_for('admin_manage_applications', page=page-1, apply_date=selected_date, status=selected_status, search_query=search_query) }}" onclick="showGlobalLoading()"><i class="fas fa-chevron-left me-1"></i> មុន</a>
                     </li>
                     <li class="page-item disabled"><span class="page-link bg-light px-4 fw-bold">ទំព័រ {{ page | default('1') }}</span></li>
                     <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('admin_manage_applications', page=page+1, apply_date=selected_date, status=selected_status, search_query=search_query) }}">បន្ទាប់ <i class="fas fa-chevron-right ms-1"></i></a>
+                        <a class="page-link" href="{{ url_for('admin_manage_applications', page=page+1, apply_date=selected_date, status=selected_status, search_query=search_query) }}" onclick="showGlobalLoading()">បន្ទាប់ <i class="fas fa-chevron-right ms-1"></i></a>
                     </li>
                 </ul>
             </nav>
@@ -428,15 +359,12 @@
 <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
         <div class="modal-content settings-modal-content shadow-lg">
-            
             <div class="modal-header settings-modal-header py-3">
                 <h5 class="modal-title fw-bold text-dark"><i class="fas fa-cog text-primary me-2"></i>ការគ្រប់គ្រងវគ្គដាក់ពាក្យ និងទម្រង់</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            
             <div class="modal-body p-4 pb-5 bg-light">
                 <form id="systemSettingsForm">
-                    
                     <div class="card border-0 shadow-sm mb-4" style="background-color: #ecfdf5; border-left: 4px solid #10b981 !important;">
                         <div class="card-body d-flex justify-content-between align-items-center py-3">
                             <div>
@@ -694,7 +622,6 @@
                 <button type="button" class="btn btn-light border px-4 fw-bold text-secondary" data-bs-dismiss="modal">បោះបង់</button>
                 <button type="button" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="saveSystemSettings()"><i class="fas fa-save me-1"></i> រក្សាទុកការផ្លាស់ប្តូរ</button>
             </div>
-            
         </div>
     </div>
 </div>
@@ -741,6 +668,7 @@
         </div>
     </div>
 </div>
+
 <div class="modal fade" id="qrApplicationModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content text-center border-0 shadow-lg rounded-4" style="font-family: 'Khmer OS Siemreap', 'Battambang', sans-serif;">
@@ -799,7 +727,8 @@
 <div class="modal fade" id="reasonModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content pro-modal-content bg-white">
-            <div class="modal-body p-0"> <div class="d-flex align-items-center p-4 border-bottom bg-white">
+            <div class="modal-body p-0"> 
+                <div class="d-flex align-items-center p-4 border-bottom bg-white">
                     <div class="pro-icon-box flex-shrink-0 shadow-sm">
                         <i class="fas fa-file-signature"></i>
                     </div>
@@ -821,7 +750,6 @@
                 <div class="p-3 bg-light border-top text-end">
                     <button type="button" class="btn btn-close-pro" data-bs-dismiss="modal">បិទផ្ទាំងនេះ</button>
                 </div>
-                
             </div>
         </div>
     </div>
@@ -838,7 +766,6 @@
                 
                 <div class="mb-3">
                     <label class="form-label fw-bold text-dark">សូមជ្រើសរើសប្រភេទមូលហេតុ៖ <span class="text-danger">*</span></label>
-                    
                     <div class="dropdown">
                         <button class="btn btn-custom-dropdown dropdown-toggle" type="button" id="dropdownReasonButton" data-bs-toggle="dropdown" aria-expanded="false">
                             <span id="selectedReasonText">-- ជ្រើសរើសមូលហេតុស្តង់ដារ --</span>
@@ -846,7 +773,6 @@
                         
                         <ul class="dropdown-menu dropdown-menu-custom" aria-labelledby="dropdownReasonButton">
                             <li><a class="dropdown-item dropdown-item-custom" href="#" onclick="selectReason('', '-- ជ្រើសរើសមូលហេតុស្តង់ដារ --'); return false;">-- ជ្រើសរើសមូលហេតុស្តង់ដារ --</a></li>
-                            
                             {% for reason in reject_reasons %}
                                 <li>
                                     <a class="dropdown-item dropdown-item-custom" href="#" onclick="selectReason('{{ reason.reason_kh }}', '{{ reason.reason_kh }}'); return false;">
@@ -854,12 +780,10 @@
                                     </a>
                                 </li>
                             {% endfor %}
-                            
                             <li><hr class="dropdown-divider m-0"></li>
                             <li><a class="dropdown-item dropdown-item-custom" href="#" onclick="selectReason('ផ្សេងៗ', 'ផ្សេងៗ (សូមបញ្ជាក់ខាងក្រោម)'); return false;">ផ្សេងៗ (សូមបញ្ជាក់ខាងក្រោម)</a></li>
                         </ul>
                     </div>
-                    
                     <input type="hidden" id="rejectReasonType" value="">
                 </div>
                 
@@ -868,7 +792,9 @@
                     <textarea id="adminRejectRemark" class="form-control" rows="3" placeholder="វាយបញ្ចូលការពន្យល់លម្អិត (បើមាន)..."></textarea>
                 </div>
                 
-                <input type="hidden" id="rejectTargetAppNo"> </div>
+                <input type="hidden" id="rejectTargetAppNo"> 
+            </div>
+            
             <div class="modal-footer bg-light border-0 py-3">
                 <button type="button" class="btn btn-secondary px-4 fw-bold rounded-pill" data-bs-dismiss="modal">បោះបង់</button>
                 <button type="button" class="btn btn-danger px-4 fw-bold rounded-pill shadow-sm" onclick="confirmAdminReject()"><i class="fas fa-times-circle me-1"></i> យល់ព្រមបដិសេធ</button>
@@ -883,6 +809,19 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
+    function showGlobalLoading() {
+        const overlay = document.getElementById('globalLoadingOverlay');
+        if(overlay) {
+            overlay.classList.remove('d-none');
+            void overlay.offsetWidth; 
+        }
+    }
+
+    function hideGlobalLoading() {
+        const overlay = document.getElementById('globalLoadingOverlay');
+        if(overlay) overlay.classList.add('d-none');
+    }
+
     function selectReason(value, displayText) {
         document.getElementById('selectedReasonText').innerText = displayText;
         document.getElementById('rejectReasonType').value = value;
@@ -892,15 +831,13 @@
     function showPhotoPreview(imgSrc, candidateName) {
         document.getElementById('previewImage').src = imgSrc;
         document.getElementById('previewName').innerText = candidateName;
-        var modal = new bootstrap.Modal(document.getElementById('photoPreviewModal'));
-        modal.show();
+        new bootstrap.Modal(document.getElementById('photoPreviewModal')).show();
     }
     
     function showRejectReason(element) {
         var reason = element.getAttribute('data-reason');
         document.getElementById('rejectReasonText').innerText = reason ? reason : 'មិនមានការបញ្ជាក់មូលហេតុឡើយ។';
-        var modal = new bootstrap.Modal(document.getElementById('reasonModal'));
-        modal.show();
+        new bootstrap.Modal(document.getElementById('reasonModal')).show();
     }
 
     function generateApplicationQRCode() {
@@ -919,16 +856,12 @@
         qrBox.innerHTML = ""; 
         
         new QRCode(qrBox, {
-            text: targetUrl,
-            width: 180,      
-            height: 180,     
-            colorDark : "#0b2e59", 
-            colorLight : "#ffffff",
+            text: targetUrl, width: 180, height: 180,     
+            colorDark : "#0b2e59", colorLight : "#ffffff",
             correctLevel : QRCode.CorrectLevel.H 
         });
 
-        let qrModal = new bootstrap.Modal(document.getElementById('qrApplicationModal'));
-        qrModal.show();
+        new bootstrap.Modal(document.getElementById('qrApplicationModal')).show();
     }
 
     function printAppQRCode() {
@@ -952,148 +885,62 @@
         <head>
             <meta charset="UTF-8">
             <title>Print Login QR Code</title>
-            <link rel="preconnect" href="https://fonts.googleapis.com">
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
             <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Moul&display=swap" rel="stylesheet">
-            <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
             <style>
                 @page { size: A4 portrait; margin: 0; }
-                body { font-family: 'Battambang', sans-serif; background: #fff; margin: 0; padding: 0; color: #333; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                .page-container { width: 210mm; height: 297mm; padding: 30mm 20mm; box-sizing: border-box; margin: 0 auto; text-align: center; }
-                .header-title { font-family: 'Moul', cursive; font-size: 30px; color: #0b2e59; margin: 0 0 25px 0; line-height: 1.5; }
-                .header-sub { font-family: 'Battambang', sans-serif; font-size: 24px; font-weight: bold; margin: 0; color: #333; }
-                .top-line { border-top: 2px solid #0b2e59; margin: 25px 50px 40px 50px; }
-                .main-title { font-family: 'Moul', cursive; font-size: 20px; color: #0b2e59; margin: 0 0 15px 0; }
-                .main-sub { font-size: 16px; color: #555; margin: 0 0 40px 0; font-weight: bold; }
-                .qr-box-outer { display: inline-block; padding: 5px; border: 1px solid #0b2e59; border-radius: 8px; margin-bottom: 30px; }
-                .qr-box-inner { border: 3px solid #0b2e59; padding: 20px; border-radius: 6px; }
-                .url-display { font-family: Arial, sans-serif; font-size: 18px; color: #0b2e59; font-weight: bold; background: #f0f4f8; padding: 12px 30px; border-radius: 30px; border: 1px dashed #c2d1e0; display: inline-block; }
-                .bottom-line { border-top: 2px solid #0b2e59; margin: 60px 50px 20px 50px; }
-                .footer-text { font-size: 13px; line-height: 1.8; color: #555; }
-                .phone { color: #d32f2f; font-weight: bold; }
+                body { font-family: 'Battambang', sans-serif; text-align: center; }
+                .header-title { font-family: 'Moul', cursive; font-size: 30px; color: #0b2e59; margin-top: 50px; }
+                .qr-box-inner { border: 3px solid #0b2e59; padding: 20px; display: inline-block; margin-top: 30px; }
             </style>
         </head>
         <body>
-            <div class="page-container">
-                <div class="header-title">ក្រសួងការងារ និងបណ្តុះបណ្តាលវិជ្ជាជីវៈ</div>
-                <div class="header-sub">គណៈកម្មាធិការបណ្តុះបណ្តាល និងបញ្ជូនពលករទៅបរទេស</div>
-                <div class="top-line"></div>
-                <div class="main-title">ស្កេនដើម្បីចូលគណនី និងបំពេញព័ត៌មាន</div>
-                <div class="main-sub">សូមបេក្ខជនស្កេន QR កូដខាងក្រោម ដើម្បីចូលទៅកាន់ប្រព័ន្ធ</div>
-                <div class="qr-box-outer">
-                    <div class="qr-box-inner">
-                        ${qrContent}
-                    </div>
-                </div>
-                <br>
-                <div class="url-display">
-                    <i class="fas fa-link me-2 text-muted"></i> ${targetUrl}
-                </div>
-                <div class="bottom-line"></div>
-                <div class="footer-text">
-                    សម្រាប់ព័ត៌មានបន្ថែម សូមទំនាក់ទំនងមកគណៈកម្មាធិការបណ្តុះបណ្តាល និងបញ្ជូនពលករទៅបរទេស<br>
-                    តាមរយៈទូរស័ព្ទ <span class="phone"><i class="fas fa-phone-alt me-1"></i> ០១២ ៤៦៦ ២២២ / ០១៦ ៤៦៦ ២២២</span> នៅរៀងរាល់ម៉ោងធ្វើការ។
-                </div>
-            </div>
-            <script>
-                window.onload = function() {
-                    if (document.fonts) {
-                        document.fonts.ready.then(function() { setTimeout(function() { window.print(); }, 300); });
-                    } else { setTimeout(function() { window.print(); }, 1000); }
-                };
-            <\/script>
+            <div class="header-title">ក្រសួងការងារ និងបណ្តុះបណ្តាលវិជ្ជាជីវៈ</div>
+            <h2>ស្កេនដើម្បីចូលគណនី និងបំពេញព័ត៌មាន</h2>
+            <div class="qr-box-inner">${qrContent}</div>
+            <h3 style="color: #0b2e59; margin-top: 30px;">${targetUrl}</h3>
+            <script>window.onload = function() { setTimeout(() => window.print(), 500); };<\/script>
         </body>
-        </html>
-        `;
+        </html>`;
 
-        printWindow.document.write(html);
-        printWindow.document.close();
-        printWindow.focus();
+        printWindow.document.write(html); printWindow.document.close(); printWindow.focus();
     }
 
     function downloadAppQRCodePDF() {
         let btn = document.getElementById('btnDownloadAppPdf');
         let originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> កំពុងរៀបចំ...';
-        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> កំពុងរៀបចំ...'; btn.disabled = true;
 
         let qrBox = document.getElementById('qrcodeAppBox');
         let canvas = qrBox.querySelector('canvas');
         let img = qrBox.querySelector('img');
-        let qrDataUrl = "";
-
-        if (canvas) {
-            qrDataUrl = canvas.toDataURL("image/png");
-        } else if (img && img.src) {
-            qrDataUrl = img.src;
-        }
+        let qrDataUrl = canvas ? canvas.toDataURL("image/png") : (img ? img.src : "");
 
         let targetUrl = document.getElementById('qrAppLinkText').innerText;
         let element = document.createElement('div');
-        element.style.width = '210mm';
-        element.style.padding = '30mm 20mm';
-        element.style.backgroundColor = '#ffffff';
-        element.style.textAlign = 'center';
+        element.style.width = '210mm'; element.style.padding = '30mm 20mm'; element.style.textAlign = 'center';
         
         element.innerHTML = `
-            <div style="font-family: 'Khmer OS Muol Light', 'Moul', serif; font-size: 30px; line-height: 1.5; color: #0b2e59; margin-bottom: 25px;">ក្រសួងការងារ និងបណ្តុះបណ្តាលវិជ្ជាជីវៈ</div>
-            <div style="font-family: 'Khmer OS Siemreap', 'Battambang', sans-serif; font-size: 24px; font-weight: bold; color: #333; margin-bottom: 25px;">គណៈកម្មាធិការបណ្តុះបណ្តាល និងបញ្ជូនពលករទៅបរទេស</div>
-            
-            <div style="border-top: 2px solid #0b2e59; margin: 0 50px 40px 50px;"></div>
-            
-            <div style="font-family: 'Khmer OS Muol Light', 'Moul', serif; font-size: 20px; color: #0b2e59; margin-bottom: 15px;">ស្កេនដើម្បីចូលគណនី និងបំពេញព័ត៌មាន</div>
-            <div style="font-family: 'Khmer OS Siemreap', 'Battambang', sans-serif; font-size: 16px; color: #555; font-weight: bold; margin-bottom: 40px;">សូមបេក្ខជនស្កេន QR កូដខាងក្រោម ដើម្បីចូលទៅកាន់ប្រព័ន្ធ</div>
-            
-            <div style="display: inline-block; padding: 5px; border: 1px solid #0b2e59; border-radius: 8px; margin-bottom: 30px;">
-                <div style="border: 3px solid #0b2e59; padding: 20px; border-radius: 6px;">
-                    <img src="${qrDataUrl}" style="width: 250px; height: 250px; display: block;">
-                </div>
-            </div>
-            <br>
-            <div style="font-family: Arial, sans-serif; font-size: 18px; color: #0b2e59; font-weight: bold; background: #f0f4f8; padding: 12px 30px; border-radius: 30px; border: 1px dashed #c2d1e0; display: inline-block;">
-                ${targetUrl}
-            </div>
-            
-            <div style="border-top: 2px solid #0b2e59; margin: 60px 50px 20px 50px;"></div>
-            
-            <div style="font-family: 'Khmer OS Siemreap', 'Battambang', sans-serif; font-size: 13px; line-height: 1.8; color: #555;">
-                សម្រាប់ព័ត៌មានបន្ថែម សូមទំនាក់ទំនងមកគណៈកម្មាធិការបណ្តុះបណ្តាល និងបញ្ជូនពលករទៅបរទេស<br>
-                តាមរយៈទូរស័ព្ទ <span style="color: #d32f2f; font-weight: bold;">០១២ ៤៦៦ ២២២ / ០១៦ ៤៦៦ ២២២</span> នៅរៀងរាល់ម៉ោងធ្វើការ។
-            </div>
-        `;
+            <div style="font-family: 'Moul', serif; font-size: 30px; color: #0b2e59; margin-bottom: 25px;">ក្រសួងការងារ និងបណ្តុះបណ្តាលវិជ្ជាជីវៈ</div>
+            <div style="font-family: 'Battambang', sans-serif; font-size: 20px; color: #0b2e59; margin-bottom: 40px;">ស្កេនដើម្បីចូលគណនី និងបំពេញព័ត៌មាន</div>
+            <div style="border: 3px solid #0b2e59; padding: 20px; display: inline-block;"><img src="${qrDataUrl}" style="width: 250px; height: 250px;"></div>
+            <h3 style="color: #0b2e59; margin-top: 30px; font-family: Arial;">${targetUrl}</h3>`;
 
-        let opt = {
-            margin: 0,
-            filename: 'QR_Code_Application_Login.pdf',
+        html2pdf().set({
+            margin: 0, filename: 'QR_Code_Application_Login.pdf',
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        html2pdf().set(opt).from(element).save().then(() => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }).catch(err => {
-            console.error(err);
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        });
+            html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        }).from(element).save().then(() => { btn.innerHTML = originalText; btn.disabled = false; });
     }
 
     function toggleExportDateRange() {
         let type = document.getElementById('export_type').value;
         let dateDiv = document.getElementById('exportDateRangeDiv');
-        if(type === 'custom') dateDiv.classList.remove('d-none');
-        else dateDiv.classList.add('d-none');
+        if(type === 'custom') dateDiv.classList.remove('d-none'); else dateDiv.classList.add('d-none');
     }
 
     function toggleAllCheckboxes(source) {
         let checkboxes = document.querySelectorAll('.row-checkbox');
-        checkboxes.forEach(cb => {
-            if (!cb.disabled) {
-                cb.checked = source.checked;
-            }
-        });
+        checkboxes.forEach(cb => { if (!cb.disabled) cb.checked = source.checked; });
         syncMasterCheckbox(); 
     }
     
@@ -1118,11 +965,10 @@
         if (btnApprove && btnReject && btnUndo) {
             btnApprove.disabled = (checkedCount === 0);
             btnReject.disabled = (checkedCount === 0);
-            btnUndo.disabled = (checkedCount === 0); // 🌟 បើកប៊ូតុង Undo ពេលមានអ្នកត្រូវបានជ្រើសរើស
+            btnUndo.disabled = (checkedCount === 0);
         }
     }
 
-    // 🌟 កែសម្រួល៖ បន្ថែមមុខងារ "Pending" សម្រាប់ Undo
     async function quickUpdateStatus(appNo, newStatus) {
         if(newStatus === 'Rejected') {
             document.getElementById('rejectTargetAppNo').value = appNo; 
@@ -1148,9 +994,8 @@
 
     async function bulkUpdate(newStatus) {
         let selected = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
-        if(selected.length === 0) {
-            alert("សូមជ្រើសរើសបេក្ខជនយ៉ាងហោចណាស់ម្នាក់!"); return;
-        }
+        if(selected.length === 0) { alert("សូមជ្រើសរើសបេក្ខជនយ៉ាងហោចណាស់ម្នាក់!"); return; }
+        
         if(newStatus === 'Rejected') {
             document.getElementById('rejectTargetAppNo').value = 'BULK'; 
             document.getElementById('adminRejectRemark').value = '';
@@ -1188,14 +1033,8 @@
         let reasonType = document.getElementById('rejectReasonType').value;
         let remarkDetails = document.getElementById('adminRejectRemark').value.trim();
         
-        if(!reasonType) {
-            alert("សូមជ្រើសរើសប្រភេទមូលហេតុនៃការបដិសេធ!");
-            document.getElementById('rejectReasonType').focus(); return;
-        }
-        if(reasonType === 'ផ្សេងៗ' && !remarkDetails) {
-            alert("សូមវាយបញ្ចូលការបញ្ជាក់បន្ថែម សម្រាប់មូលហេតុ 'ផ្សេងៗ'!");
-            document.getElementById('adminRejectRemark').focus(); return;
-        }
+        if(!reasonType) { alert("សូមជ្រើសរើសប្រភេទមូលហេតុនៃការបដិសេធ!"); return; }
+        if(reasonType === 'ផ្សេងៗ' && !remarkDetails) { alert("សូមវាយបញ្ចូលការបញ្ជាក់បន្ថែម!"); return; }
 
         let finalRemark = reasonType;
         if (remarkDetails) finalRemark = reasonType === 'ផ្សេងៗ' ? remarkDetails : `${reasonType} ( ${remarkDetails} )`;
@@ -1207,16 +1046,80 @@
     }
 
     async function executeStatusUpdate(appNos, status, remarkText) {
+        showGlobalLoading(); 
+        
         try {
             let res = await fetch('/admin/bulk_update_status', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ application_nos: appNos, status: status, remark: remarkText })
             });
             let result = await res.json();
-            if(result.status === 'success') { location.reload(); } 
-            else { alert('មានបញ្ហា៖ ' + result.message); }
-        } catch(e) { alert('មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ប្រព័ន្ធ!'); }
+            
+            if(result.status === 'success') {
+                appNos.forEach(appNo => {
+                    let statusCell = document.getElementById(`status-cell-${appNo}`);
+                    let actionCell = document.getElementById(`action-cell-${appNo}`);
+                    
+                    if(statusCell && actionCell) {
+                        if(status === 'Approved') {
+                            statusCell.innerHTML = `<span class="badge bg-success text-white px-3 py-2 rounded-pill shadow-sm"><i class="fas fa-check-circle me-1"></i> អនុម័ត</span>`;
+                            actionCell.innerHTML = `
+                                <div class="d-flex justify-content-center gap-1">
+                                    <a href="/admin/view_application/${appNo}" class="btn-icon btn-icon-primary" title="មើលលម្អិត"><i class="fas fa-eye"></i></a>
+                                    <button class="btn-icon btn-icon-warning" onclick="quickUpdateStatus('${appNo}', 'Pending')" title="កំណត់ត្រឡប់ទៅរង់ចាំវិញ (Undo)"><i class="fas fa-undo"></i></button>
+                                </div>`;
+                        } else if(status === 'Rejected') {
+                            let safeRemark = remarkText ? remarkText.replace(/"/g, '&quot;') : '';
+                            statusCell.innerHTML = `
+                                <span class="badge bg-danger text-white px-3 py-2 rounded-pill shadow-sm" data-reason="${safeRemark}" onclick="showRejectReason(this)" style="cursor: pointer;" title="ចុចដើម្បីមើលមូលហេតុ">
+                                    <i class="fas fa-times-circle me-1"></i> បដិសេធ
+                                    <span class="ms-1 border-start border-white border-opacity-25 ps-2"><i class="fas fa-eye"></i></span>
+                                </span>`;
+                            actionCell.innerHTML = `
+                                <div class="d-flex justify-content-center gap-1">
+                                    <a href="/admin/view_application/${appNo}" class="btn-icon btn-icon-primary" title="មើលលម្អិត"><i class="fas fa-eye"></i></a>
+                                    <button class="btn-icon btn-icon-warning" onclick="quickUpdateStatus('${appNo}', 'Pending')" title="កំណត់ត្រឡប់ទៅរង់ចាំវិញ (Undo)"><i class="fas fa-undo"></i></button>
+                                </div>`;
+                        } else if(status === 'Pending') {
+                            statusCell.innerHTML = `<span class="badge bg-warning text-dark px-3 py-2 rounded-pill shadow-sm"><i class="fas fa-hourglass-half me-1"></i> រង់ចាំ</span>`;
+                            actionCell.innerHTML = `
+                                <div class="d-flex justify-content-center gap-1">
+                                    <a href="/admin/view_application/${appNo}" class="btn-icon btn-icon-primary" title="មើលលម្អិត"><i class="fas fa-eye"></i></a>
+                                    <button class="btn-icon btn-icon-success" onclick="quickUpdateStatus('${appNo}', 'Approved')" title="អនុម័ត"><i class="fas fa-check"></i></button>
+                                    <button class="btn-icon btn-icon-danger" onclick="quickUpdateStatus('${appNo}', 'Rejected')" title="បដិសេធ"><i class="fas fa-times"></i></button>
+                                </div>`;
+                        }
+                        
+                        let row = document.getElementById(`row-${appNo}`);
+                        if(row) {
+                            row.style.transition = "background-color 0.5s ease";
+                            row.style.backgroundColor = "#e0f2fe";
+                            setTimeout(() => { row.style.backgroundColor = "#ffffff"; }, 1000);
+                        }
+                    }
+                });
+                
+                let pendingDelta = 0, approvedDelta = 0;
+                if(status === 'Approved') { pendingDelta = -appNos.length; approvedDelta = appNos.length; }
+                else if(status === 'Rejected') { pendingDelta = -appNos.length; }
+                else if(status === 'Pending') { pendingDelta = appNos.length; }
+
+                let statP = document.getElementById('stat-pending');
+                let statA = document.getElementById('stat-approved');
+                if(statP) statP.innerText = Math.max(0, parseInt(statP.innerText) + pendingDelta);
+                if(statA && status === 'Approved') statA.innerText = parseInt(statA.innerText) + approvedDelta;
+
+                let master = document.getElementById('selectAllMaster');
+                if(master) { master.checked = false; toggleAllCheckboxes(master); }
+                
+                hideGlobalLoading();
+                
+                const toastHtml = `<div class="alert alert-success rounded-4 shadow-lg mb-4 fw-bold border-0 position-fixed top-0 end-0 m-4" style="z-index: 1060; animation: fadeIn 0.3s;"><i class="fas fa-check-circle me-2"></i>ប្រតិបត្តិការជោគជ័យ!</div>`;
+                document.body.insertAdjacentHTML('beforeend', toastHtml);
+                setTimeout(() => { let a = document.querySelector('.alert-success'); if(a) a.remove(); }, 2000);
+                
+            } else { hideGlobalLoading(); alert('មានបញ្ហា៖ ' + result.message); }
+        } catch(e) { hideGlobalLoading(); alert('មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ប្រព័ន្ធ!'); }
     }
 
     function saveSystemSettings() {
@@ -1230,16 +1133,13 @@
         checkboxes.forEach(chk => { if (chk.name) dataObj[chk.name] = chk.checked ? 1 : 0; });
 
         fetch('/admin/update_settings_ajax', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dataObj)
-        })
-        .then(res => res.json())
-        .then(data => {
+        }).then(res => res.json()).then(data => {
             if(data.status === 'success') {
                 document.querySelector('#settingsModal .btn-close').click();
-                const alertHtml = `<div class="alert alert-success rounded-4 shadow-sm mb-4 fw-bold border-0 position-fixed top-0 end-0 m-3" style="z-index: 1060;"><i class="fas fa-check-circle me-2"></i>រក្សាទុកការកំណត់បានជោគជ័យ!</div>`;
-                document.body.insertAdjacentHTML('beforeend', alertHtml);
+                const a = `<div class="alert alert-success rounded-4 shadow-sm mb-4 fw-bold border-0 position-fixed top-0 end-0 m-3" style="z-index: 1060;"><i class="fas fa-check-circle me-2"></i>រក្សាទុកជោគជ័យ!</div>`;
+                document.body.insertAdjacentHTML('beforeend', a);
                 setTimeout(() => { document.querySelector('.alert-success').remove(); }, 3000);
             } else { alert("⚠️ បរាជ័យ៖ " + data.message); }
         }).catch(err => { alert("មានបញ្ហាក្នុងការភ្ជាប់ទៅប្រព័ន្ធ!"); });
@@ -1247,7 +1147,6 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         let masterToggles = document.querySelectorAll('.setting-header .block-master-toggle input');
-        
         masterToggles.forEach(toggle => {
             let blockBody = toggle.closest('.setting-block').querySelector('.setting-body');
             let granularChecks = blockBody.querySelectorAll('.granular-checkbox');
@@ -1262,7 +1161,6 @@
                     blockBody.style.opacity = this.checked ? '1' : '0.4';
                     blockBody.style.pointerEvents = this.checked ? 'auto' : 'none';
                 }
-                
                 if (!this.checked) granularChecks.forEach(chk => { if(!chk.disabled) chk.checked = false; });
                 else granularChecks.forEach(chk => { if(!chk.disabled) chk.checked = true; });
             });

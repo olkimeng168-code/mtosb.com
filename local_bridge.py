@@ -171,25 +171,25 @@ def save_document():
         if image.mode != 'RGB':
             image = image.convert('RGB')
 
-        # 🌟 ក្បួនដោះស្រាយបង្រួមទំហំឆ្លាតវៃ (Smart Compression Loop) 🌟
-        quality = 95
-        min_quality = 30 # កុំឱ្យគុណភាពអន់ជាង ៣០% ព្រោះវានឹងព្រិលមើលលែងយល់
-        step = 5         # បន្ថយម្តង ៥%
+        # 🌟 ក្បួនដោះស្រាយបង្រួមទំហំឆ្លាតវៃ (Smart Compression Loop ថ្មី) 🌟
+        quality = 100    # ចាប់ផ្តើមពីគុណភាពច្បាស់បំផុត ១០០%
+        min_quality = 70 # ហាមបន្ថយគុណភាពអន់ជាង ៧០% ដាច់ខាត (ដើម្បីរក្សាភាពច្បាស់ Passport)
+        step = 3         # បន្ថយម្តងបន្តិចៗ (៣%) ដើម្បីរក្សាគុណភាពឱ្យបានខ្ពស់បំផុត
         
         while True:
             img_byte_arr = io.BytesIO()
-            # សាកល្បង Save រូបចូល Memory (RAM) សិន ដើម្បីឆែកទំហំ
+            # Save រូបចូល Memory សិន ដើម្បីឆែកទំហំ
             image.save(img_byte_arr, format='JPEG', quality=quality)
             size_kb = len(img_byte_arr.getvalue()) / 1024
             
-            # បើទំហំតូចជាងអ្វីដែលបានកំណត់ (ឧ. < 1000KB) ឬ ក៏ធ្លាក់ដល់កម្រិតព្រិលបំផុតហើយ
+            # បើទំហំតូចជាង ឬស្មើ 1000KB (1MB) ឬគុណភាពធ្លាក់ដល់កម្រិតកំណត់ហើយ
             if size_kb <= max_size_kb or quality <= min_quality:
-                # គឺយល់ព្រមសរសេរចូល Hard Disk តែម្តង
+                # សរសេរចូល Hard Disk ផ្លូវការ
                 with open(final_save_path, 'wb') as f:
                     f.write(img_byte_arr.getvalue())
                 break
             
-            quality -= step # បើនៅធំជាង 1MB ទៀត គឺបន្ថយគុណភាពបន្តបន្ទាប់
+            quality -= step # បន្តបន្ថយម្តង ៣% បើទំហំនៅតែធំជាង 1MB
             
         # ទាញយកទំហំ File ជាក់ស្តែងនៅលើកុំព្យូទ័រ
         final_size_kb = round(os.path.getsize(final_save_path) / 1024, 2)

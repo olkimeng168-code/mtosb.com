@@ -380,18 +380,29 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 
-    // បង្វិលរូបភាព ៩០ ដឺក្រេ
+    // ==========================================
+    // 🌟 មុខងារបង្វិលរូបភាពទៅជាផ្តេក (Force Landscape Rotate)
+    // ==========================================
     function rotateImage90Degrees(base64Image, callback) {
         const img = new Image();
         img.onload = function() {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
+            
+            // 🌟 បង្ខំប្តូរប្រវែង និងទទឹងគ្នា ដើម្បីឱ្យចេញជាទម្រង់ផ្តេក (Landscape) ជានិច្ច
+            // ទោះបីជារូបភាពដើមមកបញ្ឈរ (ដូច Passport) ក៏ដោយ
             canvas.width = img.height;
             canvas.height = img.width;
+            
+            // គណនាចំណុចកណ្តាលដើម្បីបង្វិល
             ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.rotate(-90 * Math.PI / 180); 
+            // 🌟 បង្វិល ៩០ ដឺក្រេស្របទ្រនិចនាឡិកា (ឱ្យផ្នែកខាងលើ Passport ទៅខាងស្តាំ)
+            // បើចង់ឱ្យទៅខាងឆ្វេង ប្រើ -90 ជំនួស
+            ctx.rotate(90 * Math.PI / 180); 
             ctx.drawImage(img, -img.width / 2, -img.height / 2);
-            callback(canvas.toDataURL('image/jpeg', 0.8));
+            
+            // បោះ Base64 ត្រឡប់ទៅវិញ ជាមួយគុណភាពខ្ពស់ 0.95
+            callback(canvas.toDataURL('image/jpeg', 0.95));
         };
         img.src = base64Image;
     }
@@ -419,7 +430,9 @@ document.addEventListener("DOMContentLoaded", function() {
         btnStartScan.innerHTML = '<i class="fas fa-redo me-2 fs-4"></i> ស្កេនម្តងទៀត (Retake)';
     };
 
-    // រក្សាទុក និងបញ្ចប់
+    // ==========================================
+    // 🌟 ពេលមន្ត្រីចុច "រក្សាទុក និងបញ្ចប់"
+    // ==========================================
     window.saveAndComplete = function() {
         btnConfirmSave.disabled = true;
         btnConfirmSave.innerHTML = '<i class="fas fa-spinner fa-spin me-2 fs-5"></i> កំពុងរក្សាទុក...';
@@ -431,6 +444,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 application_no: currentAppNo, 
                 save_dir: currentSaveDir,
                 image_base64: finalBase64Image, 
+                
+                // 🌟 កែប្រែត្រង់ចំណុចនេះ៖ កំណត់ទំហំអតិបរមាដល់ 1000 KB (1 MB)
                 max_size_kb: 1000 
             })
         })
