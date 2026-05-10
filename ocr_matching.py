@@ -6,7 +6,7 @@ import platform
 import re
 from flask import Blueprint, render_template, request, jsonify
 from werkzeug.utils import secure_filename
-from google.cloud import vision
+#from google.cloud import vision
 
 ocr_sync_bp = Blueprint('ocr_sync', __name__)
 
@@ -14,7 +14,10 @@ ocr_sync_bp = Blueprint('ocr_sync', __name__)
 if platform.system() == 'Windows':
     pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 else:
+    # សម្រាប់ Mac ជាទូទៅវានៅទីតាំងនេះ (បើដំឡើងតាម Brew)
     pytesseract.pytesseract.tesseract_cmd = r'/usr/local/bin/tesseract'
+    # ឬសម្រាប់ Mac ឈីប M1/M2/M3 គឺ៖
+    # pytesseract.pytesseract.tesseract_cmd = r'/opt/homebrew/bin/tesseract'
 
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)

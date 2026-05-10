@@ -25,24 +25,15 @@ from PIL import Image
 # 🌟 Smart Cross-Platform Face Recognition
 # ==========================================
 import sys
+from unittest.mock import MagicMock
 
-try:
-    # ព្យាយាម Import ធម្មតា (សម្រាប់ Mac ឬ ម៉ាស៊ីនដែលមាន C++ រួច)
-    import face_recognition
-    print("✅ ប្រព័ន្ធស្កេនមុខ (Face Recognition): ដំណើរការពេញលេញ ១០០%")
-except ModuleNotFoundError:
-    # បើមិនមាន Library នេះទេ (នៅលើ Windows) វានឹងរត់ចូលទីនេះ
-    print("⚠️ [ចំណាំ] មុខងារ Face Recognition ត្រូវបានបិទបណ្តោះអាសន្ននៅលើ Windows នេះ។")
-    
-    # បង្កើតថ្នាក់ក្លែងបន្លំ (Dummy Class) ដើម្បីកុំឱ្យកូដខាងក្រោម Error ពេលហៅប្រើ
-    class DummyFaceRecognition:
-        def load_image_file(self, *args, **kwargs): return []
-        def face_encodings(self, *args, **kwargs): return []
-        def compare_faces(self, *args, **kwargs): return [False]
-        def face_locations(self, *args, **kwargs): return []
-        
-    # តាំងឈ្មោះថ្នាក់ក្លែងបន្លំនោះ ជា face_recognition តែម្តង
-    face_recognition = DummyFaceRecognition()
+# បង្កើត Module ក្លែងក្លាយក្នុង System Memory តែម្តង
+mock_face = MagicMock()
+sys.modules["face_recognition"] = mock_face
+sys.modules["face_recognition_models"] = mock_face
+face_recognition = mock_face
+
+print("🚫 បិទ Face Recognition ជាបណ្តោះអាសន្ន ដើម្បី Debug រក Error ផ្សេង...")
 
 # 💡 ថែមជួរនេះមកវិញ ដើម្បីឱ្យកូដស្គាល់ mysql.connector.Error
 import mysql.connector
