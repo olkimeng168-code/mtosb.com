@@ -8,32 +8,38 @@ import subprocess
 import threading
 import io
 import time
-from PIL import Image  # 🌟 សម្អាតដោយដក ImageDraw ចោល
+from PIL import Image
+
+# 🌟 វះកាត់ជាន់ទី ១៖ ទាញបណ្ណាល័យ OS-Specific និង GUI មកប្រកាសជា Global ទាំងអស់
+# ដើម្បីបង្ខំឱ្យ PyInstaller វេចខ្ចប់វាចូល .exe ជាដាច់ខាត (ការពារការគាំងបិទស្ងាត់ៗ)
+if sys.platform == 'win32':
+    import pythoncom
+    import win32com.client
+    import tkinter as tk
+    from tkinter import filedialog
 
 app = Flask(__name__)
-CORS(app) 
+# 🌟 អនុញ្ញាត CORS គ្រប់ប្រភពទាំងអស់ដើម្បីកុំឱ្យ Browser ប្លុក
+CORS(app, resources={r"/*": {"origins": "*"}}) 
 
 OS_TYPE = sys.platform
 
-# 🌟 ដំណាក់កាលទី ១៖ ទាញ Import មកក្រៅ ដើម្បីកុំឱ្យ PyInstaller បាត់បង់ពេល Compile
-if OS_TYPE == 'win32':
-    import pythoncom
-    import win32com.client
-
 # ==========================================
-# 📂 មុខងារលោតផ្ទាំងរើស Folder
+# 📂 មុខងារលោតផ្ទាំងរើស Folder (Windows 11 Native)
 # ==========================================
 selected_folder_path = ""
 
 def open_folder_dialog_windows():
     global selected_folder_path
-    import tkinter as tk
-    from tkinter import filedialog
-    root = tk.Tk()
-    root.withdraw()
-    root.attributes('-topmost', True)
-    selected_folder_path = filedialog.askdirectory(title="ជ្រើសរើសទីតាំងរក្សាទុកឯកសារស្កេន")
-    root.destroy()
+    try:
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        selected_folder_path = filedialog.askdirectory(title="ជ្រើសរើសទីតាំងរក្សាទុកឯកសារស្កេន")
+        root.destroy()
+    except Exception as e:
+        print(f"Error opening folder dialog: {e}")
+        selected_folder_path = ""
 
 @app.route('/choose_folder', methods=['GET'])
 def choose_folder():
@@ -60,11 +66,14 @@ def choose_folder():
 
 
 # ==========================================
-# 🖨️ ១. មុខងារស្កេនទាញយករូប (ម៉ាស៊ីនស្កេនពិតប្រាកដ ១០០%)
+# 🖨️ ១. មុខងារស្កេនទាញយករូប (Pure Hardware Scan)
 # ==========================================
-@app.route('/scan', methods=['POST'])
+@app.route('/scan', methods=['POST', 'OPTIONS'])
 def scan_document():
-    data = request.json
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'}), 200
+
+    data = request.json or {}
     app_no = data.get('application_no', 'Unknown')
     temp_dir = tempfile.gettempdir()
     temp_path = os.path.join(temp_dir, f"temp_eps_scan_{int(time.time())}.jpg")
@@ -73,7 +82,6 @@ def scan_document():
     error_msg = ""
 
     try:
-        # ១. បញ្ជាម៉ាស៊ីនស្កេនពិតប្រាកដ
         if OS_TYPE == 'win32':
             try:
                 pythoncom.CoInitialize()      
@@ -105,7 +113,7 @@ def scan_document():
             except Exception as e:
                 error_msg = str(e)
 
-        # 🌟 ដំណាក់កាលទី ២៖ លុប Mock Mode ចោលទាំងស្រុង (បើស្កេនពិតបរាជ័យ បោះ Error ភ្លាមៗ)
+        # 🌟 វះកាត់ជាន់ទី ២៖ លុប Mock Mode ចោលទាំងស្រុង (បើស្កេនពិតបរាជ័យ បោះ Error ភ្លាមៗ)
         if not scan_success:
             print(f"❌ ស្កេនបរាជ័យ៖ {error_msg}")
             return jsonify({
@@ -113,12 +121,10 @@ def scan_document():
                 'message': f"⚠️ ស្កេនបរាជ័យ៖ {error_msg or 'សូមពិនិត្យមើលការតភ្ជាប់ម៉ាស៊ីនស្កេនឡើងវិញ!'}"
             })
 
-        # ៣. អានរូបភាពពី Temp File រួចបម្លែងជា Base64 បញ្ជូនទៅកាន់ Web
         with open(temp_path, "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
             base64_image = f"data:image/jpeg;base64,{encoded_string}"
 
-        # លុបរូបបណ្តោះអាសន្នចោលវិញ
         if os.path.exists(temp_path):
             os.remove(temp_path)
 
@@ -131,9 +137,12 @@ def scan_document():
 # ==========================================
 # 💾 ២. មុខងាររក្សាទុករូបភាពជាផ្លូវការ (Save + Dynamic Compression)
 # ==========================================
-@app.route('/save', methods=['POST'])
+@app.route('/save', methods=['POST', 'OPTIONS'])
 def save_document():
-    data = request.json
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'success'}), 200
+
+    data = request.json or {}
     app_no = data.get('application_no')
     save_dir = data.get('save_dir')
     base64_data = data.get('image_base64')
@@ -191,7 +200,7 @@ def save_document():
 
 if __name__ == '__main__':
     print("="*60)
-    print(f"🚀 កម្មវិធី Local Bridge (Pure Hardware) កំពុងដំណើរការលើប្រព័ន្ធ៖ {OS_TYPE.upper()}")
+    print(f"🚀 កម្មវិធី Local Bridge (Production) កំពុងដំណើរការលើប្រព័ន្ធ៖ {OS_TYPE.upper()}")
     print("🌐 Port ទំនាក់ទំនង៖ http://127.0.0.1:5005")
     print("="*60)
     

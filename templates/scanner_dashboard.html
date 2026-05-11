@@ -4,62 +4,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Khmer+OS+Siemreap&display=swap" rel="stylesheet">
 
 <style>
-    /* ==========================================
-       🌟 ១. កូដ CSS ស្តង់ដារប្រចាំគម្រោងរបស់លោកអ្នក 
-       ========================================== */
     body { background-color: #f4f7f6; font-family: 'Khmer OS Siemreap', sans-serif !important; }
-    
     .card-custom { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); background: #fff; overflow: hidden; }
     .form-select, .form-control { border-radius: 8px; border: 1px solid #ced4da; padding: 0.6rem 1rem; font-size: 0.95rem; font-family: 'Khmer OS Siemreap', sans-serif; }
     .form-select:focus, .form-control:focus { box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15); border-color: #86b7fe; }
-    
-    .pro-modal-content {
-        border-radius: 12px;
-        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
-        border: 1px solid #e2e8f0;
-        overflow: hidden;
-        background-color: #ffffff;
-    }
-    
-    .btn-close-pro {
-        background-color: #ffffff;
-        color: #475569;
-        border-radius: 6px;
-        padding: 0.5rem 1.5rem;
-        font-weight: 600;
-        border: 1px solid #cbd5e1;
-        transition: all 0.2s ease;
-        font-family: 'Khmer OS Siemreap', sans-serif;
-    }
-    
-    .btn-close-pro:hover {
-        background-color: #f1f5f9;
-        color: #0f172a;
-        border-color: #94a3b8;
-    }
-
-    /* ==========================================
-       🌟 ២. កូដបន្ថែមសម្រាប់ Scanner Lightbox
-       ========================================== */
-    /* ធ្វើឱ្យផ្ទៃ Modal ងងឹតព្រិលៗ (ដូចលោកអ្នកចង់បាន) */
-    .modal-backdrop.show {
-        opacity: 0.65 !important;
-        backdrop-filter: blur(5px) !important;
-        -webkit-backdrop-filter: blur(5px) !important;
-        background-color: #1e293b !important; 
-    }
-    
-    .toolbar-pill {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    }
-    
-    /* កំណត់ Font ឱ្យប្រើ Khmer OS Siemreap ទាំងអស់ */
-    h1, h2, h3, h4, h5, h6, p, span, button, input, div {
-        font-family: 'Khmer OS Siemreap', sans-serif;
-    }
+    .pro-modal-content { border-radius: 12px; box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2); border: 1px solid #e2e8f0; overflow: hidden; background-color: #ffffff; }
+    .modal-backdrop.show { opacity: 0.65 !important; backdrop-filter: blur(5px) !important; background-color: #1e293b !important; }
+    .toolbar-pill { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    h1, h2, h3, h4, h5, h6, p, span, button, input, div { font-family: 'Khmer OS Siemreap', sans-serif; }
 </style>
 
 <div class="container-fluid mt-4 position-relative" id="main_content_area" style="filter: blur(4px); pointer-events: none; transition: filter 0.3s ease;">
@@ -71,9 +23,7 @@
     </div>
 
     <div class="row g-4 align-items-stretch">
-        
         <div class="col-lg-7 d-flex flex-column">
-            
             <div class="bg-white p-3 d-flex justify-content-between align-items-center premium-shadow mb-3 border" style="border-radius: 12px; border-left: 6px solid #0d6efd !important;">
                 <div class="d-flex align-items-center">
                     <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3 text-center" style="width: 45px; height: 45px; line-height: 28px;">
@@ -110,19 +60,24 @@
                                 <h3 class="font-moul text-dark mb-1" id="disp_khmer_name">--</h3>
                                 <h6 class="text-secondary font-inter text-uppercase letter-spacing-1" id="disp_english_name">--</h6>
                             </div>
-                            
                             <div class="d-inline-flex bg-white px-4 py-2 rounded-pill shadow-sm border mb-4">
                                 <span class="text-muted me-3">EPS-ID: <strong class="text-primary fs-5 ms-1 font-inter" id="disp_app_no">--</strong></span>
                                 <span class="text-muted border-start ps-3">ភេទ: <strong class="text-dark ms-1 font-inter" id="disp_gender">--</strong></span>
                             </div>
-                            
                             <hr class="my-2 opacity-10">
-
                             <div class="p-4 mt-3 bg-white border border-primary border-opacity-25 border-dashed" style="border-radius: 12px;">
-                                <h5 class="fw-bold text-primary mb-3"><i class="fas fa-print me-2"></i> ដាក់ឯកសារចូលម៉ាស៊ីន រួចចុចប៊ូតុងខាងក្រោម</h5>
-                                <button type="button" id="btn_start_physical_scan" class="btn btn-primary btn-lg w-100 fw-bold shadow rounded-pill py-3 hover-shadow" style="font-size: 1.15rem;">
+                                <h5 class="fw-bold text-primary mb-3"><i class="fas fa-print me-2"></i> ជ្រើសរើសវិធីសាស្ត្របញ្ចូលឯកសារ</h5>
+                                <button type="button" id="btn_start_physical_scan" class="btn btn-primary btn-lg w-100 fw-bold shadow rounded-pill py-3 hover-shadow mb-3" style="font-size: 1.15rem;">
                                     <i class="fas fa-scanner me-2 fs-4"></i> ចាប់ផ្តើមស្កេន (Start Scan)
                                 </button>
+                                <div class="d-flex align-items-center my-3">
+                                    <hr class="flex-grow-1 opacity-10"><span class="mx-3 text-muted fw-bold">ឬ (OR)</span><hr class="flex-grow-1 opacity-10">
+                                </div>
+                                <input type="file" id="manual_file_input" class="d-none" accept="image/*">
+                                <button type="button" onclick="document.getElementById('manual_file_input').click()" class="btn btn-outline-secondary btn-lg w-100 fw-bold rounded-pill py-3 shadow-sm" style="font-size: 1.05rem;">
+                                    <i class="fas fa-file-import me-2"></i> ជ្រើសរើសហ្វាលរូបភាព (Upload File)
+                                </button>
+                                <small class="text-muted mt-2 d-block">ប្រើក្នុងករណីម៉ាស៊ីនស្កេនមានបញ្ហា</small>
                             </div>
                         </div>
                     </div>
@@ -131,13 +86,11 @@
         </div>
 
         <div class="col-lg-5 d-flex flex-column">
-            
             <div class="card premium-shadow border-0 flex-grow-1" style="border-radius: 12px; overflow: hidden;">
                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom px-4">
                     <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-list-alt text-warning me-2"></i> បញ្ជីរង់ចាំស្កេន</h5>
                     <span class="badge bg-warning text-dark rounded-pill fs-6 px-3 shadow-sm font-inter" id="pending_count_badge">0</span>
                 </div>
-                
                 <div class="card-body p-0 d-flex flex-column" style="background-color: #fcfcfc;">
                     <div class="flex-grow-1" style="max-height: 650px; overflow-y: auto;">
                         <table class="table table-hover align-middle mb-0 border-0">
@@ -153,7 +106,6 @@
                     </div>
                 </div>
             </div>
-            
         </div>
     </div>
 </div>
@@ -165,28 +117,18 @@
                 <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close" onclick="checkDirBeforeClose()"></button>
             </div>
             <div class="modal-body text-center p-5 pt-2 pb-4">
-                <div class="mb-4">
-                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                        <i class="fas fa-folder-plus text-primary" style="font-size: 2.2rem;"></i>
-                    </div>
-                </div>
+                <div class="mb-4"><div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;"><i class="fas fa-folder-plus text-primary" style="font-size: 2.2rem;"></i></div></div>
                 <h4 class="fw-bold text-dark mb-2">ទាមទារការកំណត់ទីតាំង</h4>
-                <p class="text-muted mb-4" style="font-size: 0.95rem;">
-                    សូមជ្រើសរើស Folder ណាមួយនៅក្នុងកុំព្យូទ័ររបស់អ្នក សម្រាប់ធ្វើជាឃ្លាំងផ្ទុកឯកសារដែលស្កេនរួច។
-                </p>
+                <p class="text-muted mb-4" style="font-size: 0.95rem;">សូមជ្រើសរើស Folder ណាមួយនៅក្នុងកុំព្យូទ័ររបស់អ្នក សម្រាប់ធ្វើជាឃ្លាំងផ្ទុកឯកសារ។</p>
                 <div class="input-group shadow-sm mb-4" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
                     <span class="input-group-text bg-light border-0 px-3"><i class="fas fa-hdd text-secondary"></i></span>
                     <input type="text" class="form-control border-0 bg-light text-primary fw-bold" id="setup_modal_disp_dir" placeholder="មិនទាន់កំណត់..." readonly style="font-size: 0.9rem;">
                 </div>
-                <button class="btn btn-primary btn-lg w-100 fw-bold rounded-pill shadow-sm hover-shadow" id="btn_modal_choose_dir">
-                    <i class="fas fa-search-folder me-2"></i> ជ្រើសរើសទីតាំង (Browse...)
-                </button>
+                <button class="btn btn-primary btn-lg w-100 fw-bold rounded-pill shadow-sm hover-shadow" id="btn_modal_choose_dir">ជ្រើសរើសទីតាំង (Browse...)</button>
             </div>
             <div class="modal-footer bg-light border-top-0 p-3 px-4 d-flex justify-content-between align-items-center" style="border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;">
                 <span class="text-muted small"><i class="fas fa-shield-alt text-success me-1"></i> សុវត្ថិភាពទិន្នន័យ</span>
-                <button type="button" class="btn btn-success px-4 rounded-pill fw-bold shadow-sm" id="btn_confirm_setup" disabled>
-                    យល់ព្រម <i class="fas fa-arrow-right ms-1"></i>
-                </button>
+                <button type="button" class="btn btn-success px-4 rounded-pill fw-bold shadow-sm" id="btn_confirm_setup" disabled>យល់ព្រម <i class="fas fa-arrow-right ms-1"></i></button>
             </div>
         </div>
     </div>
@@ -195,58 +137,42 @@
 <div class="modal fade" id="scanPreviewModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-fullscreen">
         <div class="modal-content bg-transparent border-0 shadow-none">
-            
-            <div class="position-absolute w-100 h-100 glass-backdrop"></div>
-
+            <div class="position-absolute w-100 h-100 bg-dark opacity-75 glass-backdrop"></div>
             <div class="position-fixed top-0 start-50 translate-middle-x mt-4" style="z-index: 1060;">
                 <div class="toolbar-pill px-4 py-2 rounded-pill d-flex align-items-center gap-3 border shadow-lg">
-                    
                     <div class="d-flex align-items-center text-dark fw-bold border-end pe-3">
-                        <i class="fas fa-file-image me-2 text-primary fs-5"></i>
-                        <span style="font-size: 1.05rem;">ពិនិត្យឯកសារ</span>
+                        <i class="fas fa-file-image me-2 text-primary fs-5"></i><span>ពិនិត្យឯកសារ</span>
                     </div>
-                    
                     <div class="d-flex align-items-center border-end pe-3">
                         <span class="text-muted me-2" style="font-size: 0.9rem;">EPS-ID:</span>
                         <span class="text-primary fw-bold font-inter fs-5" id="preview_disp_app_no">---</span>
                     </div>
-
                     <div class="d-flex align-items-center ps-1">
                         <i class="fas fa-user-circle me-2 text-secondary fs-5"></i>
-                        <span class="text-dark fw-bold font-inter text-uppercase" id="preview_disp_name" style="font-size: 1.05rem; letter-spacing: 0.5px;">---</span>
+                        <span class="text-dark fw-bold font-inter text-uppercase" id="preview_disp_name" style="font-size: 1.05rem;">---</span>
                     </div>
-
                 </div>
             </div>
-
             <div class="position-fixed top-0 end-0 p-4" style="z-index: 1060;">
-                <button type="button" class="btn btn-light rounded-circle shadow-lg hover-shadow d-flex align-items-center justify-content-center border" style="width: 45px; height: 45px; transition: transform 0.2s;" onclick="retakeScan()" title="បិទ (Close)">
-                    <i class="fas fa-times text-danger fs-5"></i>
-                </button>
+                <button type="button" class="btn btn-light rounded-circle shadow-lg border" style="width: 45px; height: 45px;" onclick="retakeScan()"><i class="fas fa-times text-danger fs-5"></i></button>
             </div>
-
             <div class="modal-body d-flex align-items-center justify-content-center p-0" style="z-index: 1040; height: 100vh; overflow: hidden;">
-                <img id="scannedImagePreview" src="" alt="Scanned Document" class="pro-modal-content p-2" style="max-height: 85vh; max-width: 90vw; transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); transform-origin: center; box-shadow: 0 15px 35px rgba(0,0,0,0.3);">
+                <img id="scannedImagePreview" src="" alt="Scanned Document" class="pro-modal-content p-2" style="max-height: 85vh; max-width: 90vw; transition: transform 0.25s;">
             </div>
-
             <div class="position-fixed bottom-0 w-100 pb-4 d-flex justify-content-center" style="z-index: 1060;">
                 <div class="toolbar-pill p-2 rounded-pill d-flex align-items-center gap-4 border shadow-lg">
-                    
-                    <div class="d-flex align-items-center bg-light rounded-pill px-2 py-1 border" style="background-color: #f8fafc;">
-                        <button class="btn btn-sm btn-link text-dark text-decoration-none shadow-none" onclick="zoomImg(-0.2)"><i class="fas fa-minus"></i></button>
-                        <span class="mx-2 fw-bold text-muted font-inter" style="font-size: 0.95rem; min-width: 45px; text-align: center;" id="zoom_level_text">100%</span>
-                        <button class="btn btn-sm btn-link text-dark text-decoration-none shadow-none" onclick="zoomImg(0.2)"><i class="fas fa-plus"></i></button>
+                    <div class="d-flex align-items-center bg-light rounded-pill px-2 py-1 border">
+                        <button class="btn btn-sm btn-link text-dark text-decoration-none" onclick="zoomImg(-0.2)"><i class="fas fa-minus"></i></button>
+                        <span class="mx-2 fw-bold text-muted font-inter" style="min-width: 45px; text-align: center;" id="zoom_level_text">100%</span>
+                        <button class="btn btn-sm btn-link text-dark text-decoration-none" onclick="zoomImg(0.2)"><i class="fas fa-plus"></i></button>
                         <div class="vr mx-2"></div>
-                        <button class="btn btn-sm btn-link text-primary text-decoration-none shadow-none" onclick="resetZoom()" title="ទំហំដើម"><i class="fas fa-sync-alt"></i></button>
+                        <button class="btn btn-sm btn-link text-primary text-decoration-none" onclick="resetZoom()"><i class="fas fa-sync-alt"></i></button>
                     </div>
-
-                    <button type="button" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm" id="btnConfirmSave" onclick="saveAndComplete()" style="background-color: #0d6efd; border: none;">
+                    <button type="button" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm" id="btnConfirmSave" onclick="saveAndComplete()">
                         <i class="fas fa-check-circle me-2"></i> រក្សាទុក & បញ្ចប់
                     </button>
-                    
                 </div>
             </div>
-
         </div>
     </div>
 </div>
@@ -259,38 +185,36 @@ document.addEventListener("DOMContentLoaded", function() {
     const alertBox = document.getElementById('alert_box');
     const candidateCard = document.getElementById('candidate_info_card');
     const btnStartScan = document.getElementById('btn_start_physical_scan');
+    const fileInput = document.getElementById('manual_file_input');
     
     const scanPreviewModal = new bootstrap.Modal(document.getElementById('scanPreviewModal'));
     const imgPreview = document.getElementById('scannedImagePreview');
     const btnConfirmSave = document.getElementById('btnConfirmSave');
     const zoomText = document.getElementById('zoom_level_text');
+    
     let currentZoom = 1;
     let finalBase64Image = ""; 
-    
-    const LOCAL_BRIDGE_SCAN_ONLY = 'http://127.0.0.1:5005/scan'; 
-    const LOCAL_BRIDGE_SAVE_IMAGE = 'http://127.0.0.1:5005/save'; 
-    const LOCAL_BRIDGE_CHOOSE_DIR = 'http://127.0.0.1:5005/choose_folder';
-    
     let currentAppNo = '';
     let currentSaveDir = ''; 
 
-    // Setup Dir Modal
+    const LOCAL_BRIDGE_SCAN_ONLY = 'http://127.0.0.1:5005/scan'; 
+    const LOCAL_BRIDGE_SAVE_IMAGE = 'http://127.0.0.1:5005/save'; 
+    const LOCAL_BRIDGE_CHOOSE_DIR = 'http://127.0.0.1:5005/choose_folder';
+
     const setupModal = new bootstrap.Modal(document.getElementById('setupDirModal'));
+    if(!currentSaveDir) setupModal.show();
     
-    if(!currentSaveDir) {
-        setupModal.show();
-    }
-    
+    // Choose Directory
     document.getElementById('btn_modal_choose_dir').addEventListener('click', function() {
-        this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> កំពុងបើក...'; this.disabled = true;
+        this.disabled = true;
         fetch(LOCAL_BRIDGE_CHOOSE_DIR).then(res => res.json()).then(data => {
-            this.innerHTML = '<i class="fas fa-search-folder me-2"></i> ជ្រើសរើសទីតាំង (Browse...)'; this.disabled = false;
+            this.disabled = false;
             if(data.status === 'success' && data.path) {
                 currentSaveDir = data.path; 
                 document.getElementById('setup_modal_disp_dir').value = currentSaveDir;
                 document.getElementById('btn_confirm_setup').disabled = false;
             }
-        }).catch(err => { this.disabled = false; alert("មិនអាចភ្ជាប់ទៅ Local Bridge ទេ!"); });
+        }).catch(err => { this.disabled = false; alert("❌ មិនអាចភ្ជាប់ទៅ Local Bridge បានទេ!"); });
     });
     
     document.getElementById('btn_confirm_setup').addEventListener('click', function() {
@@ -299,58 +223,39 @@ document.addEventListener("DOMContentLoaded", function() {
         setupModal.hide(); inputBarcode.focus();
     });
 
-    window.checkDirBeforeClose = function() {
-        if(!currentSaveDir) {
-            mainContent.style.filter = 'none'; mainContent.style.pointerEvents = 'auto';
-            document.getElementById('disp_save_dir').innerText = "មិនទាន់កំណត់!";
-            document.getElementById('disp_save_dir').classList.replace('text-dark', 'text-danger');
-        }
-    }
-
-    // ចុចស្វែងរកបេក្ខជន
+    // Search Candidate
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         const appNo = inputBarcode.value.trim();
         if(!appNo) return;
-        
-        if(!currentSaveDir) {
-            setupModal.show(); 
-            return;
-        }
+        if(!currentSaveDir) { setupModal.show(); return; }
 
         alertBox.classList.add('d-none'); candidateCard.classList.add('d-none');
-        btnStartScan.innerHTML = '<i class="fas fa-scanner me-2 fs-4"></i> ចាប់ផ្តើមស្កេន (Start Scan)';
-        btnStartScan.disabled = false;
-
         fetch("{{ url_for('queue.verify_candidate_scan') }}", {
             method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({application_no: appNo})
         }).then(res => res.json()).then(data => {
             if(data.status === 'success') {
                 currentAppNo = data.candidate.application_no;
                 document.getElementById('preview_disp_app_no').innerText = currentAppNo;
-                // ✅ កូដថ្មី (ប្តូរមកបង្ហាញឈ្មោះអង់គ្លេស)៖
                 document.getElementById('preview_disp_name').innerText = data.candidate.name_en;
-                
                 document.getElementById('disp_khmer_name').innerText = data.candidate.name_kh;
                 document.getElementById('disp_english_name').innerText = data.candidate.name_en;
                 document.getElementById('disp_app_no').innerText = data.candidate.application_no;
                 document.getElementById('disp_gender').innerText = data.candidate.gender;
                 candidateCard.classList.remove('d-none');
-                btnStartScan.focus(); 
             } else {
-                alertBox.className = 'alert alert-danger d-block fw-bold fs-5 shadow-sm rounded-4 border-0 mb-4';
+                alertBox.className = 'alert alert-danger d-block fw-bold shadow-sm rounded-4 border-0 mb-4';
                 alertBox.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i> ${data.message}`;
                 inputBarcode.value = '';
             }
         });
     });
 
-    // ដំណើរការស្កេន
+    // 1. Scan from Machine
     btnStartScan.addEventListener('click', function() {
         if(!currentAppNo || !currentSaveDir) return;
-        
         btnStartScan.disabled = true;
-        btnStartScan.innerHTML = '<i class="fas fa-cog fa-spin me-2 fs-4"></i> កំពុងដំណើរការម៉ាស៊ីន...';
+        btnStartScan.innerHTML = '<i class="fas fa-cog fa-spin me-2 fs-4"></i> កំពុងស្កេន...';
 
         fetch(LOCAL_BRIDGE_SCAN_ONLY, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -359,93 +264,50 @@ document.addEventListener("DOMContentLoaded", function() {
         .then(res => res.json())
         .then(data => {
             if(data.status === 'success') {
-                btnStartScan.innerHTML = '<i class="fas fa-check-circle me-2 fs-4"></i> ស្កេនជោគជ័យ';
-                
                 rotateImage90Degrees(data.image_base64, function(rotatedBase64) {
                     finalBase64Image = rotatedBase64; 
                     imgPreview.src = finalBase64Image;
                     resetZoom();
                     scanPreviewModal.show(); 
+                    btnStartScan.disabled = false;
+                    btnStartScan.innerHTML = '<i class="fas fa-scanner me-2 fs-4"></i> ចាប់ផ្តើមស្កេន (Start Scan)';
                 });
             } else {
                 btnStartScan.disabled = false;
-                btnStartScan.innerHTML = '<i class="fas fa-scanner me-2 fs-4"></i> ចាប់ផ្តើមស្កេនម្តងទៀត';
-                alert("បញ្ហាម៉ាស៊ីនស្កេន៖ " + data.message);
+                btnStartScan.innerHTML = '<i class="fas fa-scanner me-2 fs-4"></i> ចាប់ផ្តើមស្កេន (Start Scan)';
+                alert("❌ បញ្ហាម៉ាស៊ីនស្កេន៖ " + data.message);
             }
-        })
-        .catch(err => {
-            btnStartScan.disabled = false;
-            btnStartScan.innerHTML = '<i class="fas fa-scanner me-2 fs-4"></i> ចាប់ផ្តើមស្កេន (Start Scan)';
-            alert("❌ មិនអាចភ្ជាប់ទៅម៉ាស៊ីនស្កេនបានទេ!");
-        });
+        }).catch(err => { btnStartScan.disabled = false; alert("❌ ដាច់ការតភ្ជាប់!"); });
     });
 
-    // ==========================================
-    // 🌟 មុខងារបង្វិលរូបភាពទៅជាផ្តេក (Force Landscape Rotate)
-    // ==========================================
-    function rotateImage90Degrees(base64Image, callback) {
-        const img = new Image();
-        img.onload = function() {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            // 🌟 បង្ខំប្តូរប្រវែង និងទទឹងគ្នា ដើម្បីឱ្យចេញជាទម្រង់ផ្តេក (Landscape) ជានិច្ច
-            // ទោះបីជារូបភាពដើមមកបញ្ឈរ (ដូច Passport) ក៏ដោយ
-            canvas.width = img.height;
-            canvas.height = img.width;
-            
-            // គណនាចំណុចកណ្តាលដើម្បីបង្វិល
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            // 🌟 បង្វិល ៩០ ដឺក្រេស្របទ្រនិចនាឡិកា (ឱ្យផ្នែកខាងលើ Passport ទៅខាងស្តាំ)
-            // បើចង់ឱ្យទៅខាងឆ្វេង ប្រើ -90 ជំនួស
-            ctx.rotate(90 * Math.PI / 180); 
-            ctx.drawImage(img, -img.width / 2, -img.height / 2);
-            
-            // បោះ Base64 ត្រឡប់ទៅវិញ ជាមួយគុណភាពខ្ពស់ 0.95
-            callback(canvas.toDataURL('image/jpeg', 0.95));
-        };
-        img.src = base64Image;
-    }
+    // 2. Manual File Upload
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                // សម្រាប់ File Upload យើងមិនបាច់បង្វិលរូបទេ តែបើចង់បង្វិល ហៅ rotateImage90Degrees ក៏បាន
+                finalBase64Image = event.target.result;
+                imgPreview.src = finalBase64Image;
+                resetZoom();
+                scanPreviewModal.show();
+            };
+            reader.readAsDataURL(file);
+        }
+        $(this).val('');
+    });
 
-    // ឧបករណ៍ Zoom 
-    window.zoomImg = function(step) {
-        currentZoom += step;
-        if(currentZoom < 0.5) currentZoom = 0.5;
-        if(currentZoom > 4) currentZoom = 4;
-        imgPreview.style.transform = `scale(${currentZoom})`;
-        zoomText.innerText = Math.round(currentZoom * 100) + '%';
-    };
-    window.resetZoom = function() {
-        currentZoom = 1;
-        imgPreview.style.transform = `scale(${currentZoom})`;
-        zoomText.innerText = '100%';
-    };
-
-    // ស្កេនម្តងទៀត (Retake)
-    window.retakeScan = function() {
-        scanPreviewModal.hide();
-        finalBase64Image = "";
-        imgPreview.src = "";
-        btnStartScan.disabled = false;
-        btnStartScan.innerHTML = '<i class="fas fa-redo me-2 fs-4"></i> ស្កេនម្តងទៀត (Retake)';
-    };
-
-    // ==========================================
-    // 🌟 ពេលមន្ត្រីចុច "រក្សាទុក និងបញ្ចប់"
-    // ==========================================
+    // Save and Complete
     window.saveAndComplete = function() {
         btnConfirmSave.disabled = true;
-        btnConfirmSave.innerHTML = '<i class="fas fa-spinner fa-spin me-2 fs-5"></i> កំពុងរក្សាទុក...';
+        btnConfirmSave.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> កំពុងរក្សាទុក...';
 
         fetch(LOCAL_BRIDGE_SAVE_IMAGE, {
-            method: 'POST', 
-            headers: {'Content-Type': 'application/json'},
+            method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ 
                 application_no: currentAppNo, 
                 save_dir: currentSaveDir,
                 image_base64: finalBase64Image, 
-                
-                // 🌟 កែប្រែត្រង់ចំណុចនេះ៖ កំណត់ទំហំអតិបរមាដល់ 1000 KB (1 MB)
                 max_size_kb: 1000 
             })
         })
@@ -453,82 +315,55 @@ document.addEventListener("DOMContentLoaded", function() {
         .then(data => {
             if(data.status === 'success') {
                 fetch("{{ url_for('queue.confirm_candidate_scan') }}", {
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'},
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({application_no: currentAppNo})
-                })
-                .then(res2 => res2.json())
-                .then(data2 => {
+                }).then(() => {
                     scanPreviewModal.hide();
                     btnConfirmSave.disabled = false;
-                    btnConfirmSave.innerHTML = '<i class="fas fa-check-circle me-2 fs-5"></i> រក្សាទុក & បញ្ចប់';
-                    
+                    btnConfirmSave.innerHTML = '<i class="fas fa-check-circle me-2"></i> រក្សាទុក & បញ្ចប់';
                     candidateCard.classList.add('d-none');
-                    alertBox.className = 'alert alert-success d-block fw-bold fs-5 shadow-sm rounded-4 border-0 mb-4';
-                    alertBox.innerHTML = `<i class="fas fa-check-circle me-2"></i> រក្សាទុកជោគជ័យ! ទំហំឯកសារ៖ <span class="badge bg-success font-inter fs-6">${data.final_size}</span>`;
-                    
-                    inputBarcode.value = ''; currentAppNo = ''; inputBarcode.focus();
+                    alertBox.className = 'alert alert-success d-block fw-bold shadow-sm rounded-4 border-0 mb-4';
+                    alertBox.innerHTML = `<i class="fas fa-check-circle me-2"></i> រក្សាទុកជោគជ័យ! ទំហំ៖ ${data.final_size}`;
+                    inputBarcode.value = ''; inputBarcode.focus();
                     loadPendingList();
-                    setTimeout(() => alertBox.classList.add('d-none'), 4000);
-                })
-                .catch(err => {
-                    alert("មានបញ្ហាក្នុងការ Update Database!");
-                    btnConfirmSave.disabled = false;
-                    btnConfirmSave.innerHTML = '<i class="fas fa-check-circle me-2 fs-5"></i> រក្សាទុក & បញ្ចប់';
                 });
             } else {
-                alert("មិនអាចរក្សាទុកចូលក្នុងកុំព្យូទ័របានទេ៖ " + data.message);
+                alert("❌ បរាជ័យ៖ " + data.message);
                 btnConfirmSave.disabled = false;
-                btnConfirmSave.innerHTML = '<i class="fas fa-check-circle me-2 fs-5"></i> រក្សាទុក & បញ្ចប់';
             }
-        })
-        .catch(err => {
-            alert("ដាច់ការតភ្ជាប់ជាមួយ Local Bridge ពេលកំពុង Save!");
-            btnConfirmSave.disabled = false;
-            btnConfirmSave.innerHTML = '<i class="fas fa-check-circle me-2 fs-5"></i> រក្សាទុក & បញ្ចប់';
-        });
+        }).catch(err => { alert("❌ ដាច់ការតភ្ជាប់!"); btnConfirmSave.disabled = false; });
     };
 
-    // Pending List Logic
-    window.skipCandidate = function(appNo, queueNum) {
-        if(confirm(`តើអ្នកពិតជាចង់បោះបង់លេខ ${queueNum} នេះចេញពីបញ្ជីរង់ចាំមែនទេ?`)) {
-            fetch("{{ url_for('queue.skip_candidate_scan') }}", {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({application_no: appNo})
-            }).then(res => res.json()).then(data => {
-                if(data.status === 'success') { loadPendingList(); inputBarcode.focus(); } 
-                else { alert("មានកំហុស៖ " + data.message); }
-            });
-        }
-    };
+    function rotateImage90Degrees(base64Image, callback) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.height; canvas.height = img.width;
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(90 * Math.PI / 180); 
+            ctx.drawImage(img, -img.width / 2, -img.height / 2);
+            callback(canvas.toDataURL('image/jpeg', 0.95));
+        };
+        img.src = base64Image;
+    }
+
+    window.zoomImg = function(step) { currentZoom += step; if(currentZoom < 0.5) currentZoom = 0.5; imgPreview.style.transform = `scale(${currentZoom})`; zoomText.innerText = Math.round(currentZoom * 100) + '%'; };
+    window.resetZoom = function() { currentZoom = 1; imgPreview.style.transform = `scale(${currentZoom})`; zoomText.innerText = '100%'; };
+    window.retakeScan = function() { scanPreviewModal.hide(); finalBase64Image = ""; imgPreview.src = ""; };
 
     function loadPendingList() {
-        fetch("{{ url_for('queue.get_scanner_pending_list') }}")
-        .then(res => res.json())
-        .then(data => {
+        fetch("{{ url_for('queue.get_scanner_pending_list') }}").then(res => res.json()).then(data => {
             if(data.status === 'success') {
                 document.getElementById('pending_count_badge').innerText = data.count;
-                const tbody = document.getElementById('pending_table_body');
-                tbody.innerHTML = '';
+                const tbody = document.getElementById('pending_table_body'); tbody.innerHTML = '';
                 if(data.count > 0) {
                     data.pending_list.forEach(p => {
                         let cBadge = p.counter_name ? `<span class="badge bg-light text-primary border px-2 py-1"><i class="fas fa-desktop me-1"></i> ${p.counter_name}</span>` : `-`;
-                        tbody.innerHTML += `
-                            <tr>
-                                <td class="ps-4"><span class="badge bg-secondary font-inter fs-6 px-3 rounded-pill">${p.queue_number}</span></td>
-                                <td>
-                                    <div class="fw-bold text-dark font-moul mb-1">${p.full_name_kh}</div>
-                                    <div class="text-muted mb-1"><i class="fas fa-barcode"></i> <span class="font-inter">${p.application_no}</span></div>
-                                    ${cBadge}
-                                </td>
-                                <td class="text-end pe-4">
-                                    <button onclick="skipCandidate('${p.application_no}', '${p.queue_number}')" class="btn btn-sm btn-outline-danger shadow-sm rounded-pill px-3 fw-bold bg-white hover-shadow">
-                                        <i class="fas fa-user-times me-1"></i> រំលង
-                                    </button>
-                                </td>
-                            </tr>`;
+                        tbody.innerHTML += `<tr><td class="ps-4"><span class="badge bg-secondary font-inter fs-6 px-3 rounded-pill">${p.queue_number}</span></td><td><div class="fw-bold text-dark font-moul mb-1">${p.full_name_kh}</div><div class="text-muted mb-1 font-inter">${p.application_no}</div>${cBadge}</td><td class="text-end pe-4"><button onclick="skipCandidate('${p.application_no}', '${p.queue_number}')" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold bg-white shadow-sm">រំលង</button></td></tr>`;
                     });
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-success py-5"><i class="fas fa-check-circle fs-1 mb-3 d-block text-success opacity-75"></i> មិនមានទិន្នន័យរង់ចាំស្កេនទេ</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-success py-5"><i class="fas fa-check-circle fs-1 mb-2 d-block opacity-75"></i> មិនមានទិន្នន័យរង់ចាំ</td></tr>';
                 }
             }
         });
