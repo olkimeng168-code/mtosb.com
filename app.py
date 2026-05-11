@@ -24,16 +24,19 @@ from PIL import Image
 # ==========================================
 # 🌟 Smart Cross-Platform Face Recognition
 # ==========================================
-import sys
-from unittest.mock import MagicMock
+# import sys
+# from unittest.mock import MagicMock
 
-# បង្កើត Module ក្លែងក្លាយក្នុង System Memory តែម្តង
-mock_face = MagicMock()
-sys.modules["face_recognition"] = mock_face
-sys.modules["face_recognition_models"] = mock_face
-face_recognition = mock_face
+# បិទកូដ Mock ក្លែងក្លាយ ដើម្បីអនុញ្ញាតឱ្យ AI ពិតប្រាកដដំណើរការ
+# mock_face = MagicMock()
+# sys.modules["face_recognition"] = mock_face
+# sys.modules["face_recognition_models"] = mock_face
+# face_recognition = mock_face
 
-print("🚫 បិទ Face Recognition ជាបណ្តោះអាសន្ន ដើម្បី Debug រក Error ផ្សេង...")
+# print("🚫 បិទ Face Recognition ជាបណ្តោះអាសន្ន ដើម្បី Debug រក Error ផ្សេង...")
+
+# 🟢 Import បណ្ណាល័យ AI វិភាគមុខពិតប្រាកដចូលវិញ
+import face_recognition
 
 # 💡 ថែមជួរនេះមកវិញ ដើម្បីឱ្យកូដស្គាល់ mysql.connector.Error
 import mysql.connector
@@ -852,7 +855,7 @@ import base64
 import io
 import os  
 from PIL import Image
-#import face_recognition
+import face_recognition
 import cv2
 from datetime import datetime
 from flask import request, session, jsonify
@@ -1259,7 +1262,7 @@ import json
 import os
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-#import face_recognition
+import face_recognition
 import io
 from PIL import Image
 import onnxruntime as ort  # 💡 បណ្ណាល័យថ្មីសម្រាប់រត់ AI Model
@@ -3777,7 +3780,7 @@ def candidate_login_page():
 import cv2
 import numpy as np
 import base64
-#import face_recognition
+import face_recognition
 import os
 from flask import request, jsonify, session, url_for, flash, redirect
 
